@@ -1,0 +1,9 @@
+{
+    "subscriptions": [
+        {
+            "description": "Subscription to listen to backend request",
+            "topic": "backend-request",
+            "subscription": "request-handler"
+        }
+    ]
+}
