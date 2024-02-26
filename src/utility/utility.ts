@@ -6,6 +6,12 @@ import { FileEntity } from "nodets-ms-core/lib/core/storage";
 
 export class Utility {
 
+    public static sleep(ms: number): Promise<void> {
+        return new Promise(resolve => {
+            setTimeout(resolve, ms);
+        });
+    }
+
     public static async stream2buffer(stream: NodeJS.ReadableStream): Promise<Buffer> {
 
         return new Promise<Buffer>((resolve, reject) => {

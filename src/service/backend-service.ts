@@ -120,7 +120,7 @@ export class BackendService {
      * @param blobDetails - The details of the Azure Blob storage container.
      * @param fileName - The name of the file to create in the container.
      */
-    private async uploadStreamToAzureBlob(stream: Readable, blobDetails: any, fileName: string) {
+    public async uploadStreamToAzureBlob(stream: Readable, blobDetails: any, fileName: string) {
         const client = Core.getStorageClient();
         const container = await client?.getContainer(blobDetails.containerName);
         const file = container?.createFile(`${blobDetails.filePath}/${fileName}`, "application/json");
@@ -134,7 +134,7 @@ export class BackendService {
      * @param message - The queue message containing the backend request.
      * @returns A Promise that resolves when the query execution and data streaming are completed.
      */
-    private async bboxIntersect(message: QueueMessage) {
+    public async bboxIntersect(message: QueueMessage) {
         const backendRequest = message.data as BackendRequest;
         const params = backendRequest.parameters;
         var uploadContext = {
@@ -200,18 +200,29 @@ export class BackendService {
                 console.log(uploadContext.remoteUrls.map((obj: any) => obj.url).join(","));
                 console.log('All result sets streamed and uploaded.');
 
-                setTimeout(() => {
-                    this.zipStream(uploadContext).then(async () => {
-                        console.log('Zip file uploaded.');
-                        success = true;
-                        message.data.file_upload_path = uploadContext.zipUrl;
-                        await this.publishMessage(message, success, 'Data streamed and uploaded to Azure Blob Storage');
-                    }).catch(async (error) => {
-                        console.error('Error zipping data:', error);
-                        await this.publishMessage(message, false, 'Error zipping data');
-                    }
-                    );
-                }, 5000);
+                // setTimeout(() => {
+                //     this.zipStream(uploadContext).then(async () => {
+                //         console.log('Zip file uploaded.');
+                //         success = true;
+                //         message.data.file_upload_path = uploadContext.zipUrl;
+                //         await this.publishMessage(message, success, 'Data streamed and uploaded to Azure Blob Storage');
+                //     }).catch(async (error) => {
+                //         console.error('Error zipping data:', error);
+                //         await this.publishMessage(message, false, 'Error zipping data');
+                //     }
+                //     );
+                // }, 5000);
+                await Utility.sleep(10000);
+                this.zipStream(uploadContext).then(async () => {
+                    console.log('Zip file uploaded.');
+                    success = true;
+                    message.data.file_upload_path = uploadContext.zipUrl;
+                    await this.publishMessage(message, success, 'Data streamed and uploaded to Azure Blob Storage');
+                }).catch(async (error) => {
+                    console.error('Error zipping data:', error);
+                    await this.publishMessage(message, false, 'Error zipping data');
+                }
+                );
 
             });
 
@@ -231,7 +242,7 @@ export class BackendService {
      * @param uploadContext - The upload context containing the remote URLs of the files to be zipped.
      * @throws Error if the storage client is not configured.
      */
-    private async zipStream(uploadContext: any) {
+    public async zipStream(uploadContext: any) {
         // Create a new instance of AdmZip
         const zip = new AdmZip();
         const storageClient = Core.getStorageClient();
@@ -266,7 +277,7 @@ export class BackendService {
      * @param success - Indicates whether the operation was successful.
      * @param resText - The response text.
      */
-    private async publishMessage(message: QueueMessage, success: boolean, resText: string) {
+    public async publishMessage(message: QueueMessage, success: boolean, resText: string) {
         var data = {
             message: resText,
             success: success,
@@ -278,7 +289,7 @@ export class BackendService {
 
 }
 
-const backendService: IBackendRequest = new BackendService();
+const backendService = new BackendService();
 export default backendService;
 
 
