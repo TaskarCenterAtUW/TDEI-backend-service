@@ -1,6 +1,10 @@
 # TDEI-backend-service
 TDEI backend service
 
+## Service request signatures documentation
+
+[Service signatures](./src/services.json)
+
 ## Message bbox Request 
 
 ```json
@@ -27,7 +31,7 @@ TDEI backend service
     "data": {
       "service" : "file path",
       "parameters":{...},
-      "upload_file_url" : "zip file path",
+      "file_upload_path" : "zip file path",
       "success": true|false,
       "message": "message" // if false the error string else empty string
     } 
