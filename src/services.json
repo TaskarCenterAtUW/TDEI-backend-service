@@ -1,6 +1,6 @@
 [
     {
-        "service_name": "bbox_intersect",
+        "service": "bbox_intersect",
         "parameters": [
             {
                 "name": "tdei_dataset_id",

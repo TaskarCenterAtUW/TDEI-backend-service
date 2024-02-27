@@ -85,7 +85,7 @@ export class BackendService {
         }
 
         // Find the service in the services array
-        const service = services.find(s => s.service_name === message.data.service);
+        const service = services.find(s => s.service === message.data.service);
         if (!service) {
             console.error('Service not found');
             await this.publishMessage(message, false, 'Service not found');
@@ -102,7 +102,7 @@ export class BackendService {
         }
 
 
-        switch (service.service_name) {
+        switch (service.service) {
             case "bbox_intersect":
                 await this.bboxIntersect(message);
                 break;
