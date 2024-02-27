@@ -146,12 +146,26 @@ export class BackendService {
         let success = false;
 
         try {
+            const datasetQuery = {
+                text: 'SELECT event_info, node_info, ext_point_info, ext_line_info, ext_polygon_info FROM content.dataset WHERE tdei_dataset_id = $1',
+                values: [params.tdei_dataset_id],
+            }
+            const datasetResult = await dbClient.query(datasetQuery);
+
             // Create a query stream
             const query = new QueryStream('SELECT * FROM content.bbox_intersect($1, $2, $3, $4, $5) ', [params.tdei_dataset_id, params.bbox[0], params.bbox[1], params.bbox[2], params.bbox[3]]);
             // Execute the query
             const stream = await dbClient.queryStream(query);
             // Constant JSON string to be used for all the data types
-            let constJson = `{ "DataSource": { "name": "TDEI" }, "type": "FeatureCollection", "features": [`;
+            // let constJson = `{ "DataSource": { "name": "TDEI" }, "type": "FeatureCollection", "features": [`;
+            const constJson: { [key: string]: string } = {
+                edges: this.buildAdditionalInfo(datasetResult.rows[0].event_info),
+                nodes: this.buildAdditionalInfo(datasetResult.rows[0].node_info),
+                extensions_points: this.buildAdditionalInfo(datasetResult.rows[0].ext_point_info),
+                extensions_polygons: this.buildAdditionalInfo(datasetResult.rows[0].ext_polygon_info),
+                extensions_lines: this.buildAdditionalInfo(datasetResult.rows[0].ext_line_info)
+            };
+
             // Event listener for data event
             const dataTypes = ['edges', 'nodes', 'extensions_points', 'extensions_polygons', 'extensions_lines'];
             // Create readable streams for edges and nodes
@@ -179,7 +193,7 @@ export class BackendService {
                     if (data[dataType]) {
                         input_dataType = dataType;
                         // Push the data to the respective stream
-                        streams[dataType].push(`${firstFlags[dataType] ? constJson : ","}${JSON.stringify(data[dataType])}`);
+                        streams[dataType].push(`${firstFlags[dataType] ? constJson[dataType] : ","}${JSON.stringify(data[dataType])}`);
                     }
                 }
                 if (firstFlags[input_dataType]) {
@@ -287,9 +301,24 @@ export class BackendService {
         await Core.getTopic(environment.eventBus.backendResponseTopic as string).publish(message);
     }
 
+    private buildAdditionalInfo(info: any): string {
+        const properties = ['dataSource', 'region', 'dataTimestamp', 'pipelineVersion'];
+        const jsonParts = properties.map(prop => {
+            const data = this.getData(info?.[prop]);
+            return data && data != "" ? `"${prop}": ${data},` : '';
+        });
+
+        jsonParts.push('"type": "FeatureCollection", "features": [');
+
+        return `{ ${jsonParts.join(' ').trimStart()} `;
+    }
+
+    private getData(data: any): string {
+        return data && data != '' ? JSON.stringify(data) : "";
+    }
+
 }
 
 const backendService = new BackendService();
 export default backendService;
-
 
