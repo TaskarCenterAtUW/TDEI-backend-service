@@ -199,7 +199,7 @@ export class BackendService {
                 if (firstFlags[input_dataType]) {
                     firstFlags[input_dataType] = false;
                     await this.uploadStreamToAzureBlob(streams[input_dataType], uploadContext, `${input_dataType.replace("extensions_", "")}.OSW.geojson`)
-                        .then(() => console.log(`Uploaded ${input_dataType} to Azure Blob Storage`));
+                        .then(() => console.log(`Uploaded ${input_dataType} to Storage`));
                 }
             });
 
@@ -231,7 +231,7 @@ export class BackendService {
                     console.log('Zip file uploaded.');
                     success = true;
                     message.data.file_upload_path = uploadContext.zipUrl;
-                    await this.publishMessage(message, success, 'Data streamed and uploaded to Azure Blob Storage');
+                    await this.publishMessage(message, success, 'Dataset uploaded successfully!');
                 }).catch(async (error) => {
                     console.error('Error zipping data:', error);
                     await this.publishMessage(message, false, 'Error zipping data');
