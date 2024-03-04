@@ -1,4 +1,4 @@
-import { Pool, QueryConfig, QueryResult, Submittable } from 'pg';
+import { Pool, PoolClient, QueryConfig, QueryResult, Submittable } from 'pg';
 import { PostgresError } from '../constants/pg-error-constants';
 import { environment } from '../environment/environment';
 import UniqueKeyDbException, { ForeignKeyDbException } from '../exceptions/db/database-exceptions';
@@ -66,12 +66,28 @@ class DataSource {
     }
 
     /**
+     * Retrieves a database client from the connection pool.
+     * @returns A Promise that resolves to a PoolClient object representing the database client.
+     */
+    async getDbClient(): Promise<PoolClient> {
+        const client = await this.pool.connect();
+        return client;
+    }
+
+    /**
+     * Releases the database client back to the connection pool.
+     * @param client - The database client to release.
+     */
+    async releaseDbClient(client: PoolClient) {
+        client.release();
+    }
+
+    /**
    * Async Query
    * @param queryStream 
    * @returns 
    */
-    async queryStream(queryStream: QueryStream): Promise<QueryStream> {
-        const client = await this.pool.connect();
+    async queryStream(client: PoolClient, queryStream: QueryStream): Promise<QueryStream> {
         try {
             const result = client.query(queryStream);
             return result;
@@ -86,8 +102,6 @@ class DataSource {
                     break;
             }
             throw e;
-        } finally {
-            client.release();
         }
     }
 }

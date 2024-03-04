@@ -64,9 +64,13 @@ export interface IBackendRequest {
  * Represents a backend service that processes requests and performs various operations.
  */
 export class BackendService {
-    constructor() { }
+    dataTypes = ['edges', 'nodes', 'extensions_points', 'extensions_polygons', 'extensions_lines'];
 
+    constructor(public servicesConfig: any) { }
 
+    validate(message: any) {
+        return validateMessage(message);
+    }
     /**
      * Processes the backend request.
      * 
@@ -76,7 +80,7 @@ export class BackendService {
     public async backendRequestProcessor(message: QueueMessage): Promise<boolean> {
 
         // Validate the message
-        const validMessage = validateMessage(message);
+        const validMessage = this.validate(message);
         if (!validMessage) {
             const error_message = validateMessage.errors?.map((error: ErrorObject) => error.instancePath.replace('/', "") + " " + error.message).join(", \n");
             console.error(error_message);
@@ -85,7 +89,7 @@ export class BackendService {
         }
 
         // Find the service in the services array
-        const service = services.find(s => s.service === message.data.service);
+        const service = this.servicesConfig.find((s: any) => s.service === message.data.service);
         if (!service) {
             console.error('Service not found');
             await this.publishMessage(message, false, 'Service not found');
@@ -146,8 +150,9 @@ export class BackendService {
         let success = false;
 
         try {
+            //Get dataset details
             const datasetQuery = {
-                text: 'SELECT event_info, node_info, ext_point_info, ext_line_info, ext_polygon_info FROM content.dataset WHERE tdei_dataset_id = $1',
+                text: 'SELECT event_info as edges, node_info as nodes, ext_point_info as extensions_points, ext_line_info as extensions_lines, ext_polygon_info as extensions_polygons FROM content.dataset WHERE tdei_dataset_id = $1',
                 values: [params.tdei_dataset_id],
             }
             const datasetResult = await dbClient.query(datasetQuery);
@@ -155,89 +160,27 @@ export class BackendService {
             // Create a query stream
             const query = new QueryStream('SELECT * FROM content.bbox_intersect($1, $2, $3, $4, $5) ', [params.tdei_dataset_id, params.bbox[0], params.bbox[1], params.bbox[2], params.bbox[3]]);
             // Execute the query
-            const stream = await dbClient.queryStream(query);
-            // Constant JSON string to be used for all the data types
-            // let constJson = `{ "DataSource": { "name": "TDEI" }, "type": "FeatureCollection", "features": [`;
-            const constJson: { [key: string]: string } = {
-                edges: this.buildAdditionalInfo(datasetResult.rows[0].event_info),
-                nodes: this.buildAdditionalInfo(datasetResult.rows[0].node_info),
-                extensions_points: this.buildAdditionalInfo(datasetResult.rows[0].ext_point_info),
-                extensions_polygons: this.buildAdditionalInfo(datasetResult.rows[0].ext_polygon_info),
-                extensions_lines: this.buildAdditionalInfo(datasetResult.rows[0].ext_line_info)
-            };
-
-            // Event listener for data event
-            const dataTypes = ['edges', 'nodes', 'extensions_points', 'extensions_polygons', 'extensions_lines'];
-            // Create readable streams for edges and nodes
-            const streams: { [key: string]: Readable } = {
-                edges: new Readable({ read() { } }),
-                nodes: new Readable({ read() { } }),
-                extensions_points: new Readable({ read() { } }),
-                extensions_polygons: new Readable({ read() { } }),
-                extensions_lines: new Readable({ read() { } })
-            };
-            // Flag to check if the first data is being streamed
-            const firstFlags: { [key: string]: boolean } = {
-                edges: true,
-                nodes: true,
-                extensions_points: true,
-                extensions_polygons: true,
-                extensions_lines: true
-            };
+            const databaseClient = await dbClient.getDbClient();
+            const stream = await dbClient.queryStream(databaseClient, query);
+            //Build run context
+            const dataObject = this.dataTypes.reduce((obj: any, dataType: any) => {
+                obj[dataType] = {
+                    // Constant JSON string to be used for all the data types
+                    constJson: this.buildAdditionalInfo(datasetResult.rows[0][`${dataType}`]),
+                    stream: new Readable({ read() { } }),
+                    firstFlag: true
+                };
+                return obj;
+            }, {});
             // Create streams for each data type
             stream.on('data', async data => {
-                let input_dataType: string = "";
-                // Loop through the data types
-                for (const dataType of dataTypes) {
-                    // Check if the data type is present in the data
-                    if (data[dataType]) {
-                        input_dataType = dataType;
-                        // Push the data to the respective stream
-                        streams[dataType].push(`${firstFlags[dataType] ? constJson[dataType] : ","}${JSON.stringify(data[dataType])}`);
-                    }
-                }
-                if (firstFlags[input_dataType]) {
-                    firstFlags[input_dataType] = false;
-                    await this.uploadStreamToAzureBlob(streams[input_dataType], uploadContext, `${input_dataType.replace("extensions_", "")}.OSW.geojson`)
-                        .then(() => console.log(`Uploaded ${input_dataType} to Storage`));
-                }
+                await this.handleDataEvent(data, dataObject, uploadContext);
             });
 
             // Event listener for end event
             stream.on('end', async () => {
-                //loop streams
-                for (const dataType of dataTypes) {
-                    //push null to the streams
-                    streams[dataType].push("]}");
-                    streams[dataType].push(null);
-                }
-                console.log(uploadContext.remoteUrls.map((obj: any) => obj.url).join(","));
-                console.log('All result sets streamed and uploaded.');
-
-                // setTimeout(() => {
-                //     this.zipStream(uploadContext).then(async () => {
-                //         console.log('Zip file uploaded.');
-                //         success = true;
-                //         message.data.file_upload_path = uploadContext.zipUrl;
-                //         await this.publishMessage(message, success, 'Data streamed and uploaded to Azure Blob Storage');
-                //     }).catch(async (error) => {
-                //         console.error('Error zipping data:', error);
-                //         await this.publishMessage(message, false, 'Error zipping data');
-                //     }
-                //     );
-                // }, 5000);
-                await Utility.sleep(10000);
-                this.zipStream(uploadContext).then(async () => {
-                    console.log('Zip file uploaded.');
-                    success = true;
-                    message.data.file_upload_path = uploadContext.zipUrl;
-                    await this.publishMessage(message, success, 'Dataset uploaded successfully!');
-                }).catch(async (error) => {
-                    console.error('Error zipping data:', error);
-                    await this.publishMessage(message, false, 'Error zipping data');
-                }
-                );
-
+                await this.handleEndEvent(dataObject, uploadContext, message);
+                await dbClient.releaseDbClient(databaseClient);
             });
 
             // Event listener for error event
@@ -248,6 +191,60 @@ export class BackendService {
         } catch (error) {
             console.error('Error executing query:', error);
             await this.publishMessage(message, false, 'Error executing query');
+        }
+    }
+
+    /**
+     * Handles the end event and performs necessary operations.
+     * @param dataObject - The data object.
+     * @param uploadContext - The upload context.
+     * @param message - The message object.
+     */
+    public async handleEndEvent(dataObject: any, uploadContext: any, message: any) {
+
+        for (const dataType of this.dataTypes) {
+            dataObject[dataType].stream.push("]}");
+            dataObject[dataType].stream.push(null);
+        }
+        console.log('All result sets streamed and uploaded.');
+        //Verify if atlease one file is uploaded
+        if (uploadContext.remoteUrls.length == 0) {
+            await this.publishMessage(message, false, 'No data found for the given bounding box');
+            return;
+        }
+        await Utility.sleep(10000);
+        this.zipStream(uploadContext).then(async () => {
+            console.log('Zip file uploaded.');
+            message.data.file_upload_path = uploadContext.zipUrl;
+            await this.publishMessage(message, true, 'Dataset uploaded successfully!');
+        }).catch(async (error) => {
+            console.error('Error zipping data:', error);
+            await this.publishMessage(message, false, 'Error zipping data');
+        });
+    }
+    /**
+     * Handles the data event.
+     * 
+     * @param data - The data object.
+     * @param dataObject - The data object to be updated.
+     * @param uploadContext - The upload context.
+     */
+    public async handleDataEvent(data: any, dataObject: any, uploadContext: any) {
+        try {
+            let input_dataType = "";
+            for (const dataType of this.dataTypes) {
+                if (data[dataType]) {
+                    input_dataType = dataType;
+                    dataObject[dataType].stream.push(`${dataObject[dataType].firstFlag ? dataObject[dataType].constJson : ","}${JSON.stringify(data[dataType])}`);
+                }
+            }
+            if (dataObject[input_dataType].firstFlag) {
+                dataObject[input_dataType].firstFlag = false;
+                await this.uploadStreamToAzureBlob(dataObject[input_dataType].stream, uploadContext, `${input_dataType.replace("extensions_", "")}.OSW.geojson`)
+                    .then(() => console.log(`Uploaded ${input_dataType} to Storage`));
+            }
+        } catch (error) {
+            console.error('Error streaming data:', error);
         }
     }
 
@@ -319,6 +316,7 @@ export class BackendService {
 
 }
 
-const backendService = new BackendService();
+const backendService = new BackendService(services);
 export default backendService;
+
 
