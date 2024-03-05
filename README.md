@@ -1,6 +1,10 @@
 # TDEI-backend-service
 TDEI backend service
 
+## Service request signatures documentation
+
+[Service signatures](./src/services.json)
+
 ## Message bbox Request 
 
 ```json
@@ -9,12 +13,13 @@ TDEI backend service
     "messageType": "workflow_identifier",
     "data": {
       "service" : "bbox_intersect",
-      "params":{
-
+      "parameters": {
+        "tdei_dataset_id" : "tdei_dataset_id",
+        "bbox" : [1,2,3,4]
       },
       "user_id": "user_id",
     } 
-  }
+}
 ```
 
 ## Message bbox Response 
@@ -25,8 +30,8 @@ TDEI backend service
     "messageType": "workflow_identifier",
     "data": {
       "service" : "file path",
-      "params":{},
-      "upload_file_url" : "zip file path",
+      "parameters":{...},
+      "file_upload_path" : "zip file path",
       "success": true|false,
       "message": "message" // if false the error string else empty string
     } 
