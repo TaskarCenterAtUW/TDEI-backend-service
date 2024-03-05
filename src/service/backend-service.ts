@@ -156,6 +156,14 @@ export class BackendService {
             }
             const datasetResult = await dbClient.query(datasetQuery);
 
+            //Validate bbox parameters
+            if (typeof (params.bbox) == 'string') {
+                params.bbox = params.bbox.split(',').map(Number);
+            }
+            if (params.bbox.length != 4) {
+                await this.publishMessage(message, false, 'Invalid bbox parameters');
+                return;
+            }
             // Create a query stream
             const query = new QueryStream('SELECT * FROM content.bbox_intersect($1, $2, $3, $4, $5) ', [params.tdei_dataset_id, params.bbox[0], params.bbox[1], params.bbox[2], params.bbox[3]]);
             // Execute the query

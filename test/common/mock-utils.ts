@@ -2,7 +2,7 @@ import { Core } from "nodets-ms-core"
 import { IAuthorizer } from "nodets-ms-core/lib/core/auth/abstracts/IAuthorizer";
 import { Topic } from "nodets-ms-core/lib/core/queue/topic";
 import { FileEntity, StorageClient, StorageContainer } from "nodets-ms-core/lib/core/storage"
-import { Readable } from "stream"
+import { Readable } from "stream";
 
 
 export function getMockFileEntity() {
