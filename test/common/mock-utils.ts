@@ -10,10 +10,11 @@ export function getMockFileEntity() {
         fileName: "test_file_name",
         mimeType: "csv",
         filePath: "test_file_path",
-        remoteUrl: "",
+        remoteUrl: "your-remote-url",
         getStream: function (): Promise<NodeJS.ReadableStream> {
-            const mockedStream = new Readable();
-            mockedStream._read = function () { };
+            let mockedStream = new Readable({ read() { } });
+            mockedStream.push(JSON.stringify({ "test": "test-data" }));
+            mockedStream.push(null);
             return Promise.resolve(mockedStream);
         },
         getBodyText: function (): Promise<string> {
@@ -23,10 +24,17 @@ export function getMockFileEntity() {
             return Promise.resolve(this);
         },
         uploadStream: function (stream: Readable): Promise<void> {
-            throw new Error("Function not implemented.");
+            return Promise.resolve();
         }
     };
     return fileEntity;
+}
+
+export function getMockStream(): Readable {
+    let mockedStream = new Readable({ read() { } });
+    mockedStream.push(JSON.stringify({ "test": "test-data" }));
+    mockedStream.push(null);
+    return mockedStream;
 }
 
 export function getMockStorageClient() {

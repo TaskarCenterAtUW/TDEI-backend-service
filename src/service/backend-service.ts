@@ -147,7 +147,6 @@ export class BackendService {
             remoteUrls: [],
             zipUrl: ""
         };
-        let success = false;
 
         try {
             //Get dataset details
