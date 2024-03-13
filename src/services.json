@@ -1,0 +1,17 @@
+[
+    {
+        "service": "bbox_intersect",
+        "parameters": [
+            {
+                "name": "tdei_dataset_id",
+                "type": "string",
+                "required": true
+            },
+            {
+                "name": "bbox",
+                "type": "array[4]",
+                "required": true
+            }
+        ]
+    }
+]
