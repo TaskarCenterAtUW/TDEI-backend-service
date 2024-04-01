@@ -65,6 +65,7 @@ export interface IUploadContext {
     filePath: string;
     remoteUrls: string[];
     zipUrl: string;
+    outputFileName?: string;
 }
 
 
@@ -135,7 +136,7 @@ abstract class AbstractBackendService {
         const readStream = new stream.PassThrough();
         readStream.end(zipBuffer);
 
-        await this.uploadStreamToAzureBlob(readStream, uploadContext, 'bbox_intersect.zip');
+        await this.uploadStreamToAzureBlob(readStream, uploadContext, uploadContext.outputFileName ?? 'data.zip');
         uploadContext.zipUrl = uploadContext.remoteUrls.pop() as string;
     }
 }
@@ -206,7 +207,8 @@ export class BackendService extends AbstractBackendService {
             containerName: "osw",
             filePath: `backend-jobs/${message.messageId}/${params.target_dataset_id}`,
             remoteUrls: [],
-            zipUrl: ""
+            zipUrl: "",
+            outputFileName: `dataset-tag-road-${message.messageId}.zip`
         };
 
         try {
@@ -273,7 +275,8 @@ export class BackendService extends AbstractBackendService {
             containerName: "osw",
             filePath: `backend-jobs/${message.messageId}/${params.tdei_dataset_id}`,
             remoteUrls: [],
-            zipUrl: ""
+            zipUrl: "",
+            outputFileName: `bbox-intersect-${message.messageId}.zip`
         };
 
         try {
