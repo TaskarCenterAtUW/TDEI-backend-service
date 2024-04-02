@@ -13,5 +13,20 @@
                 "required": true
             }
         ]
+    },
+    {
+        "service": "dataset_tag_road",
+        "parameters": [
+            {
+                "name": "source_dataset_id",
+                "type": "string",
+                "required": true
+            },
+            {
+                "name": "target_dataset_id",
+                "type": "string",
+                "required": true
+            }
+        ]
     }
 ]
