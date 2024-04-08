@@ -338,7 +338,7 @@ describe('BackendService', () => {
       await backendService.handleStreamEndEvent(dataObject, uploadContext, message);
 
       // Assertions
-      expect(publishMessageMock).toHaveBeenCalledWith(message, false, 'No data found');
+      expect(publishMessageMock).toHaveBeenCalledWith(message, true, 'No data found given prarameters.');
     });
   });
 
