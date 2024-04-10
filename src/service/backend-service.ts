@@ -60,17 +60,95 @@ export interface IBackendRequest {
     backendRequestProcessor(message: QueueMessage): Promise<boolean>;
 }
 
-/**
- * Represents a backend service that processes requests and performs various operations.
- */
-export class BackendService {
-    dataTypes = ['edges', 'nodes', 'extensions_points', 'extensions_polygons', 'extensions_lines'];
+export interface IUploadContext {
+    containerName: string;
+    filePath: string;
+    remoteUrls: string[];
+    zipUrl: string;
+    outputFileName?: string;
+}
 
+
+abstract class AbstractBackendService {
     constructor(public servicesConfig: any) { }
-
     validate(message: any) {
         return validateMessage(message);
     }
+
+    /**
+     * Uploads a stream to an Azure Blob storage container.
+     * 
+     * @param stream - The stream to upload.
+     * @param blobDetails - The details of the Azure Blob storage container.
+     * @param fileName - The name of the file to create in the container.
+     */
+    async uploadStreamToAzureBlob(stream: Readable, blobDetails: any, fileName: string) {
+        const client = Core.getStorageClient();
+        const container = await client?.getContainer(blobDetails.containerName);
+        const file = container?.createFile(`${blobDetails.filePath}/${fileName}`, "application/json");
+        blobDetails.remoteUrls.push(file?.remoteUrl);
+        await file?.uploadStream(stream);
+    }
+
+    /**
+   * Publishes a message to the backend response topic.
+   * 
+   * @param message - The original queue message.
+   * @param success - Indicates whether the operation was successful.
+   * @param resText - The response text.
+   */
+    public async publishMessage(message: QueueMessage, success: boolean, resText: string) {
+        var data = {
+            message: resText,
+            success: success,
+            file_upload_path: message.data.file_upload_path ?? ""
+        }
+        message.data = data;
+        await Core.getTopic(environment.eventBus.backendResponseTopic as string).publish(message);
+    }
+
+    /**
+    * Zips the files specified in the upload context and uploads the zip archive to Azure Blob Storage.
+    * @param uploadContext - The upload context containing the remote URLs of the files to be zipped.
+    * @throws Error if the storage client is not configured.
+    */
+    public async zipStream(uploadContext: IUploadContext) {
+        // Create a new instance of AdmZip
+        const zip = new AdmZip();
+        const storageClient = Core.getStorageClient();
+
+        if (!storageClient) {
+            throw new Error("Storage not configured");
+        }
+
+        const addFileToZip = async (url: string) => {
+            const fileEntity = await storageClient.getFileFromUrl(url);
+            const fileBuffer = await Utility.stream2buffer(await fileEntity.getStream());
+            zip.addFile(url.split('/').pop()!, fileBuffer);
+        };
+
+        await Promise.all(uploadContext.remoteUrls.map(addFileToZip));
+
+        // Prepare the zip archive
+        const zipBuffer = zip.toBuffer();
+
+        // Create a readable stream from the zip buffer
+        const readStream = new stream.PassThrough();
+        readStream.end(zipBuffer);
+
+        await this.uploadStreamToAzureBlob(readStream, uploadContext, uploadContext.outputFileName ?? 'data.zip');
+        uploadContext.zipUrl = uploadContext.remoteUrls.pop() as string;
+    }
+}
+
+/**
+ * Represents a backend service that processes requests and performs various operations.
+ */
+export class BackendService extends AbstractBackendService {
+    dataTypes = ['edges', 'nodes', 'extensions_points', 'extensions_polygons', 'extensions_lines'];
+
+    constructor(public servicesConfig: any) { super(servicesConfig); }
+
     /**
      * Processes the backend request.
      * 
@@ -110,6 +188,9 @@ export class BackendService {
             case "bbox_intersect":
                 await this.bboxIntersect(message);
                 break;
+            case "dataset_tag_road":
+                await this.datasetTagRoad(message);
+                break;
             default:
                 await this.publishMessage(message, false, "Service not found");
                 return false;
@@ -117,22 +198,71 @@ export class BackendService {
         return true;
     }
 
-    /**
-     * Uploads a stream to an Azure Blob storage container.
-     * 
-     * @param stream - The stream to upload.
-     * @param blobDetails - The details of the Azure Blob storage container.
-     * @param fileName - The name of the file to create in the container.
-     */
-    public async uploadStreamToAzureBlob(stream: Readable, blobDetails: any, fileName: string) {
-        const client = Core.getStorageClient();
-        const container = await client?.getContainer(blobDetails.containerName);
-        const file = container?.createFile(`${blobDetails.filePath}/${fileName}`, "application/json");
-        blobDetails.remoteUrls.push(file?.remoteUrl);
-        await file?.uploadStream(stream);
+
+
+    public async datasetTagRoad(message: QueueMessage) {
+        const backendRequest = message.data as BackendRequest;
+        const params = backendRequest.parameters;
+        var uploadContext = {
+            containerName: "osw",
+            filePath: `backend-jobs/${message.messageId}/${params.target_dataset_id}`,
+            remoteUrls: [],
+            zipUrl: "",
+            outputFileName: `dataset-tag-road-${message.messageId}.zip`
+        };
+
+        try {
+            //Tag the target dataset with the source dataset roads
+            const updateQuery = {
+                text: 'SELECT content.dataset_tag_road($1, $2)',
+                values: [params.target_dataset_id, params.source_dataset_id],
+            }
+            //Update query
+            await dbClient.query(updateQuery);
+
+            //Get dataset details
+            const datasetQuery = {
+                text: 'SELECT event_info as edges, node_info as nodes, ext_point_info as extensions_points, ext_line_info as extensions_lines, ext_polygon_info as extensions_polygons FROM content.dataset WHERE tdei_dataset_id = $1',
+                values: [params.target_dataset_id],
+            }
+            const datasetResult = await dbClient.query(datasetQuery);
+
+            // Create a query stream, Extract dataset
+            const query = new QueryStream('SELECT * FROM content.extract_dataset($1) ', [params.target_dataset_id]);
+            // Execute the query
+            const databaseClient = await dbClient.getDbClient();
+            const stream = await dbClient.queryStream(databaseClient, query);
+            //Build run context
+            const dataObject = this.dataTypes.reduce((obj: any, dataType: any) => {
+                obj[dataType] = {
+                    // Constant JSON string to be used for all the data types
+                    constJson: this.buildAdditionalInfo(datasetResult.rows[0][`${dataType}`]),
+                    stream: new Readable({ read() { } }),
+                    firstFlag: true
+                };
+                return obj;
+            }, {});
+            // Create streams for each data type
+            stream.on('data', async data => {
+                await this.handleStreamDataEvent(data, dataObject, uploadContext);
+            });
+
+            // Event listener for end event
+            stream.on('end', async () => {
+                await this.handleStreamEndEvent(dataObject, uploadContext, message);
+                await dbClient.releaseDbClient(databaseClient);
+            });
+
+            // Event listener for error event
+            stream.on('error', async error => {
+                console.error('Error streaming data:', error);
+                await this.publishMessage(message, false, 'Error streaming data');
+            });
+        } catch (error) {
+            console.error('Error executing query:', error);
+            await this.publishMessage(message, false, 'Error executing query');
+        }
     }
-
-
     /**
      * Executes a query to perform a bounding box intersection and streams the results to Azure Blob Storage.
      * @param message - The queue message containing the backend request.
@@ -141,11 +271,12 @@ export class BackendService {
     public async bboxIntersect(message: QueueMessage) {
         const backendRequest = message.data as BackendRequest;
         const params = backendRequest.parameters;
-        var uploadContext = {
+        var uploadContext: IUploadContext = {
             containerName: "osw",
             filePath: `backend-jobs/${message.messageId}/${params.tdei_dataset_id}`,
             remoteUrls: [],
-            zipUrl: ""
+            zipUrl: "",
+            outputFileName: `bbox-intersect-${message.messageId}.zip`
         };
 
         try {
@@ -181,12 +312,12 @@ export class BackendService {
             }, {});
             // Create streams for each data type
             stream.on('data', async data => {
-                await this.handleDataEvent(data, dataObject, uploadContext);
+                await this.handleStreamDataEvent(data, dataObject, uploadContext);
             });
 
             // Event listener for end event
             stream.on('end', async () => {
-                await this.handleEndEvent(dataObject, uploadContext, message);
+                await this.handleStreamEndEvent(dataObject, uploadContext, message);
                 await dbClient.releaseDbClient(databaseClient);
             });
 
@@ -207,7 +338,7 @@ export class BackendService {
      * @param uploadContext - The upload context.
      * @param message - The message object.
      */
-    public async handleEndEvent(dataObject: any, uploadContext: any, message: any) {
+    public async handleStreamEndEvent(dataObject: any, uploadContext: IUploadContext, message: any) {
 
         for (const dataType of this.dataTypes) {
             dataObject[dataType].stream.push("]}");
@@ -216,10 +347,10 @@ export class BackendService {
         console.log('All result sets streamed and uploaded.');
         //Verify if atlease one file is uploaded
         if (uploadContext.remoteUrls.length == 0) {
-            await this.publishMessage(message, true, 'No data found for the given bounding box');
+            await this.publishMessage(message, true, 'No data found given prarameters.');
             return;
         }
-        await Utility.sleep(10000);
+        await Utility.sleep(15000);
         this.zipStream(uploadContext).then(async () => {
             console.log('Zip file uploaded.');
             message.data.file_upload_path = uploadContext.zipUrl;
@@ -236,7 +367,7 @@ export class BackendService {
      * @param dataObject - The data object to be updated.
      * @param uploadContext - The upload context.
      */
-    public async handleDataEvent(data: any, dataObject: any, uploadContext: any) {
+    public async handleStreamDataEvent(data: any, dataObject: any, uploadContext: IUploadContext) {
         try {
             let input_dataType = "";
             for (const dataType of this.dataTypes) {
@@ -253,56 +384,6 @@ export class BackendService {
         } catch (error) {
             console.error('Error streaming data:', error);
         }
-    }
-
-    /**
-     * Zips the files specified in the upload context and uploads the zip archive to Azure Blob Storage.
-     * @param uploadContext - The upload context containing the remote URLs of the files to be zipped.
-     * @throws Error if the storage client is not configured.
-     */
-    public async zipStream(uploadContext: any) {
-        // Create a new instance of AdmZip
-        const zip = new AdmZip();
-        const storageClient = Core.getStorageClient();
-
-        if (!storageClient) {
-            throw new Error("Storage not configured");
-        }
-
-        const addFileToZip = async (url: string) => {
-            const fileEntity = await storageClient.getFileFromUrl(url);
-            const fileBuffer = await Utility.stream2buffer(await fileEntity.getStream());
-            zip.addFile(url.split('/').pop()!, fileBuffer);
-        };
-
-        await Promise.all(uploadContext.remoteUrls.map(addFileToZip));
-
-        // Prepare the zip archive
-        const zipBuffer = zip.toBuffer();
-
-        // Create a readable stream from the zip buffer
-        const readStream = new stream.PassThrough();
-        readStream.end(zipBuffer);
-
-        await this.uploadStreamToAzureBlob(readStream, uploadContext, 'bbox_intersect.zip');
-        uploadContext.zipUrl = uploadContext.remoteUrls.pop() as string;
-    }
-
-    /**
-     * Publishes a message to the backend response topic.
-     * 
-     * @param message - The original queue message.
-     * @param success - Indicates whether the operation was successful.
-     * @param resText - The response text.
-     */
-    public async publishMessage(message: QueueMessage, success: boolean, resText: string) {
-        var data = {
-            message: resText,
-            success: success,
-            file_upload_path: message.data.file_upload_path
-        }
-        message.data = data;
-        await Core.getTopic(environment.eventBus.backendResponseTopic as string).publish(message);
     }
 
     private buildAdditionalInfo(info: any): string {
