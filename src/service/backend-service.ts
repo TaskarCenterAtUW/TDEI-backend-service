@@ -145,7 +145,7 @@ abstract class AbstractBackendService {
  * Represents a backend service that processes requests and performs various operations.
  */
 export class BackendService extends AbstractBackendService {
-    dataTypes = ['edges', 'nodes', 'extensions_points', 'extensions_polygons', 'extensions_lines'];
+    dataTypes = ['edges', 'nodes', 'zones', 'extensions_points', 'extensions_polygons', 'extensions_lines'];
 
     constructor(public servicesConfig: any) { super(servicesConfig); }
 
@@ -222,7 +222,7 @@ export class BackendService extends AbstractBackendService {
 
             //Get dataset details
             const datasetQuery = {
-                text: 'SELECT event_info as edges, node_info as nodes, ext_point_info as extensions_points, ext_line_info as extensions_lines, ext_polygon_info as extensions_polygons FROM content.dataset WHERE tdei_dataset_id = $1',
+                text: 'SELECT event_info as edges, node_info as nodes, zone_info as zones, ext_point_info as extensions_points, ext_line_info as extensions_lines, ext_polygon_info as extensions_polygons FROM content.dataset WHERE tdei_dataset_id = $1',
                 values: [params.target_dataset_id],
             }
             const datasetResult = await dbClient.query(datasetQuery);
@@ -282,7 +282,7 @@ export class BackendService extends AbstractBackendService {
         try {
             //Get dataset details
             const datasetQuery = {
-                text: 'SELECT event_info as edges, node_info as nodes, ext_point_info as extensions_points, ext_line_info as extensions_lines, ext_polygon_info as extensions_polygons FROM content.dataset WHERE tdei_dataset_id = $1',
+                text: 'SELECT event_info as edges, node_info as nodes, zone_info as zones, ext_point_info as extensions_points, ext_line_info as extensions_lines, ext_polygon_info as extensions_polygons FROM content.dataset WHERE tdei_dataset_id = $1',
                 values: [params.tdei_dataset_id],
             }
             const datasetResult = await dbClient.query(datasetQuery);
@@ -347,7 +347,7 @@ export class BackendService extends AbstractBackendService {
         console.log('All result sets streamed and uploaded.');
         //Verify if atlease one file is uploaded
         if (uploadContext.remoteUrls.length == 0) {
-            await this.publishMessage(message, true, 'No data found given prarameters.');
+            await this.publishMessage(message, true, 'No data found the given prarameters.');
             return;
         }
         await Utility.sleep(15000);
