@@ -145,6 +145,7 @@ abstract class AbstractBackendService {
  * Represents a backend service that processes requests and performs various operations.
  */
 export class BackendService extends AbstractBackendService {
+
     dataTypes = ['edges', 'nodes', 'zones', 'extensions_points', 'extensions_polygons', 'extensions_lines'];
 
     constructor(public servicesConfig: any) { super(servicesConfig); }
