@@ -271,6 +271,10 @@ describe('BackendService', () => {
         extensions_lines: {
           stream: new Readable({ read() { } }),
           firstFlag: true
+        },
+        zones: {
+          stream: new Readable({ read() { } }),
+          firstFlag: true
         }
       };
       const uploadContext = {
@@ -319,6 +323,10 @@ describe('BackendService', () => {
         extensions_lines: {
           stream: new Readable({ read() { } }),
           firstFlag: true
+        },
+        zones: {
+          stream: new Readable({ read() { } }),
+          firstFlag: true
         }
       };
       const uploadContext = {
@@ -338,7 +346,7 @@ describe('BackendService', () => {
       await backendService.handleStreamEndEvent(dataObject, uploadContext, message);
 
       // Assertions
-      expect(publishMessageMock).toHaveBeenCalledWith(message, true, 'No data found given prarameters.');
+      expect(publishMessageMock).toHaveBeenCalledWith(message, true, 'No data found for given prarameters.');
     });
   });
 
