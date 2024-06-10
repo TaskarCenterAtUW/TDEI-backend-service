@@ -348,7 +348,7 @@ export class BackendService extends AbstractBackendService {
         console.log('All result sets streamed and uploaded.');
         //Verify if atlease one file is uploaded
         if (uploadContext.remoteUrls.length == 0) {
-            await this.publishMessage(message, true, 'No data found the given prarameters.');
+            await this.publishMessage(message, true, 'No data found for given prarameters.');
             return;
         }
         await Utility.sleep(15000);
