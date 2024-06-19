@@ -1,5 +1,8 @@
+import { environment } from "../environment/environment";
 import { Readable } from "stream";
 import { FileEntity } from "nodets-ms-core/lib/core/storage";
+import { Core } from "nodets-ms-core";
+import { QueueMessage } from "nodets-ms-core/lib/core/queue";
 
 export class Utility {
 
@@ -20,6 +23,23 @@ export class Utility {
             stream.on("error", err => reject(`error converting stream - ${err}`));
 
         });
+    }
+
+    /**
+  * Publishes a message to the backend response topic.
+  * 
+  * @param message - The original queue message.
+  * @param success - Indicates whether the operation was successful.
+  * @param resText - The response text.
+  */
+    public static async publishMessage(message: QueueMessage, success: boolean, resText: string) {
+        var data = {
+            message: resText,
+            success: success,
+            file_upload_path: message.data.file_upload_path ?? ""
+        }
+        message.data = data;
+        await Core.getTopic(environment.eventBus.backendResponseTopic as string).publish(message);
     }
 }
 
