@@ -57,9 +57,9 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
     @Prop()
     filter_source!: string;
     @Prop()
-    aggregate!: string[]; //attributes from source dimension to be aggregated
+    aggregate: string[] = []; //attributes from source dimension to be aggregated
     @Prop()
-    attributes!: string[]; //attributes from source dimension to be added to the target feature properties
+    attributes: string[] = []; //attributes from source dimension to be added to the target feature properties
 
     /**
      * Basic SQL injection check
@@ -138,9 +138,7 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
         let select_attributes = '';
         let target_select_required_fields = '';
         let group_by = '';
-        let extension_attributes_required = this.aggregate.length || this.attributes.length;
-
-        const attribute_names = this.attributes.join(', ');
+        let extension_attributes_required = this.aggregate?.length || this.attributes?.length;
 
         //based on the target dimension, select the required fields, target table, and transform the geometry
         switch (this.target_dimension) {
@@ -198,7 +196,7 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
         //compile the aggregate fields
         let aggregate_compiled: { name: string, aggregate: string }[] = [];
         try {
-            if (this.aggregate.length) {
+            if (this.aggregate?.length) {
                 aggregate_compiled = this.aggregate.map((aggregate) => {
                     const name = aggregate.split('(')[1].split(')')[0];
                     aggregate = aggregate.replace(name, `source.${name}`);
@@ -221,7 +219,7 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
 
         //compile the attribute fields
         let attribute_names_compiled: { name: string, attribute: string }[] = [];
-        if (this.attributes.length) {
+        if (this.attributes?.length) {
             attribute_names_compiled = this.attributes.map((attribute) => {
                 if (attribute.toLowerCase().includes(' as ')) {
                     const alias_name = attribute.toLowerCase().split(' as ')[1];
