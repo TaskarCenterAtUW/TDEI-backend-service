@@ -5,6 +5,7 @@ import { AbstractOSWBackendRequest } from "../base/osw-backend-abstract";
 import { BackendRequest, SpatialJoinRequestParams } from "../interface/interfaces";
 import { Readable } from "stream";
 import { Utility } from "../../utility/utility";
+import { InputException } from "../../exceptions/http/http-exceptions";
 
 export class SpatialQueryService extends AbstractOSWBackendRequest {
 
@@ -68,6 +69,13 @@ export class SpatialQueryService extends AbstractOSWBackendRequest {
                 await Utility.publishMessage(message, false, 'Error streaming data : ' + error.message);
             });
         } catch (error) {
+
+            if (error instanceof InputException) {
+                console.error('Error executing query:', error);
+                await Utility.publishMessage(message, false, error.message);
+                return;
+            }
+
             console.error('Error executing query:', error);
             await Utility.publishMessage(message, false, 'Error executing query');
         }
