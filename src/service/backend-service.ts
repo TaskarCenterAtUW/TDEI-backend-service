@@ -91,7 +91,7 @@ export class BackendService {
             case "dataset_tag_road":
                 await this.datasetTagRoadService.datasetTagRoad(message);
                 break;
-            case "spatial_query":
+            case "spatial_join":
                 await this.spatialQueryService.executeSpatialQuery(message);
                 break;
             default:

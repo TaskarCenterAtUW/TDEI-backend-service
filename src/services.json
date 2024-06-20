@@ -30,7 +30,7 @@
         ]
     },
     {
-        "service": "spatial_query",
+        "service": "spatial_join",
         "parameters": [
             {
                 "name": "source_dataset_id",
