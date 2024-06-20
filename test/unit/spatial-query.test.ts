@@ -26,11 +26,11 @@ describe('BackendService', () => {
             const query = spatialServiceParams.buildSpatialQuery();
             console.log(query);
             // Assertions
-            expect(query.text).toContain('SELECT');
-            expect(query.text).toContain('FROM');
-            expect(query.text).toContain('INNER JOIN');
-            expect(query.text).toContain('WHERE');
-            expect(query.text).toContain('GROUP BY');
+            expect(query).toContain('SELECT');
+            expect(query).toContain('FROM');
+            expect(query).toContain('INNER JOIN');
+            expect(query).toContain('WHERE');
+            expect(query).toContain('GROUP BY');
             // expect(query.values).toHaveLength(10);
         });
 
@@ -66,6 +66,32 @@ describe('BackendService', () => {
 
             // Call the method under test
             expect(() => spatialServiceParams.buildSpatialQuery()).toThrow(InputException);
+        });
+
+        it('should execute query with empty aggregate and atribute input', () => {
+            // Set up the test data
+            spatialServiceParams.aggregate = [];
+            spatialServiceParams.attributes = [];
+
+            // Call the method under test
+            const query = spatialServiceParams.buildSpatialQuery();
+            expect(query).toContain('SELECT');
+        });
+
+        it('should execute query with required input only', () => {
+            // Set up the test data
+            spatialServiceParams.aggregate = [];
+            spatialServiceParams.attributes = [];
+            spatialServiceParams.filter_source = "";
+            spatialServiceParams.filter_target = "";
+            spatialServiceParams.transform_source = "";
+            spatialServiceParams.transform_target = "";
+
+
+            // Call the method under test
+            const query = spatialServiceParams.buildSpatialQuery();
+            console.log(query);
+            expect(query).toContain('SELECT');
         });
     });
 });

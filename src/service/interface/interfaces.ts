@@ -285,29 +285,20 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
                         $${param_counter++}
                     ), 
                     true
-                )::json AS feature` : ``
+                )::json AS feature` : `$${param_counter++}`
                     } 
                 FROM $${param_counter++}
                 INNER JOIN $${param_counter++} on  $${param_counter++}
                 WHERE
                 target.tdei_dataset_id = '$${param_counter++}'
                 AND source.tdei_dataset_id = '$${param_counter++}'
-                ${target_filter ? `AND $${param_counter++}` : ``}
-                ${source_filter ? `AND $${param_counter++}` : ``}
+                ${target_filter ? `AND $${param_counter++}` : `$${param_counter++}`}
+                ${source_filter ? `AND $${param_counter++}` : `$${param_counter++}`}
                 GROUP BY $${param_counter++}
                 `.replace(/\s+/g, ' ').trim(),
-            values: [select_attributes, extension_attributes, target_table, source_table, join_condition_compiled, this.target_dataset_id, this.source_dataset_id]
+            values: [select_attributes, extension_attributes, target_table, source_table,
+                join_condition_compiled, this.target_dataset_id, this.source_dataset_id, target_filter, source_filter, group_by]
         };
-
-        if (target_filter) {
-            query.values?.push(target_filter);
-        }
-
-        if (source_filter) {
-            query.values?.push(source_filter);
-        }
-
-        query.values?.push(group_by);
 
         return this.substituteValues(query);
     }
