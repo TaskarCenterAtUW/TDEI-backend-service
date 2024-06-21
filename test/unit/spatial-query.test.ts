@@ -7,7 +7,7 @@ describe('BackendService', () => {
         spatialServiceParams = SpatialJoinRequestParams.from({
             target_dimension: 'edge',
             source_dimension: 'point',
-            attributes: ['highway as my_highway', 'footway as my_footway'],
+            attributes: ['highway as my_highway', 'power as my_power'],
             aggregate: ['array_agg(highway) as my_way'],
             join_condition: 'ST_Intersects(geometry_target, geometry_source)',
             transform_target: 'ST_Buffer(geometry_target, 5)',
