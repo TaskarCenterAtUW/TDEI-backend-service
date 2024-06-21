@@ -232,13 +232,16 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
 
         //extension fields to be added to the feature properties
         let extension_attributes = aggregate_compiled.map((aggregate) => { return `'ext:${aggregate.name}', ${aggregate.aggregate}` }).join(', ');
-        extension_attributes = extension_attributes ? `${extension_attributes}, ` : '';
+        extension_attributes = extension_attributes && attribute_names_compiled.length ? `${extension_attributes}, ` : extension_attributes;
         extension_attributes += attribute_names_compiled.map((attribute) => { return `'ext:${attribute.name}', source.${attribute.attribute}` }).join(', ');
 
         group_by = `${target_select_required_fields}`;
         //if attribute fields exists, then add them to the group by
         if (attribute_names_compiled.length) {
             group_by += `, ${attribute_names_compiled.map((attribute) => { return `source.${attribute.attribute}` }).join(', ')}`;
+        }
+
+        if (extension_attributes.length) {
             //to add extension fields to the feature properties, feature to be added to group by
             group_by += `, target.feature:: jsonb`;
         }
@@ -295,8 +298,8 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
                 ${source_filter ? `AND $${param_counter++}` : `$${param_counter++}`}
                 GROUP BY $${param_counter++}
                 `.replace(/\s+/g, ' ').trim(),
-            values: [select_attributes, extension_attributes, target_table, source_table,
-                join_condition_compiled, this.target_dataset_id, this.source_dataset_id, target_filter, source_filter, group_by]
+            values: [select_attributes, extension_attributes ?? '', target_table, source_table,
+                join_condition_compiled, this.target_dataset_id, this.source_dataset_id, target_filter ?? '', source_filter ?? '', group_by]
         };
 
         return this.substituteValues(query);
