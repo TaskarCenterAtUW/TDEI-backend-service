@@ -2,7 +2,6 @@ import { QueueMessage } from "nodets-ms-core/lib/core/queue";
 import { AbstractDomainEntity, Prop } from "nodets-ms-core/lib/models";
 import { InputException } from "../../exceptions/http/http-exceptions";
 import { QueryConfig } from "pg";
-import SQL from 'sql-template-strings';
 
 /**
  * Represents a backend request.
