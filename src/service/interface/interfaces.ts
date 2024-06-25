@@ -155,7 +155,8 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
             case 'zone':
                 target_table = 'content.zone target';
                 transform_geometry_target = 'ST_Transform(target.zone_loc, 3857)';
-                target_select_required_fields = 'target.zone_id, target.zone_loc';
+                target_select_required_fields = 'target.zone_id, target.zone_loc, target.node_ids';
+                break;
             default:
                 throw new InputException('Invalid target dimension');
         }
@@ -274,6 +275,11 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
 
         //Select attributes
         select_attributes = `${target_select_required_fields}`;
+        if (extension_attributes == '') {
+            select_attributes += `, (target.feature::jsonb)::json`;
+            group_by += `, target.feature::jsonb`;
+        }
+
         let param_counter = 1;
         let query: QueryConfig = {
             text:
