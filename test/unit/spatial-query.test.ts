@@ -5,7 +5,7 @@ describe('BackendService', () => {
 
     beforeEach(() => {
         spatialServiceParams = SpatialJoinRequestParams.from({
-            target_dimension: 'zone',
+            target_dimension: 'edge',
             source_dimension: 'point',
             attributes: ['highway as my_highway', 'power as my_power'],
             aggregate: ['array_agg(highway) as my_way'],
