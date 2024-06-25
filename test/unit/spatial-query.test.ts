@@ -5,13 +5,13 @@ describe('BackendService', () => {
 
     beforeEach(() => {
         spatialServiceParams = SpatialJoinRequestParams.from({
-            target_dimension: 'edge',
+            target_dimension: 'zone',
             source_dimension: 'point',
-            // attributes: ['highway as my_highway', 'power as my_power'],
-            // aggregate: ['array_agg(highway) as my_way'],
+            attributes: ['highway as my_highway', 'power as my_power'],
+            aggregate: ['array_agg(highway) as my_way'],
             join_condition: 'ST_Intersects(geometry_target, geometry_source)',
             transform_target: 'ST_Buffer(geometry_target, 5)',
-            // transform_source: "",
+            transform_source: "",
             filter_target: "highway='footway' AND footway='sidewalk'",
             // filter_target: "   highway='footway'    AND footway='sidewalk' OR (highway2='footway' OR footway2='sidewalk')",
             filter_source: "highway='street_lamp'",
