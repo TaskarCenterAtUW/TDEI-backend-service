@@ -35,8 +35,10 @@ export class SpatialQueryService extends AbstractOSWBackendRequest {
                 values: [params.target_dataset_id],
             }
             const datasetResult = await dbClient.query(datasetQuery);
-
-            uploadContext.outputFileName = `${datasetResult.rows[0].name}-spatial_join-jobId_${message.messageId}.zip`;
+            let datasetname: string = datasetResult.rows[0].name;
+            //Safe url name
+            datasetname = datasetname.replace(/[^a-zA-Z0-9]/g, '_');
+            uploadContext.outputFileName = `${datasetname}-spatial_join-jobId_${message.messageId}.zip`;
 
             // Create a query stream
             const query = new QueryStream('SELECT * FROM content.tdei_dataset_spatial_join($1, $2, $3) ', [spatialQueryService.target_dataset_id, dynamicQuery, spatialQueryService.target_dimension]);
