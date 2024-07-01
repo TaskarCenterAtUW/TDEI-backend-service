@@ -35,6 +35,8 @@ export interface IUploadContext {
     outputFileName?: string;
 }
 
+export interface AttributeDetails { alias: string, column: string, aggregate?: string }
+
 export class SpatialJoinRequestParams extends AbstractDomainEntity {
 
     @Prop()
@@ -137,7 +139,6 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
         let select_attributes = '';
         let target_select_required_fields = '';
         let group_by = '';
-        let extension_attributes_required = this.aggregate?.length || this.attributes?.length;
 
         //based on the target dimension, select the required fields, target table, and transform the geometry
         switch (this.target_dimension) {
@@ -194,22 +195,23 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
         }
 
         //compile the aggregate fields
-        let aggregate_compiled: { name: string, aggregate: string }[] = [];
+        let aggregate_compiled: AttributeDetails[] = [];
         try {
             if (this.aggregate?.length) {
                 aggregate_compiled = this.aggregate.map((aggregate) => {
                     const name = aggregate.split('(')[1].split(')')[0];
                     aggregate = aggregate.replace(name, `source.${name}`);
+                    let columnName = `source.${name}`;
 
                     //if aggregate has alias then take the alias as the name
                     if (aggregate.toLowerCase().includes(' as ')) {
                         const alias_name = aggregate.toLowerCase().split(' as ')[1];
                         //remove the alias from the aggregate
                         aggregate = aggregate.toLowerCase().split(' as ')[0];
-                        return { name: alias_name, aggregate };
+                        return { alias: `${alias_name}`, column: columnName, aggregate: aggregate };
                     }
                     else {
-                        return { name, aggregate };
+                        return { alias: `${name}`, column: columnName, aggregate: aggregate };
                     }
                 });
             }
@@ -218,35 +220,26 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
         }
 
         //compile the attribute fields
-        let attribute_names_compiled: { name: string, attribute: string }[] = [];
+        let attribute_names_compiled: AttributeDetails[] = [];
         if (this.attributes?.length) {
             attribute_names_compiled = this.attributes.map((attribute) => {
                 if (attribute.toLowerCase().includes(' as ')) {
                     const alias_name = attribute.toLowerCase().split(' as ')[1];
                     //remove the alias from the attribute
                     attribute = attribute.toLowerCase().split(' as ')[0];
-                    return { name: alias_name, attribute };
+                    return { alias: `${alias_name}`, column: `source.${attribute}` };
                 }
-                return { name: attribute, attribute };
+                return { alias: `${attribute}`, column: `source.${attribute}` };
             });
         }
 
-        //extension fields to be added to the feature properties
-        let extension_attributes = aggregate_compiled.map((aggregate) => { return `'ext:${aggregate.name}', ${aggregate.aggregate}` }).join(', ');
-        extension_attributes = extension_attributes && attribute_names_compiled.length ? `${extension_attributes}, ` : extension_attributes;
-        extension_attributes += attribute_names_compiled.map((attribute) => { return `'ext:${attribute.name}', source.${attribute.attribute}` }).join(', ');
+        let final_attributes: AttributeDetails[] = [...aggregate_compiled, ...attribute_names_compiled];
 
-        group_by = `${target_select_required_fields}`;
+        group_by = `${target_select_required_fields}, target.feature::jsonb`;
         //if attribute fields exists, then add them to the group by
         if (attribute_names_compiled.length) {
-            group_by += `, ${attribute_names_compiled.map((attribute) => { return `source.${attribute.attribute}` }).join(', ')}`;
+            group_by += `, ${attribute_names_compiled.map((attribute) => { return `${attribute.column}` }).join(', ')}`;
         }
-
-        if (extension_attributes.length) {
-            //to add extension fields to the feature properties, feature to be added to group by
-            group_by += `, target.feature:: jsonb`;
-        }
-
 
         let target_transform_compiled = undefined;
         let source_transform_compiled = undefined;
@@ -275,10 +268,11 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
 
         //Select attributes
         select_attributes = `${target_select_required_fields}`;
-        if (extension_attributes == '') {
+        if (final_attributes.length == 0) {
             select_attributes += `, (target.feature::jsonb)::json`;
-            group_by += `, target.feature::jsonb`;
         }
+
+        const caseStatements = this.generateCaseStatements(aggregate_compiled, attribute_names_compiled);
 
         let param_counter = 1;
         let query: QueryConfig = {
@@ -286,31 +280,71 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
                 `
                 SELECT 
                 $${param_counter++} 
-                ${extension_attributes_required ? `, jsonb_set(
-                    target.feature::jsonb, 
-                    '{properties}', 
-                    target.feature::jsonb->'properties' || jsonb_build_object(
-                        $${param_counter++}
-                    ), 
-                    true
-                )::json AS feature` : `$${param_counter++}`
+                ${final_attributes.length ? `, JSONB_SET(
+                    target.feature::jsonb,
+                    '{properties}',
+                    COALESCE(
+                      target.feature::jsonb -> 'properties', '{}'::jsonb
+                    ) || ($${param_counter++}),
+                    TRUE
+                  )::json AS feature` : `$${param_counter++}`
                     } 
                 FROM $${param_counter++}
-                INNER JOIN $${param_counter++} on  $${param_counter++}
-                WHERE
-                target.tdei_dataset_id = '$${param_counter++}'
+                LEFT JOIN $${param_counter++} on  $${param_counter++}
                 AND source.tdei_dataset_id = '$${param_counter++}'
                 ${target_filter ? `AND $${param_counter++}` : `$${param_counter++}`}
                 ${source_filter ? `AND $${param_counter++}` : `$${param_counter++}`}
+                WHERE
+                target.tdei_dataset_id = '$${param_counter++}'
                 GROUP BY $${param_counter++}
                 `.replace(/\s+/g, ' ').trim(),
-            values: [select_attributes, extension_attributes ?? '', target_table, source_table,
-                join_condition_compiled, this.target_dataset_id, this.source_dataset_id, target_filter ?? '', source_filter ?? '', group_by]
+            values: [select_attributes, final_attributes.length ? caseStatements : '', target_table, source_table,
+                join_condition_compiled, this.source_dataset_id, target_filter ?? '', source_filter ?? '', this.target_dataset_id, group_by]
         };
 
         return this.substituteValues(query);
     }
 
+
+    /**
+     * Generates the case statements for aggregating and non-aggregating attributes.
+     * 
+     * @param aggregatedAttributes - An array of AttributeDetails objects representing the aggregated attributes.
+     * @param nonAggregatedAttributes - An array of AttributeDetails objects representing the non-aggregated attributes.
+     * @returns A string representing the generated case statements.
+     */
+    generateCaseStatements(aggregatedAttributes: AttributeDetails[], nonAggregatedAttributes: AttributeDetails[]) {
+        const aggCases = aggregatedAttributes.map(attr => {
+            return `
+            CASE
+              WHEN ${attr.aggregate} FILTER (WHERE ${attr.column} IS NOT NULL) IS NOT NULL THEN
+                JSONB_BUILD_OBJECT('ext:${attr.alias}', ${attr.aggregate} FILTER (WHERE ${attr.column} IS NOT NULL))
+              ELSE '{}'::jsonb
+            END
+          `;
+        });
+
+        const nonAggCases = nonAggregatedAttributes.map(attr => {
+            return `
+            CASE
+              WHEN ${attr.column} IS NOT NULL THEN
+                JSONB_BUILD_OBJECT('ext:${attr.alias}', ${attr.column})
+              ELSE '{}'::jsonb
+            END
+          `;
+        });
+
+        return [...aggCases, ...nonAggCases].join(' || ');
+    }
+
+
+
+    /**
+     * Replaces placeholders in a query text with corresponding values.
+     * 
+     * @param query - The query object containing the text and values.
+     * @returns The query text with placeholders replaced by values.
+     */
     substituteValues(query: any) {
         let text = query.text;
         let values = query.values;

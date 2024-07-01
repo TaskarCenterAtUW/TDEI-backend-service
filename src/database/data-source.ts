@@ -26,7 +26,7 @@ class DataSource {
         this.pool.on('error', function (err: Error) {
             console.log(`Idle-Client Error:\n${err.message}\n${err.stack}`)
         }).on('connect', () => {
-            console.log("Database initialized successfully !");
+            console.log("Database connected successfully !");
         });
     }
 
