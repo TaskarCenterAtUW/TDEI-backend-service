@@ -1,10 +1,11 @@
-import { BackendService, IUploadContext } from '../../src/service/backend-service';
+import { BackendService } from '../../src/service/backend-service';
 import dbClient from '../../src/database/data-source';
 import { Readable } from 'stream';
 import { mockCore } from '../common/mock-utils';
 import services from '../../src/services.json';
 import { Utility } from '../../src/utility/utility';
 import { PoolClient } from 'pg';
+import { IUploadContext } from '../../src/service/interface/interfaces';
 
 describe('BackendService', () => {
   let backendService: BackendService;
@@ -27,8 +28,8 @@ describe('BackendService', () => {
         messageId: 'your-message-id'
       };
       const validateMessageMock = jest.spyOn(backendService, 'validate').mockReturnValue(true);
-      const publishMessageMock = jest.spyOn(backendService, 'publishMessage').mockResolvedValue(undefined);
-      const bboxIntersectMock = jest.spyOn(backendService, 'bboxIntersect').mockResolvedValue(undefined);
+      const publishMessageMock = jest.spyOn(Utility, 'publishMessage').mockResolvedValue(undefined);
+      const bboxIntersectMock = jest.spyOn(backendService.bboxService, 'bboxIntersect').mockResolvedValue(undefined);
 
       // Call the method under test
       const result = await backendService.backendRequestProcessor(message);
@@ -50,8 +51,8 @@ describe('BackendService', () => {
         messageId: 'your-message-id'
       };
       const validateMessageMock = jest.spyOn(backendService, 'validate').mockReturnValue(false);
-      const publishMessageMock = jest.spyOn(backendService, 'publishMessage').mockResolvedValue(undefined);
-      const bboxIntersectMock = jest.spyOn(backendService, 'bboxIntersect').mockResolvedValue(undefined);
+      const publishMessageMock = jest.spyOn(Utility, 'publishMessage').mockResolvedValue(undefined);
+      const bboxIntersectMock = jest.spyOn(backendService.bboxService, 'bboxIntersect').mockResolvedValue(undefined);
 
       // Call the method under test
       const result = await backendService.backendRequestProcessor(message);
@@ -73,8 +74,8 @@ describe('BackendService', () => {
         messageId: 'your-message-id'
       };
       const validateMessageMock = jest.spyOn(backendService, 'validate').mockReturnValue(true);
-      const publishMessageMock = jest.spyOn(backendService, 'publishMessage').mockResolvedValue(undefined);
-      const bboxIntersectMock = jest.spyOn(backendService, 'bboxIntersect').mockResolvedValue(undefined);
+      const publishMessageMock = jest.spyOn(Utility, 'publishMessage').mockResolvedValue(undefined);
+      const bboxIntersectMock = jest.spyOn(backendService.bboxService, 'bboxIntersect').mockResolvedValue(undefined);
 
       // Call the method under test
       const result = await backendService.backendRequestProcessor(message);
@@ -101,7 +102,7 @@ describe('BackendService', () => {
 
       mockCore();
       // Call the method under test
-      await backendService.uploadStreamToAzureBlob(stream, blobDetails, 'your-file-name');
+      await backendService.bboxService.uploadStreamToAzureBlob(stream, blobDetails, 'your-file-name');
 
       // Assertions
       expect(blobDetails.remoteUrls).toEqual(['your-remote-url']);
@@ -129,12 +130,12 @@ describe('BackendService', () => {
       const queryStreamSpy = jest.spyOn(dbClient, 'queryStream').mockImplementation(queryStreamMock);
       const releaseDbClientSpy = jest.spyOn(dbClient, 'releaseDbClient').mockImplementation(undefined);
       const querySpy = jest.spyOn(dbClient, 'query').mockImplementation(queryMock);
-      const handleStreamDataEventMock = jest.spyOn(backendService, 'handleStreamDataEvent').mockResolvedValueOnce(undefined);
-      const handleStreamEndEventMock = jest.spyOn(backendService, 'handleStreamEndEvent').mockResolvedValueOnce(undefined);
-      const publishMessageMock = jest.spyOn(backendService, 'publishMessage').mockResolvedValueOnce(undefined);
+      const handleStreamDataEventMock = jest.spyOn(backendService.bboxService, 'handleStreamDataEvent').mockResolvedValueOnce(undefined);
+      const handleStreamEndEventMock = jest.spyOn(backendService.bboxService, 'handleStreamEndEvent').mockResolvedValueOnce(undefined);
+      const publishMessageMock = jest.spyOn(Utility, 'publishMessage').mockResolvedValueOnce(undefined);
 
       // Call the method under test
-      await backendService.bboxIntersect(message);
+      await backendService.bboxService.bboxIntersect(message);
       await Utility.sleep(1);
 
       // Assertions
@@ -164,10 +165,10 @@ describe('BackendService', () => {
       const queryStreamMock = jest.fn().mockRejectedValueOnce(new Error('Query execution error'));
       const queryStreamSpy = jest.spyOn(dbClient, 'queryStream').mockImplementation(queryStreamMock);
       const publishMessageMock = jest.fn().mockResolvedValueOnce(undefined);
-      const publishMessageSpy = jest.spyOn(backendService, 'publishMessage').mockImplementation(publishMessageMock);
+      const publishMessageSpy = jest.spyOn(Utility, 'publishMessage').mockImplementation(publishMessageMock);
 
       // Call the method under test
-      await backendService.bboxIntersect(message);
+      await backendService.bboxService.bboxIntersect(message);
 
       // Assertions
       expect(getDbClientMock).toHaveBeenCalled();
@@ -199,12 +200,12 @@ describe('BackendService', () => {
       const queryStreamSpy = jest.spyOn(dbClient, 'queryStream').mockImplementation(queryStreamMock);
       const releaseDbClientSpy = jest.spyOn(dbClient, 'releaseDbClient').mockImplementation(undefined);
       const querySpy = jest.spyOn(dbClient, 'query').mockImplementation(queryMock);
-      const handleStreamDataEventMock = jest.spyOn(backendService, 'handleStreamDataEvent').mockResolvedValueOnce(undefined);
-      const handleStreamEndEventMock = jest.spyOn(backendService, 'handleStreamEndEvent').mockResolvedValueOnce(undefined);
-      const publishMessageMock = jest.spyOn(backendService, 'publishMessage').mockResolvedValueOnce(undefined);
+      const handleStreamDataEventMock = jest.spyOn(backendService.datasetTagRoadService, 'handleStreamDataEvent').mockResolvedValueOnce(undefined);
+      const handleStreamEndEventMock = jest.spyOn(backendService.datasetTagRoadService, 'handleStreamEndEvent').mockResolvedValueOnce(undefined);
+      const publishMessageMock = jest.spyOn(Utility, 'publishMessage').mockResolvedValueOnce(undefined);
 
       // Call the method under test
-      await backendService.datasetTagRoad(message);
+      await backendService.datasetTagRoadService.datasetTagRoad(message);
       await Utility.sleep(1);
 
       // Assertions
@@ -235,10 +236,10 @@ describe('BackendService', () => {
       const queryStreamMock = jest.fn().mockRejectedValueOnce(new Error('Query execution error'));
       const queryStreamSpy = jest.spyOn(dbClient, 'queryStream').mockImplementation(queryStreamMock);
       const publishMessageMock = jest.fn().mockResolvedValueOnce(undefined);
-      const publishMessageSpy = jest.spyOn(backendService, 'publishMessage').mockImplementation(publishMessageMock);
+      const publishMessageSpy = jest.spyOn(Utility, 'publishMessage').mockImplementation(publishMessageMock);
 
       // Call the method under test
-      await backendService.bboxIntersect(message);
+      await backendService.bboxService.bboxIntersect(message);
 
       // Assertions
       expect(getDbClientMock).toHaveBeenCalled();
@@ -289,11 +290,11 @@ describe('BackendService', () => {
         }
       };
       const utilitySleep = jest.spyOn(Utility, 'sleep').mockImplementation(() => Promise.resolve());
-      const publishMessageMock = jest.spyOn(backendService, 'publishMessage').mockResolvedValueOnce(undefined);
-      const zipStreamMock = jest.spyOn(backendService, 'zipStream').mockResolvedValueOnce(undefined);
+      const publishMessageMock = jest.spyOn(Utility, 'publishMessage').mockResolvedValueOnce(undefined);
+      const zipStreamMock = jest.spyOn(backendService.bboxService, 'zipStream').mockResolvedValueOnce(undefined);
 
       // Call the method under test
-      await backendService.handleStreamEndEvent(dataObject, uploadContext, message);
+      await backendService.bboxService.handleStreamEndEvent(dataObject, uploadContext, message);
 
       // Assertions
       expect(utilitySleep).toHaveBeenCalled();
@@ -340,10 +341,10 @@ describe('BackendService', () => {
           file_upload_path: ''
         }
       };
-      const publishMessageMock = jest.spyOn(backendService, 'publishMessage').mockResolvedValueOnce(undefined);
+      const publishMessageMock = jest.spyOn(Utility, 'publishMessage').mockResolvedValueOnce(undefined);
 
       // Call the method under test
-      await backendService.handleStreamEndEvent(dataObject, uploadContext, message);
+      await backendService.bboxService.handleStreamEndEvent(dataObject, uploadContext, message);
 
       // Assertions
       expect(publishMessageMock).toHaveBeenCalledWith(message, true, 'No data found for given prarameters.');
@@ -363,10 +364,10 @@ describe('BackendService', () => {
         }
       };
       const uploadStreamMock = jest.fn().mockResolvedValueOnce(undefined);
-      const uploadStreamSpy = jest.spyOn(backendService, 'uploadStreamToAzureBlob').mockImplementation(uploadStreamMock);
+      const uploadStreamSpy = jest.spyOn(backendService.bboxService, 'uploadStreamToAzureBlob').mockImplementation(uploadStreamMock);
 
       // Call the method under test
-      await backendService.handleStreamDataEvent(data, dataObject, {} as IUploadContext);
+      await backendService.bboxService.handleStreamDataEvent(data, dataObject, {} as IUploadContext);
 
       // Assertions
       expect(uploadStreamSpy).toHaveBeenCalledWith(expect.anything(), expect.any(Object), 'edges.OSW.geojson');
@@ -378,10 +379,10 @@ describe('BackendService', () => {
       // Mock the necessary dependencies
       mockCore();
       const uploadStreamMock = jest.fn().mockResolvedValueOnce(undefined);
-      const uploadStreamSpy = jest.spyOn(backendService, 'uploadStreamToAzureBlob').mockImplementation(uploadStreamMock);
+      const uploadStreamSpy = jest.spyOn(backendService.bboxService, 'uploadStreamToAzureBlob').mockImplementation(uploadStreamMock);
 
       // Call the method under test
-      await backendService.zipStream(<any>{
+      await backendService.bboxService.zipStream(<any>{
         remoteUrls: ['your-remote-url-1', 'your-remote-url-2']
       });
 
@@ -398,11 +399,11 @@ describe('BackendService', () => {
           file_upload_path: ''
         }
       };
-      const publishMessageMock = jest.spyOn(backendService, 'publishMessage').mockResolvedValueOnce(undefined);
+      const publishMessageMock = jest.spyOn(Utility, 'publishMessage').mockResolvedValueOnce(undefined);
       mockCore();
 
       // Call the method under test
-      await backendService.publishMessage(message, true, 'Dataset uploaded successfully!');
+      await Utility.publishMessage(message, true, 'Dataset uploaded successfully!');
 
       // Assertions
       expect(publishMessageMock).toHaveBeenCalledWith(message, true, 'Dataset uploaded successfully!');
