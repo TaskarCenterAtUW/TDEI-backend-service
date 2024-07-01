@@ -28,7 +28,7 @@ describe('BackendService', () => {
             // Assertions
             expect(query).toContain('SELECT');
             expect(query).toContain('FROM');
-            expect(query).toContain('INNER JOIN');
+            expect(query).toContain('LEFT JOIN');
             expect(query).toContain('WHERE');
             expect(query).toContain('GROUP BY');
             // expect(query.values).toHaveLength(10);

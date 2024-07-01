@@ -21,7 +21,7 @@ export class SpatialQueryService extends AbstractOSWBackendRequest {
             filePath: `backend-jobs/${message.messageId}/${params.target_dataset_id}`,
             remoteUrls: [],
             zipUrl: "",
-            outputFileName: `spatial-query-${message.messageId}.zip`
+            outputFileName: ''
         };
 
         try {
@@ -31,11 +31,12 @@ export class SpatialQueryService extends AbstractOSWBackendRequest {
 
             //Get dataset details
             const datasetQuery = {
-                text: 'SELECT event_info as edges, node_info as nodes, zone_info as zones, ext_point_info as extensions_points, ext_line_info as extensions_lines, ext_polygon_info as extensions_polygons FROM content.dataset WHERE tdei_dataset_id = $1',
+                text: 'SELECT name, event_info as edges, node_info as nodes, zone_info as zones, ext_point_info as extensions_points, ext_line_info as extensions_lines, ext_polygon_info as extensions_polygons FROM content.dataset WHERE tdei_dataset_id = $1',
                 values: [params.target_dataset_id],
             }
             const datasetResult = await dbClient.query(datasetQuery);
 
+            uploadContext.outputFileName = `${datasetResult.rows[0].name}-spatial_join-jobId_${message.messageId}.zip`;
 
             // Create a query stream
             const query = new QueryStream('SELECT * FROM content.tdei_dataset_spatial_join($1, $2, $3) ', [spatialQueryService.target_dataset_id, dynamicQuery, spatialQueryService.target_dimension]);
