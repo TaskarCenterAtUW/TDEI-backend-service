@@ -7,14 +7,10 @@ describe('BackendService', () => {
         spatialServiceParams = SpatialJoinRequestParams.from({
             target_dimension: 'edge',
             source_dimension: 'point',
-            attributes: ['highway as my_highway', 'power as my_power'],
-            aggregate: ['array_agg(highway) as my_way'],
-            join_condition: 'ST_Intersects(geometry_target, geometry_source)',
-            transform_target: 'ST_Buffer(geometry_target, 5)',
-            transform_source: "",
-            filter_target: "highway='footway' AND footway='sidewalk'",
-            // filter_target: "   highway='footway'    AND footway='sidewalk' OR (highway2='footway' OR footway2='sidewalk')",
-            filter_source: "highway='street_lamp'",
+            aggregate: ['array_agg(highway) as my_way', 'MAX(footway) as max_footway'],
+            join_condition: 'ST_Intersects(ST_Buffer(geometry_target, 5), geometry_source)',
+            join_filter_target: "highway='footway' AND footway='sidewalk'",
+            join_filter_source: "highway='street_lamp'",
             target_dataset_id: 'fa8e12ea-6b0c-4d3e-8b38-5b87b268e76b',
             source_dataset_id: '0d661b69495d47fb838862edf699fe09'
         });
@@ -31,7 +27,6 @@ describe('BackendService', () => {
             expect(query).toContain('LEFT JOIN');
             expect(query).toContain('WHERE');
             expect(query).toContain('GROUP BY');
-            // expect(query.values).toHaveLength(10);
         });
 
         it('should throw an InputException for invalid target dimension', () => {
@@ -71,7 +66,6 @@ describe('BackendService', () => {
         it('should execute query with empty aggregate and atribute input', () => {
             // Set up the test data
             spatialServiceParams.aggregate = [];
-            spatialServiceParams.attributes = [];
 
             // Call the method under test
             const query = spatialServiceParams.buildSpatialQuery();
@@ -81,12 +75,6 @@ describe('BackendService', () => {
         it('should execute query with required input only', () => {
             // Set up the test data
             spatialServiceParams.aggregate = [];
-            spatialServiceParams.attributes = [];
-            spatialServiceParams.filter_source = "";
-            spatialServiceParams.filter_target = "";
-            spatialServiceParams.transform_source = "";
-            spatialServiceParams.transform_target = "";
-
 
             // Call the method under test
             const query = spatialServiceParams.buildSpatialQuery();
