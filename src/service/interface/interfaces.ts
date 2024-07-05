@@ -50,17 +50,11 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
     @Prop()
     join_condition!: string;
     @Prop()
-    transform_target!: string;
+    join_filter_target!: string;
     @Prop()
-    transform_source!: string;
-    @Prop()
-    filter_target!: string;
-    @Prop()
-    filter_source!: string;
+    join_filter_source!: string;
     @Prop()
     aggregate: string[] = []; //attributes from source dimension to be aggregated
-    @Prop()
-    attributes: string[] = []; //attributes from source dimension to be added to the target feature properties
 
     /**
      * Basic SQL injection check
@@ -219,60 +213,31 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
             throw new InputException('Invalid aggregate syntax');
         }
 
-        //compile the attribute fields
-        let attribute_names_compiled: AttributeDetails[] = [];
-        if (this.attributes?.length) {
-            attribute_names_compiled = this.attributes.map((attribute) => {
-                if (attribute.toLowerCase().includes(' as ')) {
-                    const alias_name = attribute.toLowerCase().split(' as ')[1];
-                    //remove the alias from the attribute
-                    attribute = attribute.toLowerCase().split(' as ')[0];
-                    return { alias: `${alias_name}`, column: `source.${attribute}` };
-                }
-                return { alias: `${attribute}`, column: `source.${attribute}` };
-            });
-        }
-
-        let final_attributes: AttributeDetails[] = [...aggregate_compiled, ...attribute_names_compiled];
-
         group_by = `${target_select_required_fields}, target.feature::jsonb`;
-        //if attribute fields exists, then add them to the group by
-        if (attribute_names_compiled.length) {
-            group_by += `, ${attribute_names_compiled.map((attribute) => { return `${attribute.column}` }).join(', ')}`;
-        }
 
-        let target_transform_compiled = undefined;
-        let source_transform_compiled = undefined;
-        //Transform the target and source geometries
-        if (this.transform_target) {
-            target_transform_compiled = this.transform_target.replace('geometry_target', transform_geometry_target);
-        }
-        if (this.transform_source) {
-            source_transform_compiled = this.transform_source.replace('geometry_source', transform_geometry_source);
-        }
         //Transform the join geometry conditionally
-        let join_condition_compiled = this.join_condition.replace('geometry_target', target_transform_compiled ?? transform_geometry_target);
-        join_condition_compiled = join_condition_compiled.replace('geometry_source', source_transform_compiled ?? transform_geometry_source);
+        let join_condition_compiled = this.join_condition.replace('geometry_target', transform_geometry_target);
+        join_condition_compiled = join_condition_compiled.replace('geometry_source', transform_geometry_source);
 
         //Filter filter attribute alias names
-        if (this.filter_target && this.filter_target != '') {
-            this.filter_target = this.prefixColumns(this.filter_target, 'target');
+        if (this.join_filter_target && this.join_filter_target != '') {
+            this.join_filter_target = this.prefixColumns(this.join_filter_target, 'target');
         }
 
-        if (this.filter_source && this.filter_source != '') {
-            this.filter_source = this.prefixColumns(this.filter_source, 'source');
+        if (this.join_filter_source && this.join_filter_source != '') {
+            this.join_filter_source = this.prefixColumns(this.join_filter_source, 'source');
         }
         //In the case filters are on geometry, transform the geometry
-        let target_filter = this.filter_target?.replace('geometry_target', transform_geometry_target);
-        let source_filter = this.filter_source?.replace('geometry_source', transform_geometry_source);
+        this.join_filter_target = this.join_filter_target?.replace('geometry_target', transform_geometry_target);
+        this.join_filter_source = this.join_filter_source?.replace('geometry_source', transform_geometry_source);
 
         //Select attributes
         select_attributes = `${target_select_required_fields}`;
-        if (final_attributes.length == 0) {
+        if (aggregate_compiled.length == 0) {
             select_attributes += `, (target.feature::jsonb)::json`;
         }
 
-        const caseStatements = this.generateCaseStatements(aggregate_compiled, attribute_names_compiled);
+        const caseStatements = this.generateCaseStatements(aggregate_compiled);
 
         let param_counter = 1;
         let query: QueryConfig = {
@@ -280,7 +245,7 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
                 `
                 SELECT 
                 $${param_counter++} 
-                ${final_attributes.length ? `, JSONB_SET(
+                ${aggregate_compiled.length ? `, JSONB_SET(
                     target.feature::jsonb,
                     '{properties}',
                     COALESCE(
@@ -292,14 +257,14 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
                 FROM $${param_counter++}
                 LEFT JOIN $${param_counter++} on  $${param_counter++}
                 AND source.tdei_dataset_id = '$${param_counter++}'
-                ${target_filter ? `AND $${param_counter++}` : `$${param_counter++}`}
-                ${source_filter ? `AND $${param_counter++}` : `$${param_counter++}`}
+                ${this.join_filter_target ? `AND $${param_counter++}` : `$${param_counter++}`}
+                ${this.join_filter_source ? `AND $${param_counter++}` : `$${param_counter++}`}
                 WHERE
                 target.tdei_dataset_id = '$${param_counter++}'
                 GROUP BY $${param_counter++}
                 `.replace(/\s+/g, ' ').trim(),
-            values: [select_attributes, final_attributes.length ? caseStatements : '', target_table, source_table,
-                join_condition_compiled, this.source_dataset_id, target_filter ?? '', source_filter ?? '', this.target_dataset_id, group_by]
+            values: [select_attributes, aggregate_compiled.length ? caseStatements : '', target_table, source_table,
+                join_condition_compiled, this.source_dataset_id, this.join_filter_target ?? '', this.join_filter_source ?? '', this.target_dataset_id, group_by]
         };
 
         return this.substituteValues(query);
@@ -313,7 +278,7 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
      * @param nonAggregatedAttributes - An array of AttributeDetails objects representing the non-aggregated attributes.
      * @returns A string representing the generated case statements.
      */
-    generateCaseStatements(aggregatedAttributes: AttributeDetails[], nonAggregatedAttributes: AttributeDetails[]) {
+    generateCaseStatements(aggregatedAttributes: AttributeDetails[]) {
         const aggCases = aggregatedAttributes.map(attr => {
             return `
             CASE
@@ -324,17 +289,7 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
           `;
         });
 
-        const nonAggCases = nonAggregatedAttributes.map(attr => {
-            return `
-            CASE
-              WHEN ${attr.column} IS NOT NULL THEN
-                JSONB_BUILD_OBJECT('ext:${attr.alias}', ${attr.column})
-              ELSE '{}'::jsonb
-            END
-          `;
-        });
-
-        return [...aggCases, ...nonAggCases].join(' || ');
+        return [...aggCases].join(' || ');
     }
 
 

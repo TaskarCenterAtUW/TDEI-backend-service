@@ -58,34 +58,19 @@
                 "required": true
             },
             {
-                "name": "transform_target",
+                "name": "join_filter_target",
                 "type": "string",
                 "required": false
             },
             {
-                "name": "transform_source",
-                "type": "string",
-                "required": false
-            },
-            {
-                "name": "filter_target",
-                "type": "string",
-                "required": false
-            },
-            {
-                "name": "filter_source",
+                "name": "join_filter_source",
                 "type": "string",
                 "required": false
             },
             {
                 "name": "aggregate",
                 "type": "array",
-                "required": false
-            },
-            {
-                "name": "attributes",
-                "type": "array",
-                "required": false
+                "required": true
             }
         ]
     }
