@@ -1,5 +1,5 @@
-# TDEI-backend-service
-TDEI backend service
+# TDEI-data-query-service
+TDEI Data Query Service
 
 ## Service request signatures documentation
 
