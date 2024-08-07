@@ -13,7 +13,7 @@ export class QueueService {
 
     initializeQueue() {
         console.log('Queue initialized');
-        this.queueConfig = new QueueConfig(this.config.queueConfig);
+        this.queueConfig = new QueueConfig(this.config);
         this.subscribe();
     }
 
@@ -50,9 +50,9 @@ export class QueueService {
      * Handle the subscribed messages
      * @param message 
      */
-    private handleMessage = (message: QueueMessage) => {
+    private handleMessage = async (message: QueueMessage) => {
         try {
-            backendService.backendRequestProcessor(message);
+            await backendService.backendRequestProcessor(message);
         } catch (error) {
             console.error("Error in handling incoming message", error);
         }
