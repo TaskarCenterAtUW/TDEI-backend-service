@@ -97,7 +97,7 @@ export class BackendService {
             case "spatial_join":
                 await this.spatialQueryService.executeSpatialQuery(message);
                 break;
-            case "union_join":
+            case "union_dataset":
                 await this.unionQueryService.executeUnionQuery(message);
                 break;
             default:

@@ -18,7 +18,7 @@ export class UnionQueryService extends AbstractOSWBackendRequest {
         const params: any = backendRequest.parameters;
         var uploadContext = {
             containerName: "osw",
-            filePath: `backend-jobs/${message.messageId}/${params.target_dataset_id}`,
+            filePath: `backend-jobs/${message.messageId}/${params.tdei_dataset_id_one}_${params.tdei_dataset_id_two}`,
             remoteUrls: [],
             zipUrl: "",
             outputFileName: ''
@@ -32,16 +32,16 @@ export class UnionQueryService extends AbstractOSWBackendRequest {
             //Get dataset details
             const datasetQuery = {
                 text: 'SELECT name, event_info as edges, node_info as nodes, zone_info as zones, ext_point_info as extensions_points, ext_line_info as extensions_lines, ext_polygon_info as extensions_polygons FROM content.dataset WHERE tdei_dataset_id = $1',
-                values: [params.target_dataset_id_one],
+                values: [params.tdei_dataset_id_one],
             }
             const datasetResult = await dbClient.query(datasetQuery);
             let datasetname: string = datasetResult.rows[0].name;
             //Safe url name
             datasetname = datasetname.replace(/[^a-zA-Z0-9]/g, '_');
-            uploadContext.outputFileName = `${datasetname}-union_join-jobId_${message.messageId}.zip`;
+            uploadContext.outputFileName = `${datasetname}-union_dataset-jobId_${message.messageId}.zip`;
 
             // Create a query stream
-            const query = new QueryStream('SELECT * FROM content.tdei_union_dataset($1, $2) ', [params.target_dataset_id_one, params.target_dimension_two]);
+            const query = new QueryStream('SELECT * FROM content.tdei_union_dataset($1, $2) ', [params.tdei_dataset_id_one, params.tdei_dimension_two]);
             // Execute the query
             const databaseClient = await dbClient.getDbClient();
             const stream = await dbClient.queryStream(databaseClient, query);

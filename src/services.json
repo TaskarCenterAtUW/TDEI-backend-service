@@ -73,5 +73,20 @@
                 "required": true
             }
         ]
+    },
+    {
+        "service": "union_dataset",
+        "parameters": [
+            {
+                "name": "tdei_dataset_id_one",
+                "type": "string",
+                "required": true
+            },
+            {
+                "name": "tdei_dataset_id_two",
+                "type": "string",
+                "required": true
+            }
+        ]
     }
 ]
