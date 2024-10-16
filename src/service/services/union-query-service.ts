@@ -31,14 +31,16 @@ export class UnionQueryService extends AbstractOSWBackendRequest {
 
             //Get dataset details
             const datasetQuery = {
-                text: 'SELECT name, event_info as edges, node_info as nodes, zone_info as zones, ext_point_info as extensions_points, ext_line_info as extensions_lines, ext_polygon_info as extensions_polygons FROM content.dataset WHERE tdei_dataset_id = $1',
-                values: [params.tdei_dataset_id_one],
+                text: 'SELECT name, event_info as edges, node_info as nodes, zone_info as zones, ext_point_info as extensions_points, ext_line_info as extensions_lines, ext_polygon_info as extensions_polygons FROM content.dataset WHERE tdei_dataset_id in ($1, $2)',
+                values: [params.tdei_dataset_id_one, params.tdei_dataset_id_two],
             }
             const datasetResult = await dbClient.query(datasetQuery);
-            let datasetname: string = datasetResult.rows[0].name;
+            let datasetname_one: string = datasetResult.rows[0].name;
+            let datasetname_two: string = datasetResult.rows[1].name;
             //Safe url name
-            datasetname = datasetname.replace(/[^a-zA-Z0-9]/g, '_');
-            uploadContext.outputFileName = `${datasetname}-union_dataset-jobId_${message.messageId}.zip`;
+            datasetname_one = datasetname_one.replace(/[^a-zA-Z0-9]/g, '_');
+            datasetname_two = datasetname_two.replace(/[^a-zA-Z0-9]/g, '_');
+            uploadContext.outputFileName = `${datasetname_one}_${datasetname_two}-union_dataset-jobId_${message.messageId}.zip`;
 
             // Create a query stream
             const query = new QueryStream('SELECT * FROM content.tdei_union_dataset($1, $2) ', [params.tdei_dataset_id_one, params.tdei_dimension_two]);

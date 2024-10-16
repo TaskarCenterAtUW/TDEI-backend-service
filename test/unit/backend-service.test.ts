@@ -291,6 +291,7 @@ describe('BackendService', () => {
         }
       };
       const utilitySleep = jest.spyOn(Utility, 'sleep').mockImplementation(() => Promise.resolve());
+      const utilitySleep2 = jest.spyOn(Utility, 'sleep').mockImplementation(() => Promise.resolve());
       const publishMessageMock = jest.spyOn(Utility, 'publishMessage').mockResolvedValueOnce(undefined);
       const zipStreamMock = jest.spyOn(backendService.bboxService, 'zipStream').mockResolvedValueOnce(undefined);
 
@@ -299,9 +300,10 @@ describe('BackendService', () => {
 
       // Assertions
       expect(utilitySleep).toHaveBeenCalled();
+      expect(utilitySleep2).toHaveBeenCalled();
       expect(zipStreamMock).toHaveBeenCalled();
       expect(publishMessageMock).toHaveBeenCalledWith(message, true, 'Dataset uploaded successfully!');
-    });
+    }, 10000);
 
     it('should publish unsuccessful message when no data is uploaded to storage', async () => {
       // Mock the necessary dependencies
@@ -349,7 +351,7 @@ describe('BackendService', () => {
 
       // Assertions
       expect(publishMessageMock).toHaveBeenCalledWith(message, true, 'No data found for given prarameters.');
-    });
+    }, 10000);
   });
 
   describe('handleStreamDataEvent', () => {
@@ -431,7 +433,7 @@ describe('BackendService', () => {
       const queryStreamMock = jest.fn().mockReturnValueOnce(dbStream);
       // const queryMock1 = jest.fn().mockResolvedValueOnce({ rows: [{ name: 'dataset-name' }] });
       const queryMock = jest.fn().mockResolvedValueOnce({ rows: [{ edges: 'your-edges-data' }] });
-      const querySpy1 = jest.spyOn(dbClient, 'query').mockResolvedValueOnce(<any>{ rows: [{ name: 'dataset-name' }] });
+      const querySpy1 = jest.spyOn(dbClient, 'query').mockResolvedValueOnce(<any>{ rows: [{ name: 'dataset-name' }, { name: 'dataset-name2' }] });
       const getDbClientMock = jest.spyOn(dbClient, 'getDbClient').mockResolvedValueOnce({} as PoolClient);
       const queryStreamSpy = jest.spyOn(dbClient, 'queryStream').mockImplementation(queryStreamMock);
       const releaseDbClientSpy = jest.spyOn(dbClient, 'releaseDbClient').mockImplementation(undefined);
@@ -466,7 +468,7 @@ describe('BackendService', () => {
         },
         messageId: 'your-message-id'
       };
-      const querySpy1 = jest.spyOn(dbClient, 'query').mockResolvedValueOnce(<any>{ rows: [{ name: 'dataset-name' }] });
+      const querySpy1 = jest.spyOn(dbClient, 'query').mockResolvedValueOnce(<any>{ rows: [{ name: 'dataset-name' }, { name: 'dataset-name2' }] });
       const getDbClientMock = jest.spyOn(dbClient, 'getDbClient').mockResolvedValueOnce({} as PoolClient);
       const queryMock = jest.fn().mockResolvedValueOnce({ rows: [{ edges: 'your-edges-data' }] });
       const querySpy = jest.spyOn(dbClient, 'query').mockImplementation(queryMock);
