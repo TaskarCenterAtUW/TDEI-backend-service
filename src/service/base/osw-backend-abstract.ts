@@ -70,6 +70,7 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
             dataObject[dataType].stream.push(null);
         }
         console.log('All result sets streamed and uploaded.');
+        await Utility.sleep(5000);
         //Verify if atlease one file is uploaded
         if (uploadContext.remoteUrls.length == 0) {
             await Utility.publishMessage(message, true, 'No data found for given prarameters.');
