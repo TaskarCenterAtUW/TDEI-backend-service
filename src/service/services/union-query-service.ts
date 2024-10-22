@@ -25,25 +25,17 @@ export class UnionQueryService extends AbstractOSWBackendRequest {
         };
 
         try {
-
-            // let spatialQueryService = SpatialJoinRequestParams.from(params);
-            // let dynamicQuery = spatialQueryService.buildSpatialQuery();
-
             //Get dataset details
             const datasetQuery = {
                 text: 'SELECT name, event_info as edges, node_info as nodes, zone_info as zones, ext_point_info as extensions_points, ext_line_info as extensions_lines, ext_polygon_info as extensions_polygons FROM content.dataset WHERE tdei_dataset_id in ($1, $2)',
                 values: [params.tdei_dataset_id_one, params.tdei_dataset_id_two],
             }
             const datasetResult = await dbClient.query(datasetQuery);
-            let datasetname_one: string = datasetResult.rows[0].name;
-            let datasetname_two: string = datasetResult.rows[1].name;
-            //Safe url name
-            datasetname_one = datasetname_one.replace(/[^a-zA-Z0-9]/g, '_');
-            datasetname_two = datasetname_two.replace(/[^a-zA-Z0-9]/g, '_');
-            uploadContext.outputFileName = `${datasetname_one}_${datasetname_two}-union_dataset-jobId_${message.messageId}.zip`;
+
+            uploadContext.outputFileName = `union_dataset-jobId_${message.messageId}.zip`;
 
             // Create a query stream
-            const query = new QueryStream('SELECT * FROM content.tdei_union_dataset($1, $2) ', [params.tdei_dataset_id_one, params.tdei_dimension_two]);
+            const query = new QueryStream(`SELECT * FROM content.tdei_union_dataset($1,$2) `, [params.tdei_dataset_id_one, params.tdei_dataset_id_two], { highWaterMark: 100 });
             // Execute the query
             const databaseClient = await dbClient.getDbClient();
             const stream = await dbClient.queryStream(databaseClient, query);
@@ -57,6 +49,8 @@ export class UnionQueryService extends AbstractOSWBackendRequest {
                 };
                 return obj;
             }, {});
+
+
             // Create streams for each data type
             stream.on('data', async data => {
                 await this.handleStreamDataEvent(data, dataObject, uploadContext);
