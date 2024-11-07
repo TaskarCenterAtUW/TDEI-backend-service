@@ -6,6 +6,7 @@ import services from '../../src/services.json';
 import { Utility } from '../../src/utility/utility';
 import { PoolClient } from 'pg';
 import { IUploadContext } from '../../src/service/interface/interfaces';
+import e from 'express';
 
 describe('BackendService', () => {
   let backendService: BackendService;
@@ -290,6 +291,7 @@ describe('BackendService', () => {
         }
       };
       const utilitySleep = jest.spyOn(Utility, 'sleep').mockImplementation(() => Promise.resolve());
+      const utilitySleep2 = jest.spyOn(Utility, 'sleep').mockImplementation(() => Promise.resolve());
       const publishMessageMock = jest.spyOn(Utility, 'publishMessage').mockResolvedValueOnce(undefined);
       const zipStreamMock = jest.spyOn(backendService.bboxService, 'zipStream').mockResolvedValueOnce(undefined);
 
@@ -298,9 +300,10 @@ describe('BackendService', () => {
 
       // Assertions
       expect(utilitySleep).toHaveBeenCalled();
+      expect(utilitySleep2).toHaveBeenCalled();
       expect(zipStreamMock).toHaveBeenCalled();
       expect(publishMessageMock).toHaveBeenCalledWith(message, true, 'Dataset uploaded successfully!');
-    });
+    }, 10000);
 
     it('should publish unsuccessful message when no data is uploaded to storage', async () => {
       // Mock the necessary dependencies
@@ -348,7 +351,7 @@ describe('BackendService', () => {
 
       // Assertions
       expect(publishMessageMock).toHaveBeenCalledWith(message, true, 'No data found for given prarameters.');
-    });
+    }, 10000);
   });
 
   describe('handleStreamDataEvent', () => {
@@ -410,5 +413,79 @@ describe('BackendService', () => {
     });
 
     // Add more test cases for different scenarios
+  });
+
+  describe('Union Dataset', () => {
+    it('should execute the query and handle the data and end events', async () => {
+      // Mock the necessary dependencies
+      const message: any = {
+        data: {
+          parameters: {
+            tdei_dataset_id_one: 'your-tdei-dataset-id',
+            tdei_dataset_id_two: 'your-tdei-dataset-id'
+          }
+        },
+        messageId: 'your-message-id'
+      };
+      let dbStream = new Readable({ read() { } });
+      dbStream.push(JSON.stringify({ "edges": "your-edges-data" }));
+      dbStream.push(null);
+      const queryStreamMock = jest.fn().mockReturnValueOnce(dbStream);
+      // const queryMock1 = jest.fn().mockResolvedValueOnce({ rows: [{ name: 'dataset-name' }] });
+      const queryMock = jest.fn().mockResolvedValueOnce({ rows: [{ edges: 'your-edges-data' }] });
+      const querySpy1 = jest.spyOn(dbClient, 'query').mockResolvedValueOnce(<any>{ rows: [{ name: 'dataset-name' }, { name: 'dataset-name2' }] });
+      const getDbClientMock = jest.spyOn(dbClient, 'getDbClient').mockResolvedValueOnce({} as PoolClient);
+      const queryStreamSpy = jest.spyOn(dbClient, 'queryStream').mockImplementation(queryStreamMock);
+      const releaseDbClientSpy = jest.spyOn(dbClient, 'releaseDbClient').mockImplementation(undefined);
+      const querySpy = jest.spyOn(dbClient, 'query').mockImplementation(queryMock);
+      const handleStreamDataEventMock = jest.spyOn(backendService.unionQueryService, 'handleStreamDataEvent').mockResolvedValueOnce(undefined);
+      const handleStreamEndEventMock = jest.spyOn(backendService.unionQueryService, 'handleStreamEndEvent').mockResolvedValueOnce(undefined);
+      const publishMessageMock = jest.spyOn(Utility, 'publishMessage').mockResolvedValueOnce(undefined);
+
+      // Call the method under test
+      await backendService.unionQueryService.executeUnionQuery(message);
+      await Utility.sleep(1);
+
+      // Assertions
+      expect(querySpy1).toHaveBeenCalled();
+      expect(getDbClientMock).toHaveBeenCalled();
+      expect(queryStreamSpy).toHaveBeenCalledWith(expect.any(Object), expect.any(Object));
+      expect(querySpy).toHaveBeenCalledWith(expect.any(Object));
+      expect(releaseDbClientSpy).toHaveBeenCalled();
+      expect(handleStreamDataEventMock).toHaveBeenCalled();
+      expect(handleStreamEndEventMock).toHaveBeenCalled();
+      expect(publishMessageMock).not.toHaveBeenCalled();
+    }, 100);
+
+    it('should handle error during query execution and publish error message', async () => {
+      // Mock the necessary dependencies
+      const message: any = {
+        data: {
+          parameters: {
+            tdei_dataset_id: 'your-tdei-dataset-id',
+            bbox: [0, 0, 1, 1]
+          }
+        },
+        messageId: 'your-message-id'
+      };
+      const querySpy1 = jest.spyOn(dbClient, 'query').mockResolvedValueOnce(<any>{ rows: [{ name: 'dataset-name' }, { name: 'dataset-name2' }] });
+      const getDbClientMock = jest.spyOn(dbClient, 'getDbClient').mockResolvedValueOnce({} as PoolClient);
+      const queryMock = jest.fn().mockResolvedValueOnce({ rows: [{ edges: 'your-edges-data' }] });
+      const querySpy = jest.spyOn(dbClient, 'query').mockImplementation(queryMock);
+      const queryStreamMock = jest.fn().mockRejectedValueOnce(new Error('Query execution error'));
+      const queryStreamSpy = jest.spyOn(dbClient, 'queryStream').mockImplementation(queryStreamMock);
+      const publishMessageMock = jest.fn().mockResolvedValueOnce(undefined);
+      const publishMessageSpy = jest.spyOn(Utility, 'publishMessage').mockImplementation(publishMessageMock);
+
+      // Call the method under test
+      await backendService.unionQueryService.executeUnionQuery(message);
+
+      // Assertions
+      expect(querySpy1).toHaveBeenCalled();
+      expect(getDbClientMock).toHaveBeenCalled();
+      expect(querySpy).toHaveBeenCalledWith(expect.any(Object));
+      expect(queryStreamSpy).toHaveBeenCalledWith(expect.any(Object), expect.any(Object));
+      expect(publishMessageSpy).toHaveBeenCalledWith(message, false, 'Error executing query');
+    });
   });
 });
