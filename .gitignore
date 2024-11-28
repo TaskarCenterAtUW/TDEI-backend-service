@@ -131,3 +131,5 @@ build
 .pnp.*
 
 test-report.html
+.idea/
+test_results
