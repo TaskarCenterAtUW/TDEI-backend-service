@@ -373,7 +373,7 @@ describe('BackendService', () => {
       await backendService.bboxService.handleStreamDataEvent(data, dataObject, {} as IUploadContext);
 
       // Assertions
-      expect(uploadStreamSpy).toHaveBeenCalledWith(expect.anything(), expect.any(Object), 'edges.OSW.geojson');
+      expect(uploadStreamSpy).toHaveBeenCalledWith(expect.anything(), expect.any(Object), 'osw.edges.geojson');
     });
   });
 

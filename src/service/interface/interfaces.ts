@@ -138,18 +138,18 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
         switch (this.target_dimension) {
             case 'edge':
                 target_table = 'content.edge target';
-                transform_geometry_target = 'ST_Transform(target.edge_loc, 3857)';
+                transform_geometry_target = 'target.edge_loc_3857';
                 target_select_required_fields = 'target.edge_id, target.edge_loc, target.orig_node_id, target.dest_node_id';
 
                 break;
             case 'node':
                 target_table = 'content.node target';
-                transform_geometry_target = 'ST_Transform(target.node_loc, 3857)';
+                transform_geometry_target = 'target.node_loc_3857';
                 target_select_required_fields = 'target.node_id, target.node_loc';
                 break;
             case 'zone':
                 target_table = 'content.zone target';
-                transform_geometry_target = 'ST_Transform(target.zone_loc, 3857)';
+                transform_geometry_target = 'target.zone_loc_3857';
                 target_select_required_fields = 'target.zone_id, target.zone_loc, target.node_ids';
                 break;
             default:
@@ -162,15 +162,15 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
         switch (this.source_dimension) {
             case 'edge':
                 source_table = 'content.edge source';
-                transform_geometry_source = 'ST_Transform(source.edge_loc, 3857)';
+                transform_geometry_source = 'source.edge_loc_3857';
                 break;
             case 'node':
                 source_table = 'content.node source';
-                transform_geometry_source = 'ST_Transform(source.node_loc, 3857)';
+                transform_geometry_source = 'source.node_loc_3857';
                 break;
             case 'zone':
                 source_table = 'content.zone source';
-                transform_geometry_source = 'ST_Transform(source.zone_loc, 3857)';
+                transform_geometry_source = 'source.zone_loc_3857';
                 break;
             case 'point':
                 source_table = 'content.extension_point source';

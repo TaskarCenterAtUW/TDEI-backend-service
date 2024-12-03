@@ -5,6 +5,7 @@ import AdmZip from "adm-zip";
 import { Core } from "nodets-ms-core";
 import { Readable } from "stream";
 import stream from 'stream';
+import { environment } from "../../environment/environment";
 
 export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
     dataTypes = ['edges', 'nodes', 'zones', 'extensions_points', 'extensions_polygons', 'extensions_lines'];
@@ -104,7 +105,7 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
             }
             if (dataObject[input_dataType].firstFlag) {
                 dataObject[input_dataType].firstFlag = false;
-                await this.uploadStreamToAzureBlob(dataObject[input_dataType].stream, uploadContext, `${input_dataType.replace("extensions_", "")}.OSW.geojson`)
+                await this.uploadStreamToAzureBlob(dataObject[input_dataType].stream, uploadContext, `osw.${input_dataType.replace("extensions_", "")}.geojson`)
                     .then(() => console.log(`Uploaded ${input_dataType} to Storage`));
             }
         } catch (error) {
@@ -113,11 +114,14 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
     }
 
     buildAdditionalInfo(info: any): string {
-        const properties = ['dataSource', 'region', 'dataTimestamp', 'pipelineVersion'];
-        const jsonParts = properties.map(prop => {
+        const properties = ['dataSource', 'region', 'dataTimestamp', 'pipelineVersion', '$schema'];
+        let jsonParts = properties.map(prop => {
             const data = this.getData(info?.[prop]);
             return data && data != "" ? `"${prop}": ${data},` : '';
         });
+
+        if (!jsonParts.toString().includes('$schema'))
+            jsonParts.push(`"$schema": ${environment.oswSchemaUrl},`);
 
         jsonParts.push('"type": "FeatureCollection", "features": [');
 
