@@ -121,7 +121,7 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
         });
 
         if (!jsonParts.toString().includes('$schema'))
-            jsonParts.push(`"$schema": ${environment.oswSchemaUrl},`);
+            jsonParts.push(`"$schema": "${environment.oswSchemaUrl}",`);
 
         jsonParts.push('"type": "FeatureCollection", "features": [');
 
