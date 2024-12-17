@@ -21,4 +21,5 @@ export const environment = {
     appPort: parseInt(process.env.PORT ?? "8080"),
     authPermissionUrl: process.env.AUTH_HOST + '/api/v1/hasPermission',
     secretGenerateUrl: process.env.AUTH_HOST + '/api/v1/generateSecret',
+    oswSchemaUrl: process.env.OSW_SCHEMA_URL,
 }
