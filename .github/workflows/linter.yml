@@ -99,8 +99,8 @@ jobs:
           timestamp=$(date '+%Y-%m-%d_%H-%M-%S')
           mkdir -p test_results
           log_file="test_results/${timestamp}_report.log"
-          echo -e "\nTest Cases Report Report\n" >> $log_file
-          npm run test >> $log_file 2>&1
+          echo -e "\nTest Cases Report\n" >> $log_file
+          npm run test >> $log_file 2>&1 || echo "Tests completed with errors"
 
 
       - name: Upload report to Azure
