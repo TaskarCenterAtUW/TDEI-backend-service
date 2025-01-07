@@ -14,74 +14,86 @@ export class SpatialQueryService extends AbstractOSWBackendRequest {
     }
 
     public async executeSpatialQuery(message: QueueMessage) {
-        const backendRequest = message.data as BackendRequest;
-        const params: any = backendRequest.parameters;
-        var uploadContext = {
-            containerName: "osw",
-            filePath: `backend-jobs/${message.messageId}/${params.target_dataset_id}`,
-            remoteUrls: [],
-            zipUrl: "",
-            outputFileName: ''
-        };
+        return new Promise(async (resolve, reject) => {
+            const backendRequest = message.data as BackendRequest;
+            const params: any = backendRequest.parameters;
+            var uploadContext = {
+                containerName: "osw",
+                filePath: `backend-jobs/${message.messageId}/${params.target_dataset_id}`,
+                remoteUrls: [],
+                zipUrl: "",
+                outputFileName: ''
+            };
 
-        try {
+            try {
 
-            let spatialQueryService = SpatialJoinRequestParams.from(params);
-            let dynamicQuery = spatialQueryService.buildSpatialQuery();
+                let spatialQueryService = SpatialJoinRequestParams.from(params);
+                let dynamicQuery = spatialQueryService.buildSpatialQuery();
 
-            //Get dataset details
-            const datasetQuery = {
-                text: 'SELECT name, event_info as edges, node_info as nodes, zone_info as zones, ext_point_info as extensions_points, ext_line_info as extensions_lines, ext_polygon_info as extensions_polygons FROM content.dataset WHERE tdei_dataset_id = $1',
-                values: [params.target_dataset_id],
-            }
-            const datasetResult = await dbClient.query(datasetQuery);
-            let datasetname: string = datasetResult.rows[0].name;
-            //Safe url name
-            datasetname = datasetname.replace(/[^a-zA-Z0-9]/g, '_');
-            uploadContext.outputFileName = `${datasetname}-spatial_join-jobId_${message.messageId}.zip`;
+                //Get dataset details
+                const datasetQuery = {
+                    text: 'SELECT name, event_info as edges, node_info as nodes, zone_info as zones, ext_point_info as extensions_points, ext_line_info as extensions_lines, ext_polygon_info as extensions_polygons FROM content.dataset WHERE tdei_dataset_id = $1',
+                    values: [params.target_dataset_id],
+                }
+                const datasetResult = await dbClient.query(datasetQuery);
+                let datasetname: string = datasetResult.rows[0].name;
+                //Safe url name
+                datasetname = datasetname.replace(/[^a-zA-Z0-9]/g, '_');
+                uploadContext.outputFileName = `${datasetname}-spatial_join-jobId_${message.messageId}.zip`;
 
-            // Create a query stream
-            const query = new QueryStream('SELECT * FROM content.tdei_dataset_spatial_join($1, $2, $3) ', [spatialQueryService.target_dataset_id, dynamicQuery, spatialQueryService.target_dimension]);
-            // Execute the query
-            const databaseClient = await dbClient.getDbClient();
-            const stream = await dbClient.queryStream(databaseClient, query);
-            //Build run context
-            const dataObject = this.dataTypes.reduce((obj: any, dataType: any) => {
-                obj[dataType] = {
-                    // Constant JSON string to be used for all the data types
-                    constJson: this.buildAdditionalInfo(datasetResult.rows[0][`${dataType}`]),
-                    stream: new Readable({ read() { } }),
-                    firstFlag: true
-                };
-                return obj;
-            }, {});
-            // Create streams for each data type
-            stream.on('data', async data => {
-                await this.handleStreamDataEvent(data, dataObject, uploadContext);
-            });
+                // Create a query stream
+                const query = new QueryStream('SELECT * FROM content.tdei_dataset_spatial_join($1, $2, $3) ', [spatialQueryService.target_dataset_id, dynamicQuery, spatialQueryService.target_dimension]);
+                // Execute the query
+                const databaseClient = await dbClient.getDbClient();
+                const stream = await dbClient.queryStream(databaseClient, query);
+                //Build run context
+                const dataObject = this.dataTypes.reduce((obj: any, dataType: any) => {
+                    obj[dataType] = {
+                        // Constant JSON string to be used for all the data types
+                        constJson: this.buildAdditionalInfo(datasetResult.rows[0][`${dataType}`]),
+                        stream: new Readable({ read() { } }),
+                        firstFlag: true
+                    };
+                    return obj;
+                }, {});
+                // Create streams for each data type
+                stream.on('data', async data => {
+                    try {
+                        await this.handleStreamDataEvent(data, dataObject, uploadContext);
+                    } catch (error) {
+                        await Utility.publishMessage(message, false, 'Error streaming data');
+                        reject(`Error streaming data: ${error}`);
+                    }
+                });
 
-            // Event listener for end event
-            stream.on('end', async () => {
-                await this.handleStreamEndEvent(dataObject, uploadContext, message);
-                await dbClient.releaseDbClient(databaseClient);
-            });
+                // Event listener for end event
+                stream.on('end', async () => {
+                    await this.handleStreamEndEvent(dataObject, uploadContext, message);
+                    await dbClient.releaseDbClient(databaseClient);
+                    resolve(true);
+                });
 
-            // Event listener for error event
-            stream.on('error', async error => {
-                console.error('Error streaming data:', error);
-                await Utility.publishMessage(message, false, 'Error streaming data : ' + error.message);
-            });
-        } catch (error) {
+                // Event listener for error event
+                stream.on('error', async error => {
+                    console.error('Error streaming data:', error);
+                    await Utility.publishMessage(message, false, 'Error streaming data');
+                    reject(`Error streaming query: ${error}`);
+                });
+            } catch (error) {
 
-            if (error instanceof InputException) {
+                if (error instanceof InputException) {
+                    console.error('Error executing query:', error);
+                    await Utility.publishMessage(message, false, error.message);
+                    reject(`Error executing query: ${error}`);
+                    return;
+                }
+
                 console.error('Error executing query:', error);
-                await Utility.publishMessage(message, false, error.message);
-                return;
+                await Utility.publishMessage(message, false, 'Error executing query');
+                reject(`Error executing query: ${error}`);
             }
+        });
 
-            console.error('Error executing query:', error);
-            await Utility.publishMessage(message, false, 'Error executing query');
-        }
     }
 
 }

@@ -169,7 +169,7 @@ describe('BackendService', () => {
       const publishMessageSpy = jest.spyOn(Utility, 'publishMessage').mockImplementation(publishMessageMock);
 
       // Call the method under test
-      await backendService.bboxService.bboxIntersect(message);
+      await expect(backendService.bboxService.bboxIntersect(message)).rejects.toContain('Error executing query');
 
       // Assertions
       expect(getDbClientMock).toHaveBeenCalled();
@@ -240,7 +240,7 @@ describe('BackendService', () => {
       const publishMessageSpy = jest.spyOn(Utility, 'publishMessage').mockImplementation(publishMessageMock);
 
       // Call the method under test
-      await backendService.bboxService.bboxIntersect(message);
+      await expect(backendService.datasetTagRoadService.datasetTagRoad(message)).rejects.toContain('Error executing query');
 
       // Assertions
       expect(getDbClientMock).toHaveBeenCalled();
@@ -478,7 +478,7 @@ describe('BackendService', () => {
       const publishMessageSpy = jest.spyOn(Utility, 'publishMessage').mockImplementation(publishMessageMock);
 
       // Call the method under test
-      await backendService.unionQueryService.executeUnionQuery(message);
+      await expect(backendService.unionQueryService.executeUnionQuery(message)).rejects.toContain('Error executing query');
 
       // Assertions
       expect(querySpy1).toHaveBeenCalled();
