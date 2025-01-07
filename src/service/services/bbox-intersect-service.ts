@@ -43,7 +43,7 @@ export class BboxIntersectService extends AbstractOSWBackendRequest {
                 }
                 if (params.bbox.length != 4) {
                     await Utility.publishMessage(message, false, 'Invalid bbox parameters');
-                    reject('Invalid bbox parameters');
+                    return reject('Invalid bbox parameters');
                 }
                 // Create a query stream
                 const query = new QueryStream('SELECT * FROM content.bbox_intersect($1, $2, $3, $4, $5) ', [params.tdei_dataset_id, params.bbox[0], params.bbox[1], params.bbox[2], params.bbox[3]]);

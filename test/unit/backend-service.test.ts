@@ -344,14 +344,16 @@ describe('BackendService', () => {
           file_upload_path: ''
         }
       };
+      const utilitySleep = jest.spyOn(Utility, 'sleep').mockImplementation(() => Promise.resolve());
       const publishMessageMock = jest.spyOn(Utility, 'publishMessage').mockResolvedValueOnce(undefined);
+      mockCore();
 
       // Call the method under test
       await backendService.bboxService.handleStreamEndEvent(dataObject, uploadContext, message);
 
       // Assertions
       expect(publishMessageMock).toHaveBeenCalledWith(message, true, 'No data found for given prarameters.');
-    }, 10000);
+    }, 15000);
   });
 
   describe('handleStreamDataEvent', () => {

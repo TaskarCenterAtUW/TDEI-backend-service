@@ -75,7 +75,7 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
             //Verify if atlease one file is uploaded
             if (uploadContext.remoteUrls.length == 0) {
                 await Utility.publishMessage(message, true, 'No data found for given prarameters.');
-                resolve(true);
+                return resolve(true);
             }
             await Utility.sleep(15000);
             this.zipStream(uploadContext).then(async () => {
@@ -111,11 +111,11 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
                     dataObject[input_dataType].firstFlag = false;
                     await this.uploadStreamToAzureBlob(dataObject[input_dataType].stream, uploadContext, `osw.${input_dataType.replace("extensions_", "")}.geojson`);
                     console.log(`Uploaded ${input_dataType} to Storage`);
-                    resolve(true);
+                    return resolve(true);
                 }
             } catch (error) {
                 console.error('Error streaming data:', error);
-                reject(`Error streaming data:, ${error}`);
+                return reject(`Error streaming data:, ${error}`);
             }
         });
     }
