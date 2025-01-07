@@ -35,39 +35,33 @@ export class UnionQueryService extends AbstractOSWBackendRequest {
 
                 uploadContext.outputFileName = `union_dataset-jobId_${message.messageId}.zip`;
 
-                // Create a query stream
-                const query = new QueryStream(`SELECT * FROM content.tdei_union_dataset($1,$2) `, [params.tdei_dataset_id_one, params.tdei_dataset_id_two], { highWaterMark: 100 });
-                // Execute the query
-                const databaseClient = await dbClient.getDbClient();
-                const stream = await dbClient.queryStream(databaseClient, query);
-                //Build run context
-                const dataObject = this.dataTypes.reduce((obj: any, dataType: any) => {
-                    obj[dataType] = {
-                        // Constant JSON string to be used for all the data types
-                        constJson: this.buildAdditionalInfo(datasetResult.rows[0][`${dataType}`]),
-                        stream: new Readable({ read() { } }),
-                        firstFlag: true
-                    };
-                    return obj;
-                }, {});
+            // Create a query stream
+            const query = new QueryStream(`SELECT * FROM content.tdei_union_dataset($1,$2) `, [params.tdei_dataset_id_one, params.tdei_dataset_id_two], { highWaterMark: 100 });
+            // Execute the query
+            const databaseClient = await dbClient.getDbClient();
+            const stream = await dbClient.queryStream(databaseClient, query);
+            //Build run context
+            // const dataObject = this.dataTypes.reduce((obj: any, dataType: any) => {
+            //     obj[dataType] = {
+            //         // Constant JSON string to be used for all the data types
+            //         constJson: this.buildAdditionalInfo(datasetResult.rows[0][`${dataType}`]),
+            //         stream: new Readable({ read() { } }),
+            //         firstFlag: true
+            //     };
+            //     return obj;
+            // }, {});
 
 
-                // Create streams for each data type
-                stream.on('data', async data => {
-                    try {
-                        await this.handleStreamDataEvent(data, dataObject, uploadContext);
-                    } catch (error) {
-                        await Utility.publishMessage(message, false, 'Error streaming data');
-                        reject(`Error streaming data: ${error}`);
-                    }
-                });
+            // Create streams for each data type
+            stream.on('data', async data => {
+                // await this.handleStreamDataEvent(data, dataObject, uploadContext);
+            });
 
-                // Event listener for end event
-                stream.on('end', async () => {
-                    await this.handleStreamEndEvent(dataObject, uploadContext, message);
-                    await dbClient.releaseDbClient(databaseClient);
-                    resolve(true);
-                });
+            // Event listener for end event
+            // stream.on('end', async () => {
+            //     await this.handleStreamEndEvent(dataObject, uploadContext, message);
+            //     await dbClient.releaseDbClient(databaseClient);
+            // });
 
                 // Event listener for error event
                 stream.on('error', async error => {

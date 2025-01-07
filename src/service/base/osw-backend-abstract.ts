@@ -8,7 +8,6 @@ import stream from 'stream';
 import { environment } from "../../environment/environment";
 
 export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
-    dataTypes = ['edges', 'nodes', 'zones', 'extensions_points', 'extensions_polygons', 'extensions_lines'];
 
     /**
      * Uploads a stream to an Azure Blob storage container.
@@ -64,13 +63,21 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
  * @param uploadContext - The upload context.
  * @param message - The message object.
  */
-    public async handleStreamEndEvent(dataObject: any, uploadContext: IUploadContext, message: any) {
+    public async handleStreamEndEvent(dataObject: any, file_name: string) {
+
+        dataObject[file_name].stream.push("]}");
+        dataObject[file_name].stream.push(null);
+
+        console.log(`Finished streaming ${file_name}`);
+    }
+
+    /**
+     * Zips and uploads the data to Azure Blob Storage.
+     * @param uploadContext - The upload context.
+     * @param message - The message object.
+     */
+    public async zipAndUpload(uploadContext: IUploadContext, message: any) {
         return new Promise(async (resolve, reject) => {
-            for (const dataType of this.dataTypes) {
-                dataObject[dataType].stream.push("]}");
-                dataObject[dataType].stream.push(null);
-            }
-            console.log('All result sets streamed and uploaded.');
             await Utility.sleep(5000);
             //Verify if atlease one file is uploaded
             if (uploadContext.remoteUrls.length == 0) {
@@ -97,20 +104,15 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
      * @param dataObject - The data object to be updated.
      * @param uploadContext - The upload context.
      */
-    public async handleStreamDataEvent(data: any, dataObject: any, uploadContext: IUploadContext) {
+    public async handleStreamDataEvent(data: any, file_name: string, dataObject: any, uploadContext: IUploadContext) {
         return new Promise(async (resolve, reject) => {
             try {
-                let input_dataType = "";
-                for (const dataType of this.dataTypes) {
-                    if (data[dataType]) {
-                        input_dataType = dataType;
-                        dataObject[dataType].stream.push(`${dataObject[dataType].firstFlag ? dataObject[dataType].constJson : ","}${JSON.stringify(data[dataType])}`);
-                    }
-                }
-                if (dataObject[input_dataType].firstFlag) {
-                    dataObject[input_dataType].firstFlag = false;
-                    await this.uploadStreamToAzureBlob(dataObject[input_dataType].stream, uploadContext, `osw.${input_dataType.replace("extensions_", "")}.geojson`);
-                    console.log(`Uploaded ${input_dataType} to Storage`);
+                dataObject[file_name].stream.push(`${dataObject[file_name].firstFlag ? dataObject[file_name].constJson : ","}${JSON.stringify(data["feature"])}`);
+
+                if (dataObject[file_name].firstFlag) {
+                    dataObject[file_name].firstFlag = false;
+                    await this.uploadStreamToAzureBlob(dataObject[file_name].stream, uploadContext, `osw.${file_name}.geojson`);
+                    console.log(`Uploaded ${file_name} to Storage`);
                     return resolve(true);
                 }
             } catch (error) {
@@ -121,12 +123,13 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
     }
 
     buildAdditionalInfo(info: any): string {
-        const properties = ['dataSource', 'region', 'dataTimestamp', 'pipelineVersion', '$schema'];
-        let jsonParts = properties.map(prop => {
-            const data = this.getData(info?.[prop]);
-            return data && data != "" ? `"${prop}": ${data},` : '';
-        });
-
+        const jsonParts: string[] = [];
+        if (info) {
+            Object.keys(info).forEach((key: any) => {
+                const data = this.getData(info?.[key]);
+                jsonParts.push(data && data != "" ? `"${key}": ${data},` : '');
+            });
+        }
         if (!jsonParts.toString().includes('$schema'))
             jsonParts.push(`"$schema": "${environment.oswSchemaUrl}",`);
 

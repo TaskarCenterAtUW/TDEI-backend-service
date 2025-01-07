@@ -41,37 +41,31 @@ export class SpatialQueryService extends AbstractOSWBackendRequest {
                 datasetname = datasetname.replace(/[^a-zA-Z0-9]/g, '_');
                 uploadContext.outputFileName = `${datasetname}-spatial_join-jobId_${message.messageId}.zip`;
 
-                // Create a query stream
-                const query = new QueryStream('SELECT * FROM content.tdei_dataset_spatial_join($1, $2, $3) ', [spatialQueryService.target_dataset_id, dynamicQuery, spatialQueryService.target_dimension]);
-                // Execute the query
-                const databaseClient = await dbClient.getDbClient();
-                const stream = await dbClient.queryStream(databaseClient, query);
-                //Build run context
-                const dataObject = this.dataTypes.reduce((obj: any, dataType: any) => {
-                    obj[dataType] = {
-                        // Constant JSON string to be used for all the data types
-                        constJson: this.buildAdditionalInfo(datasetResult.rows[0][`${dataType}`]),
-                        stream: new Readable({ read() { } }),
-                        firstFlag: true
-                    };
-                    return obj;
-                }, {});
-                // Create streams for each data type
-                stream.on('data', async data => {
-                    try {
-                        await this.handleStreamDataEvent(data, dataObject, uploadContext);
-                    } catch (error) {
-                        await Utility.publishMessage(message, false, 'Error streaming data');
-                        reject(`Error streaming data: ${error}`);
-                    }
-                });
+            // Create a query stream
+            const query = new QueryStream('SELECT * FROM content.tdei_dataset_spatial_join($1, $2, $3) ', [spatialQueryService.target_dataset_id, dynamicQuery, spatialQueryService.target_dimension]);
+            // Execute the query
+            const databaseClient = await dbClient.getDbClient();
+            const stream = await dbClient.queryStream(databaseClient, query);
+            //Build run context
+            // const dataObject = this.dataTypes.reduce((obj: any, dataType: any) => {
+            //     obj[dataType] = {
+            //         // Constant JSON string to be used for all the data types
+            //         constJson: this.buildAdditionalInfo(datasetResult.rows[0][`${dataType}`]),
+            //         stream: new Readable({ read() { } }),
+            //         firstFlag: true
+            //     };
+            //     return obj;
+            // }, {});
+            // Create streams for each data type
+            stream.on('data', async data => {
+                //await this.handleStreamDataEvent(data, dataObject, uploadContext);
+            });
 
-                // Event listener for end event
-                stream.on('end', async () => {
-                    await this.handleStreamEndEvent(dataObject, uploadContext, message);
-                    await dbClient.releaseDbClient(databaseClient);
-                    resolve(true);
-                });
+            // Event listener for end event
+            stream.on('end', async () => {
+                //await this.handleStreamEndEvent(dataObject, uploadContext, message);
+                await dbClient.releaseDbClient(databaseClient);
+            });
 
                 // Event listener for error event
                 stream.on('error', async error => {
