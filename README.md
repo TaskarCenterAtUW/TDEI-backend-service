@@ -8,7 +8,7 @@ The project is built on NodeJS framework. All the regular nuances for a NodeJS p
 | Software | Version|
 |----|---|
 | NodeJS | 16.17.0|
-| Typescript | 4.8.2|
+| Typescript | 4.8.2 |
 
 
 ## Environment variables
