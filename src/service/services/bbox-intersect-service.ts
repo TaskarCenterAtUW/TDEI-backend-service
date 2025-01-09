@@ -39,21 +39,21 @@ export class BboxIntersectService extends AbstractOSWBackendRequest {
                     return reject('Invalid bbox parameters');
                 }
 
-                // Start a transaction
-                const databaseClient = await dbClient.getDbClient();
-                await databaseClient.query('BEGIN');
-                //Get dataset details
-                const datasetQuery = {
-                    text: 'SELECT event_info as edge, node_info as node, zone_info as zone, ext_point_info as point, ext_line_info as line, ext_polygon_info as polygon FROM content.dataset WHERE tdei_dataset_id = $1 limit 1',
-                    values: [params.tdei_dataset_id],
-                }
-                const datasetResult = await databaseClient.query(datasetQuery);
-                //Get dataset extension details
-                const datasetExtensionQuery = {
-                    text: 'SELECT file_meta, name FROM content.extension_file WHERE tdei_dataset_id = $1 limit 1',
-                    values: [params.tdei_dataset_id],
-                }
-                const datasetExtensionResult = await databaseClient.query(datasetExtensionQuery);
+            // Start a transaction
+            const databaseClient = await dbClient.getDbClient();
+            await databaseClient.query('BEGIN');
+            //Get dataset details
+            const datasetQuery = {
+                text: 'SELECT event_info as edge, node_info as node, zone_info as zone, ext_point_info as point, ext_line_info as line, ext_polygon_info as polygon FROM content.dataset WHERE tdei_dataset_id = $1 limit 1',
+                values: [params.tdei_dataset_id],
+            }
+            const datasetResult = await databaseClient.query(datasetQuery);
+            //Get dataset extension details
+            const datasetExtensionQuery = {
+                text: 'SELECT file_meta, name FROM content.extension_file WHERE tdei_dataset_id = $1',
+                values: [params.tdei_dataset_id],
+            }
+            const datasetExtensionResult = await databaseClient.query(datasetExtensionQuery);
 
                 // Execute the Bbox query
                 const resultQuery = {
@@ -62,35 +62,33 @@ export class BboxIntersectService extends AbstractOSWBackendRequest {
                 }
                 const result = await databaseClient.query(resultQuery);
 
-                //Build file metadata
-                let dataObject: any = [];
-                datasetResult.rows.forEach((row: any) => {
-                    Object.keys(row).forEach((key: any) => {
-                        dataObject[key] = {
-                            constJson: this.buildAdditionalInfo(row[key]),
-                            stream: new Readable({ read() { } }),
-                            firstFlag: true
-                        };
-                    });
+            //Build file metadata
+            let dataObject: any = [];
+            datasetResult.rows.forEach((row: any) => {
+                Object.keys(row).forEach((key: any) => {
+                    dataObject[key] = {
+                        constJson: this.buildAdditionalInfo(row[key]),
+                        stream: new Readable({ read() { } }),
+                        firstFlag: true
+                    };
                 });
-                datasetExtensionResult.rows.forEach((row: any) => {
-                    Object.keys(row).forEach((key: any) => {
-                        dataObject[key] = {
-                            constJson: this.buildAdditionalInfo(row[key]),
-                            stream: new Readable({ read() { } }),
-                            firstFlag: true
-                        };
-                    });
-                });
+            });
+            datasetExtensionResult.rows.forEach((row: any) => {
+                dataObject[row["name"]] = {
+                    constJson: this.buildAdditionalInfo(row["file_meta"]),
+                    stream: new Readable({ read() { } }),
+                    firstFlag: true
+                };
+            });
 
                 // Execute the query
                 let success = true;
                 for (const row of result.rows) {
                     const { file_name, cursor_ref } = row;
 
-                    // Stream the cursor's data
-                    const query = new QueryStream(`FETCH 100 FROM "${cursor_ref}"`);
-                    const stream = await dbClient.queryStream(databaseClient, query);
+                // Stream the cursor's data
+                const query = new QueryStream(`FETCH ALL FROM "${cursor_ref}"`);
+                const stream = await dbClient.queryStream(databaseClient, query);
 
                     stream.on('data', async data => {
                         try {
