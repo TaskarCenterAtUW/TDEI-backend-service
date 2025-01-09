@@ -11,7 +11,7 @@ export function getMockFileEntity() {
         mimeType: "csv",
         filePath: "test_file_path",
         remoteUrl: "your-remote-url",
-        getStream: function (): Promise<NodeJS.ReadableStream> {
+        getStream: function (): Promise<Readable> {
             let mockedStream = new Readable({ read() { } });
             mockedStream.push(JSON.stringify({ "test": "test-data" }));
             mockedStream.push(null);
@@ -25,6 +25,9 @@ export function getMockFileEntity() {
         },
         uploadStream: function (stream: Readable): Promise<void> {
             return Promise.resolve();
+        },
+        deleteFile: function (): Promise<void> {
+            throw new Error("Function not implemented.");
         }
     };
     return fileEntity;
@@ -47,6 +50,12 @@ export function getMockStorageClient() {
         },
         getFileFromUrl: function (): Promise<FileEntity> {
             return Promise.resolve(getMockFileEntity());
+        },
+        getSASUrl: function (containerName: string, filePath: string, expiryInHours: number): Promise<string> {
+            throw new Error("Function not implemented.");
+        },
+        cloneFile: function (fileUrl: string, destinationContainerName: string, destinationFilePath: string): Promise<FileEntity> {
+            throw new Error("Function not implemented.");
         }
     };
     return storageClientObj;
