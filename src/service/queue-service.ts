@@ -3,6 +3,7 @@ import { QueueConfig } from "../model/queue-subscriptions-model";
 import { Topic } from "nodets-ms-core/lib/core/queue/topic";
 import { Core } from "nodets-ms-core";
 import backendService from "./backend-service";
+import { environment } from "../environment/environment";
 
 export class QueueService {
 
@@ -25,7 +26,7 @@ export class QueueService {
     private getTopicInstance(topicName: string) {
         let topic = this.topicCollection.get(topicName);
         if (!topic) {
-            topic = Core.getTopic(topicName);
+            topic = Core.getTopic(topicName, null, environment.eventBus.maxConcurrentMessages);
             this.topicCollection.set(topicName, topic);
         }
         return topic;
@@ -56,7 +57,6 @@ export class QueueService {
         } catch (error) {
             console.error("Error in handling incoming message", error);
         }
-        return Promise.resolve();
     }
 
     /**
