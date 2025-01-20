@@ -296,7 +296,7 @@ describe('BackendService', () => {
       const zipStreamMock = jest.spyOn(backendService.bboxService, 'zipStream').mockResolvedValueOnce(undefined);
 
       // Call the method under test
-      await backendService.bboxService.handleStreamEndEvent(dataObject, uploadContext, message);
+      await backendService.bboxService.handleStreamEndEvent(dataObject, "test_file");
 
       // Assertions
       expect(utilitySleep).toHaveBeenCalled();
@@ -349,7 +349,7 @@ describe('BackendService', () => {
       mockCore();
 
       // Call the method under test
-      await backendService.bboxService.handleStreamEndEvent(dataObject, uploadContext, message);
+      await backendService.bboxService.handleStreamEndEvent(dataObject, "test_file");
 
       // Assertions
       expect(publishMessageMock).toHaveBeenCalledWith(message, true, 'No data found for given prarameters.');
@@ -372,7 +372,7 @@ describe('BackendService', () => {
       const uploadStreamSpy = jest.spyOn(backendService.bboxService, 'uploadStreamToAzureBlob').mockImplementation(uploadStreamMock);
 
       // Call the method under test
-      await backendService.bboxService.handleStreamDataEvent(data, dataObject, {} as IUploadContext);
+      await backendService.bboxService.handleStreamDataEvent(data, "test_file", dataObject, {} as IUploadContext);
 
       // Assertions
       expect(uploadStreamSpy).toHaveBeenCalledWith(expect.anything(), expect.any(Object), 'osw.edges.geojson');
@@ -429,33 +429,19 @@ describe('BackendService', () => {
         },
         messageId: 'your-message-id'
       };
-      let dbStream = new Readable({ read() { } });
-      dbStream.push(JSON.stringify({ "edges": "your-edges-data" }));
-      dbStream.push(null);
-      const queryStreamMock = jest.fn().mockReturnValueOnce(dbStream);
-      // const queryMock1 = jest.fn().mockResolvedValueOnce({ rows: [{ name: 'dataset-name' }] });
-      const queryMock = jest.fn().mockResolvedValueOnce({ rows: [{ edges: 'your-edges-data' }] });
-      const querySpy1 = jest.spyOn(dbClient, 'query').mockResolvedValueOnce(<any>{ rows: [{ name: 'dataset-name' }, { name: 'dataset-name2' }] });
+
       const getDbClientMock = jest.spyOn(dbClient, 'getDbClient').mockResolvedValueOnce({} as PoolClient);
-      const queryStreamSpy = jest.spyOn(dbClient, 'queryStream').mockImplementation(queryStreamMock);
-      const releaseDbClientSpy = jest.spyOn(dbClient, 'releaseDbClient').mockImplementation(undefined);
-      const querySpy = jest.spyOn(dbClient, 'query').mockImplementation(queryMock);
-      const handleStreamDataEventMock = jest.spyOn(backendService.unionQueryService, 'handleStreamDataEvent').mockResolvedValueOnce(undefined);
-      const handleStreamEndEventMock = jest.spyOn(backendService.unionQueryService, 'handleStreamEndEvent').mockResolvedValueOnce(undefined);
       const publishMessageMock = jest.spyOn(Utility, 'publishMessage').mockResolvedValueOnce(undefined);
+
+      const handleStreamDataEventMock = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset').mockResolvedValueOnce(true);
 
       // Call the method under test
       await backendService.unionQueryService.executeUnionQuery(message);
       await Utility.sleep(1);
 
       // Assertions
-      expect(querySpy1).toHaveBeenCalled();
       expect(getDbClientMock).toHaveBeenCalled();
-      expect(queryStreamSpy).toHaveBeenCalledWith(expect.any(Object), expect.any(Object));
-      expect(querySpy).toHaveBeenCalledWith(expect.any(Object));
-      expect(releaseDbClientSpy).toHaveBeenCalled();
       expect(handleStreamDataEventMock).toHaveBeenCalled();
-      expect(handleStreamEndEventMock).toHaveBeenCalled();
       expect(publishMessageMock).not.toHaveBeenCalled();
     }, 100);
 
@@ -470,23 +456,19 @@ describe('BackendService', () => {
         },
         messageId: 'your-message-id'
       };
-      const querySpy1 = jest.spyOn(dbClient, 'query').mockResolvedValueOnce(<any>{ rows: [{ name: 'dataset-name' }, { name: 'dataset-name2' }] });
+      // const querySpy1 = jest.spyOn(dbClient, 'query').mockResolvedValueOnce(<any>{ rows: [{ name: 'dataset-name' }, { name: 'dataset-name2' }] });
       const getDbClientMock = jest.spyOn(dbClient, 'getDbClient').mockResolvedValueOnce({} as PoolClient);
-      const queryMock = jest.fn().mockResolvedValueOnce({ rows: [{ edges: 'your-edges-data' }] });
-      const querySpy = jest.spyOn(dbClient, 'query').mockImplementation(queryMock);
-      const queryStreamMock = jest.fn().mockRejectedValueOnce(new Error('Query execution error'));
-      const queryStreamSpy = jest.spyOn(dbClient, 'queryStream').mockImplementation(queryStreamMock);
       const publishMessageMock = jest.fn().mockResolvedValueOnce(undefined);
       const publishMessageSpy = jest.spyOn(Utility, 'publishMessage').mockImplementation(publishMessageMock);
+
+      const handleStreamDataEventMock = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset').mockResolvedValueOnce(new Error('Query execution error'));
 
       // Call the method under test
       await expect(backendService.unionQueryService.executeUnionQuery(message)).rejects.toContain('Error executing query');
 
       // Assertions
-      expect(querySpy1).toHaveBeenCalled();
       expect(getDbClientMock).toHaveBeenCalled();
-      expect(querySpy).toHaveBeenCalledWith(expect.any(Object));
-      expect(queryStreamSpy).toHaveBeenCalledWith(expect.any(Object), expect.any(Object));
+      expect(handleStreamDataEventMock).toHaveBeenCalledWith(expect.any(Object));
       expect(publishMessageSpy).toHaveBeenCalledWith(message, false, 'Error executing query');
     });
   });

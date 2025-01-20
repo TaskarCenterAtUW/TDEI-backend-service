@@ -6,6 +6,8 @@ import { Core } from "nodets-ms-core";
 import { Readable } from "stream";
 import stream from 'stream';
 import { environment } from "../../environment/environment";
+import QueryStream from "pg-query-stream";
+import { QueryResult } from "pg";
 
 export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
 
@@ -122,7 +124,7 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
         });
     }
 
-    buildAdditionalInfo(info: any): string {
+    private buildAdditionalInfo(info: any): string {
         const jsonParts: string[] = [];
         if (info) {
             Object.keys(info).forEach((key: any) => {
@@ -138,7 +140,94 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
         return `{ ${jsonParts.join(' ').trimStart()} `;
     }
 
-    getData(data: any): string {
+    private getData(data: any): string {
         return data && data != '' ? JSON.stringify(data) : "";
+    }
+
+
+    async process_upload_dataset(tdei_dataset_id: string, uploadContext: IUploadContext, message: any, databaseClient: any, result: QueryResult<any>) {
+        return new Promise(async (resolve, reject) => {
+            await databaseClient.query('BEGIN');
+            //Get dataset details
+            const datasetQuery = {
+                text: 'SELECT event_info as edge, node_info as node, zone_info as zone, ext_point_info as point, ext_line_info as line, ext_polygon_info as polygon FROM content.dataset WHERE tdei_dataset_id = $1 limit 1',
+                values: [tdei_dataset_id],
+            }
+            const datasetResult = await databaseClient.query(datasetQuery);
+            //Get dataset extension details
+            const datasetExtensionQuery = {
+                text: 'SELECT file_meta, name FROM content.extension_file WHERE tdei_dataset_id = $1',
+                values: [tdei_dataset_id],
+            }
+            const datasetExtensionResult = await databaseClient.query(datasetExtensionQuery);
+
+            //Build file metadata
+            let dataObject: any = [];
+            datasetResult.rows.forEach((row: any) => {
+                Object.keys(row).forEach((key: any) => {
+                    dataObject[key] = {
+                        constJson: this.buildAdditionalInfo(row[key]),
+                        stream: new Readable({ read() { } }),
+                        firstFlag: true
+                    };
+                });
+            });
+            datasetExtensionResult.rows.forEach((row: any) => {
+                dataObject[row["name"]] = {
+                    constJson: this.buildAdditionalInfo(row["file_meta"]),
+                    stream: new Readable({ read() { } }),
+                    firstFlag: true
+                };
+            });
+
+            // Execute the query
+            let success = true;
+            for (const row of result.rows) {
+                const { file_name, cursor_ref } = row;
+
+                // Stream the cursor's data
+                const query = new QueryStream(`FETCH ALL FROM "${cursor_ref}"`);
+                const stream = await databaseClient.queryStream(databaseClient, query);
+
+                stream.on('data', async (data: any) => {
+                    try {
+                        await this.handleStreamDataEvent(data, file_name, dataObject, uploadContext);
+                    } catch (error) {
+                        await Utility.publishMessage(message, false, 'Error streaming data');
+                        reject(`Error streaming data: ${error}`);
+                    }
+                });
+
+                try {
+                    await new Promise((resolveCur, rejectCur) => {
+                        // Event listener for end event
+                        stream.on('end', async () => {
+                            resolveCur(await this.handleStreamEndEvent(dataObject, file_name));
+                        });
+
+                        // Event listener for error event
+                        stream.on('error', async (error: any) => {
+                            console.error('Error streaming data:', error);
+                            await Utility.publishMessage(message, false, 'Error streaming data');
+                            rejectCur(error);
+                        });
+                    });
+                } catch (error) {
+                    success = false;
+                    break;
+                }
+
+                // Close the cursor
+                await databaseClient.query(`CLOSE "${cursor_ref}"`);
+            }
+
+            // Commit the transaction
+            await databaseClient.query('COMMIT');
+            await databaseClient.releaseDbClient(databaseClient);
+
+            if (success)
+                await this.zipAndUpload(uploadContext, message);
+            resolve(true);
+        });
     }
 }

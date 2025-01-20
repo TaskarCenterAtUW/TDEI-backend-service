@@ -1,9 +1,7 @@
 import { QueueMessage } from "nodets-ms-core/lib/core/queue";
-import QueryStream from "pg-query-stream";
 import dbClient from "../../database/data-source";
 import { AbstractOSWBackendRequest } from "../base/osw-backend-abstract";
 import { BackendRequest, IUploadContext } from "../interface/interfaces";
-import { Readable } from "stream";
 import { Utility } from "../../utility/utility";
 
 export class BboxIntersectService extends AbstractOSWBackendRequest {
@@ -39,21 +37,8 @@ export class BboxIntersectService extends AbstractOSWBackendRequest {
                     return reject('Invalid bbox parameters');
                 }
 
-            // Start a transaction
-            const databaseClient = await dbClient.getDbClient();
-            await databaseClient.query('BEGIN');
-            //Get dataset details
-            const datasetQuery = {
-                text: 'SELECT event_info as edge, node_info as node, zone_info as zone, ext_point_info as point, ext_line_info as line, ext_polygon_info as polygon FROM content.dataset WHERE tdei_dataset_id = $1 limit 1',
-                values: [params.tdei_dataset_id],
-            }
-            const datasetResult = await databaseClient.query(datasetQuery);
-            //Get dataset extension details
-            const datasetExtensionQuery = {
-                text: 'SELECT file_meta, name FROM content.extension_file WHERE tdei_dataset_id = $1',
-                values: [params.tdei_dataset_id],
-            }
-            const datasetExtensionResult = await databaseClient.query(datasetExtensionQuery);
+                // Start a transaction
+                const databaseClient = await dbClient.getDbClient();
 
                 // Execute the Bbox query
                 const resultQuery = {
@@ -61,73 +46,8 @@ export class BboxIntersectService extends AbstractOSWBackendRequest {
                     values: [params.tdei_dataset_id, params.bbox[0], params.bbox[1], params.bbox[2], params.bbox[3]],
                 }
                 const result = await databaseClient.query(resultQuery);
+                this.process_upload_dataset(params.tdei_dataset_id, uploadContext, message, databaseClient, result);
 
-            //Build file metadata
-            let dataObject: any = [];
-            datasetResult.rows.forEach((row: any) => {
-                Object.keys(row).forEach((key: any) => {
-                    dataObject[key] = {
-                        constJson: this.buildAdditionalInfo(row[key]),
-                        stream: new Readable({ read() { } }),
-                        firstFlag: true
-                    };
-                });
-            });
-            datasetExtensionResult.rows.forEach((row: any) => {
-                dataObject[row["name"]] = {
-                    constJson: this.buildAdditionalInfo(row["file_meta"]),
-                    stream: new Readable({ read() { } }),
-                    firstFlag: true
-                };
-            });
-
-                // Execute the query
-                let success = true;
-                for (const row of result.rows) {
-                    const { file_name, cursor_ref } = row;
-
-                // Stream the cursor's data
-                const query = new QueryStream(`FETCH ALL FROM "${cursor_ref}"`);
-                const stream = await dbClient.queryStream(databaseClient, query);
-
-                    stream.on('data', async data => {
-                        try {
-                            await this.handleStreamDataEvent(data, file_name, dataObject, uploadContext);
-                        } catch (error) {
-                            await Utility.publishMessage(message, false, 'Error streaming data');
-                            reject(`Error streaming data: ${error}`);
-                        }
-                    });
-
-                    try {
-                        await new Promise((resolveCur, rejectCur) => {
-                            // Event listener for end event
-                            stream.on('end', async () => {
-                                resolveCur(await this.handleStreamEndEvent(dataObject, file_name));
-                            });
-
-                            // Event listener for error event
-                            stream.on('error', async error => {
-                                console.error('Error streaming data:', error);
-                                await Utility.publishMessage(message, false, 'Error streaming data');
-                                rejectCur(error);
-                            });
-                        });
-                    } catch (error) {
-                        success = false;
-                        break;
-                    }
-
-                    // Close the cursor
-                    await databaseClient.query(`CLOSE "${cursor_ref}"`);
-                }
-
-                // Commit the transaction
-                await dbClient.query('COMMIT');
-                await dbClient.releaseDbClient(databaseClient);
-
-                if (success)
-                    await this.zipAndUpload(uploadContext, message);
                 return resolve(true);
             } catch (error) {
                 console.error('Error executing query:', error);

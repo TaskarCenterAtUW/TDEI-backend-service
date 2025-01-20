@@ -7,7 +7,7 @@ describe('BackendService', () => {
         spatialServiceParams = SpatialJoinRequestParams.from({
             target_dimension: 'edge',
             source_dimension: 'point',
-            aggregate: ['array_agg(highway) as my_way', 'MAX(footway) as max_footway'],
+            aggregate: ['array_agg(DISTINCT(coalesce(highway, \'\'))) as my_way', 'MAX(footway) as max_footway'],
             join_condition: 'ST_Intersects(ST_Buffer(geometry_target, 5), geometry_source)',
             join_filter_target: "highway='footway' AND footway='sidewalk'",
             join_filter_source: "highway='street_lamp'",

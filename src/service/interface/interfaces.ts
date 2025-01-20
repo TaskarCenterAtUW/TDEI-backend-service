@@ -2,7 +2,8 @@ import { QueueMessage } from "nodets-ms-core/lib/core/queue";
 import { AbstractDomainEntity, Prop } from "nodets-ms-core/lib/models";
 import { InputException } from "../../exceptions/http/http-exceptions";
 import { QueryConfig } from "pg";
-
+import { Parser } from "node-sql-parser";
+const parser = new Parser();
 /**
  * Represents a backend request.
  */
@@ -184,6 +185,10 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
                 source_table = 'content.extension_polygon source';
                 transform_geometry_source = 'ST_Transform(source.polygon_loc, 3857)';
                 break;
+            case 'extension':
+                source_table = 'content.extension source';
+                transform_geometry_source = 'source.ext_loc_3857';
+                break;
             default:
                 throw new InputException('Invalid source dimension');
         }
@@ -192,21 +197,25 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
         let aggregate_compiled: AttributeDetails[] = [];
         try {
             if (this.aggregate?.length) {
-                aggregate_compiled = this.aggregate.map((aggregate) => {
-                    const name = aggregate.split('(')[1].split(')')[0];
-                    aggregate = aggregate.replace(name, `source.${name}`);
-                    let columnName = `source.${name}`;
+                // aggregate_compiled = this.aggregate.map((aggregate) => {
+                //     const name = aggregate.split('(')[1].split(')')[0];
+                //     aggregate = aggregate.replace(name, `source.${name}`);
+                //     let columnName = `source.${name}`;
 
-                    //if aggregate has alias then take the alias as the name
-                    if (aggregate.toLowerCase().includes(' as ')) {
-                        const alias_name = aggregate.toLowerCase().split(' as ')[1];
-                        //remove the alias from the aggregate
-                        aggregate = aggregate.toLowerCase().split(' as ')[0];
-                        return { alias: `${alias_name}`, column: columnName, aggregate: aggregate };
-                    }
-                    else {
-                        return { alias: `${name}`, column: columnName, aggregate: aggregate };
-                    }
+                //     //if aggregate has alias then take the alias as the name
+                //     if (aggregate.toLowerCase().includes(' as ')) {
+                //         const alias_name = aggregate.toLowerCase().split(' as ')[1];
+                //         //remove the alias from the aggregate
+                //         aggregate = aggregate.toLowerCase().split(' as ')[0];
+                //         return { alias: `${alias_name}`, column: columnName, aggregate: aggregate };
+                //     }
+                //     else {
+                //         return { alias: `${name}`, column: columnName, aggregate: aggregate };
+                //     }
+                // });
+                aggregate_compiled = this.aggregate.map((aggregate) => {
+                    const { alias, column, aggregate: modifiedAggregate } = this.replaceColumnNamesFromAggregate(aggregate);
+                    return { alias, column, aggregate: modifiedAggregate };
                 });
             }
         } catch (error) {
@@ -292,7 +301,43 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
         return [...aggCases].join(' || ');
     }
 
+    /**
+     * Replaces column names in an aggregate with the corresponding source prefix.
+     * 
+     * @param aggregate - The aggregate to be modified.
+     * @returns An object containing the modified aggregate, alias, and column.
+     */
+    replaceColumnNamesFromAggregate(aggregate: string): { alias: string, column: string, aggregate: string } {
+        const parsedQuery = parser.astify(`SELECT ${aggregate} FROM dummy_table`);
+        let alias_name = '';
+        let columnName = '';
 
+        function traverse(node: any) {
+            if (node.type === 'column_ref') {
+                columnName = node.column;
+            }
+            if (node.as) {
+                alias_name = node.as;
+            }
+            if (node.left) traverse(node.left);
+            if (node.right) traverse(node.right);
+            if (node.expr) traverse(node.expr);
+            if (node.args?.value) node.args.value.forEach((arg: any) => traverse(arg));
+            if (node.args?.expr) traverse(node.args?.expr);
+            if (node.value) traverse(node.value);
+            if (node.columns) node.columns.forEach((col: any) => traverse(col));
+        }
+
+        traverse(parsedQuery);
+
+        let modifiedAggregate = aggregate;
+        if (columnName) {
+            const regex = new RegExp(`\\b${columnName}\\b`, 'g');
+            modifiedAggregate = modifiedAggregate.replace(regex, `source.${columnName}`);
+        }
+
+        return { alias: alias_name || columnName, column: columnName, aggregate: modifiedAggregate };
+    }
 
     /**
      * Replaces placeholders in a query text with corresponding values.
