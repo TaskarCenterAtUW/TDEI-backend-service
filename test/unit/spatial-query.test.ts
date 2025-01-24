@@ -6,13 +6,14 @@ describe('BackendService', () => {
     beforeEach(() => {
         spatialServiceParams = SpatialJoinRequestParams.from({
             target_dimension: 'edge',
-            source_dimension: 'point',
-            aggregate: ['array_agg(DISTINCT(coalesce(highway, \'\'))) as my_way', 'MAX(footway) as max_footway'],
-            join_condition: 'ST_Intersects(ST_Buffer(geometry_target, 5), geometry_source)',
+            source_dimension: 'extension',
+            aggregate: ['array_agg(ext:qm:fixed || \' \' || ext:qm:fixed) as qm', 'MAX(ext:qm:fixed) as max_qm'],
+            // join_condition: 'ST_Intersects(ST_Buffer(geometry_target, 5), geometry_source)',
+            join_condition: 'ST_DWITHIN(geometry_target, geometry_source, 10)',
             join_filter_target: "highway='footway' AND footway='sidewalk'",
-            join_filter_source: "highway='street_lamp'",
-            target_dataset_id: 'fa8e12ea-6b0c-4d3e-8b38-5b87b268e76b',
-            source_dataset_id: '0d661b69495d47fb838862edf699fe09'
+            join_filter_source: "amenity='bench'",
+            target_dataset_id: 'd1d11dc0-2c2c-4c22-b090-19f67a5af292',
+            source_dataset_id: '3f7e7db6-a9dd-4fb7-825a-8d5581a77929'
         });
     });
 

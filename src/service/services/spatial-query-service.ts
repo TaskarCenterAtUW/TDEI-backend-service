@@ -29,7 +29,7 @@ export class SpatialQueryService extends AbstractOSWBackendRequest {
                 const databaseClient = await dbClient.getDbClient();
 
                 const resultQuery = {
-                    text: 'SELECT * FROM content.tdei_dataset_spatial_join($1, $2, $3)',
+                    text: 'SELECT * FROM content.tdei_dataset_spatial_join_new($1, $2, $3)',
                     values: [spatialQueryService.target_dataset_id, dynamicQuery, spatialQueryService.target_dimension],
                 }
                 const result = await databaseClient.query(resultQuery);

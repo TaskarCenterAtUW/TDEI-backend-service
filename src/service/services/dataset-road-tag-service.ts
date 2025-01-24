@@ -34,7 +34,7 @@ export class DatasetRoadTagService extends AbstractOSWBackendRequest {
                 const databaseClient = await dbClient.getDbClient();
 
                 const resultQuery = {
-                    text: 'SELECT * FROM content.extract_dataset($1)',
+                    text: 'SELECT * FROM content.extract_dataset_new($1)',
                     values: [params.target_dataset_id],
                 }
                 const result = await databaseClient.query(resultQuery);

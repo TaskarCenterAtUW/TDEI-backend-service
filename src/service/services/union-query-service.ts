@@ -26,7 +26,7 @@ export class UnionQueryService extends AbstractOSWBackendRequest {
                 const databaseClient = await dbClient.getDbClient();
 
                 const resultQuery = {
-                    text: 'SELECT * FROM content.tdei_union_dataset($1,$2)',
+                    text: 'SELECT * FROM content.tdei_union_dataset_new($1,$2)',
                     values: [params.tdei_dataset_id_one, params.tdei_dataset_id_two],
                 }
                 const result = await databaseClient.query(resultQuery);
