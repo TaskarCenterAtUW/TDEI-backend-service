@@ -3,6 +3,7 @@ import dbClient from "../../database/data-source";
 import { AbstractOSWBackendRequest } from "../base/osw-backend-abstract";
 import { BackendRequest } from "../interface/interfaces";
 import { Utility } from "../../utility/utility";
+import { QueryConfig } from "pg";
 
 export class DatasetRoadTagService extends AbstractOSWBackendRequest {
 
@@ -31,15 +32,12 @@ export class DatasetRoadTagService extends AbstractOSWBackendRequest {
                 //Update query
                 await dbClient.query(updateQuery);
 
-                const databaseClient = await dbClient.getDbClient();
-
-                const resultQuery = {
-                    text: 'SELECT * FROM content.extract_dataset_new($1)',
+                const datasetQueryConfig: QueryConfig = {
+                    text: 'SELECT * FROM content.extract_dataset($1)',
                     values: [params.target_dataset_id],
                 }
-                const result = await databaseClient.query(resultQuery);
 
-                this.process_upload_dataset(params.target_dataset_id, uploadContext, message, databaseClient, result);
+                this.process_upload_dataset(params.target_dataset_id, uploadContext, message, datasetQueryConfig);
                 return resolve(true);
 
             } catch (error) {

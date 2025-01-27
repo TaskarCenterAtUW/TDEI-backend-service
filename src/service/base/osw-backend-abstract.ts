@@ -7,7 +7,8 @@ import { Readable } from "stream";
 import stream from 'stream';
 import { environment } from "../../environment/environment";
 import QueryStream from "pg-query-stream";
-import { QueryResult } from "pg";
+import { QueryConfig, QueryResult } from "pg";
+import dbClient from "../../database/data-source";
 
 export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
 
@@ -145,8 +146,9 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
     }
 
 
-    async process_upload_dataset(tdei_dataset_id: string, uploadContext: IUploadContext, message: any, databaseClient: any, result: QueryResult<any>) {
+    async process_upload_dataset(tdei_dataset_id: string, uploadContext: IUploadContext, message: any, queryConfig: QueryConfig) {
         return new Promise(async (resolve, reject) => {
+            const databaseClient = await dbClient.getDbClient();
             await databaseClient.query('BEGIN');
             //Get dataset details
             const datasetQuery = {
@@ -180,6 +182,7 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
                 };
             });
 
+            const result: QueryResult = await databaseClient.query(queryConfig);
             // Execute the query
             let success = true;
             for (const row of result.rows) {
@@ -187,7 +190,7 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
 
                 // Stream the cursor's data
                 const query = new QueryStream(`FETCH ALL FROM "${cursor_ref}"`);
-                const stream = await databaseClient.queryStream(databaseClient, query);
+                const stream = await dbClient.queryStream(databaseClient, query);
 
                 stream.on('data', async (data: any) => {
                     try {
@@ -223,7 +226,7 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
 
             // Commit the transaction
             await databaseClient.query('COMMIT');
-            await databaseClient.releaseDbClient(databaseClient);
+            await dbClient.releaseDbClient(databaseClient);
 
             if (success)
                 await this.zipAndUpload(uploadContext, message);

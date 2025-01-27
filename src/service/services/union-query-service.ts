@@ -1,8 +1,8 @@
 import { QueueMessage } from "nodets-ms-core/lib/core/queue";
-import dbClient from "../../database/data-source";
 import { AbstractOSWBackendRequest } from "../base/osw-backend-abstract";
 import { BackendRequest } from "../interface/interfaces";
 import { Utility } from "../../utility/utility";
+import { QueryConfig } from "pg";
 
 export class UnionQueryService extends AbstractOSWBackendRequest {
 
@@ -23,15 +23,13 @@ export class UnionQueryService extends AbstractOSWBackendRequest {
             };
 
             try {
-                const databaseClient = await dbClient.getDbClient();
 
-                const resultQuery = {
-                    text: 'SELECT * FROM content.tdei_union_dataset_new($1,$2)',
+                const unionQueryConfig: QueryConfig = {
+                    text: 'SELECT * FROM content.tdei_union_dataset($1,$2)',
                     values: [params.tdei_dataset_id_one, params.tdei_dataset_id_two],
                 }
-                const result = await databaseClient.query(resultQuery);
 
-                this.process_upload_dataset(params.tdei_dataset_id_one, uploadContext, message, databaseClient, result);
+                this.process_upload_dataset(params.tdei_dataset_id_one, uploadContext, message, unionQueryConfig);
                 return resolve(true);
 
             } catch (error) {

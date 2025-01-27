@@ -1,8 +1,8 @@
 import { QueueMessage } from "nodets-ms-core/lib/core/queue";
-import dbClient from "../../database/data-source";
 import { AbstractOSWBackendRequest } from "../base/osw-backend-abstract";
 import { BackendRequest, SpatialJoinRequestParams } from "../interface/interfaces";
 import { Utility } from "../../utility/utility";
+import { QueryConfig } from "pg";
 
 export class SpatialQueryService extends AbstractOSWBackendRequest {
 
@@ -19,22 +19,19 @@ export class SpatialQueryService extends AbstractOSWBackendRequest {
                 filePath: `backend-jobs/${message.messageId}/${params.target_dataset_id}`,
                 remoteUrls: [],
                 zipUrl: "",
-                outputFileName: `$spatial_join-jobId_${message.messageId}.zip`
+                outputFileName: `spatial_join-jobId_${message.messageId}.zip`
             };
 
             try {
                 let spatialQueryService = SpatialJoinRequestParams.from(params);
                 let dynamicQuery = spatialQueryService.buildSpatialQuery();
 
-                const databaseClient = await dbClient.getDbClient();
-
-                const resultQuery = {
-                    text: 'SELECT * FROM content.tdei_dataset_spatial_join_new($1, $2, $3)',
+                const spatialQueryConfig: QueryConfig = {
+                    text: 'SELECT * FROM content.tdei_dataset_spatial_join($1, $2, $3)',
                     values: [spatialQueryService.target_dataset_id, dynamicQuery, spatialQueryService.target_dimension],
                 }
-                const result = await databaseClient.query(resultQuery);
 
-                this.process_upload_dataset(spatialQueryService.target_dataset_id, uploadContext, message, databaseClient, result);
+                this.process_upload_dataset(spatialQueryService.target_dataset_id, uploadContext, message, spatialQueryConfig);
                 return resolve(true);
 
             } catch (error) {

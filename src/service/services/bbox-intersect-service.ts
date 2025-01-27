@@ -1,8 +1,8 @@
 import { QueueMessage } from "nodets-ms-core/lib/core/queue";
-import dbClient from "../../database/data-source";
 import { AbstractOSWBackendRequest } from "../base/osw-backend-abstract";
 import { BackendRequest, IUploadContext } from "../interface/interfaces";
 import { Utility } from "../../utility/utility";
+import { QueryConfig } from "pg";
 
 export class BboxIntersectService extends AbstractOSWBackendRequest {
 
@@ -37,16 +37,13 @@ export class BboxIntersectService extends AbstractOSWBackendRequest {
                     return reject('Invalid bbox parameters');
                 }
 
-                // Start a transaction
-                const databaseClient = await dbClient.getDbClient();
-
                 // Execute the Bbox query
-                const resultQuery = {
-                    text: 'SELECT * FROM content.bbox_intersect_new($1, $2, $3, $4, $5)',
+                const bboxResultQuery: QueryConfig = {
+                    text: 'SELECT * FROM content.bbox_intersect($1, $2, $3, $4, $5)',
                     values: [params.tdei_dataset_id, params.bbox[0], params.bbox[1], params.bbox[2], params.bbox[3]],
                 }
-                const result = await databaseClient.query(resultQuery);
-                this.process_upload_dataset(params.tdei_dataset_id, uploadContext, message, databaseClient, result);
+
+                this.process_upload_dataset(params.tdei_dataset_id, uploadContext, message, bboxResultQuery);
 
                 return resolve(true);
             } catch (error) {
