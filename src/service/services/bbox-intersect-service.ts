@@ -43,7 +43,7 @@ export class BboxIntersectService extends AbstractOSWBackendRequest {
                     values: [params.tdei_dataset_id, params.bbox[0], params.bbox[1], params.bbox[2], params.bbox[3]],
                 }
 
-                this.process_upload_dataset(params.tdei_dataset_id, uploadContext, message, bboxResultQuery);
+                await this.process_upload_dataset(params.tdei_dataset_id, uploadContext, message, bboxResultQuery);
 
                 return resolve(true);
             } catch (error) {

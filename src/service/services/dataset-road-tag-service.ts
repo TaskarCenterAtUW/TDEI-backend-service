@@ -37,7 +37,7 @@ export class DatasetRoadTagService extends AbstractOSWBackendRequest {
                     values: [params.target_dataset_id],
                 }
 
-                this.process_upload_dataset(params.target_dataset_id, uploadContext, message, datasetQueryConfig);
+                await this.process_upload_dataset(params.target_dataset_id, uploadContext, message, datasetQueryConfig);
                 return resolve(true);
 
             } catch (error) {

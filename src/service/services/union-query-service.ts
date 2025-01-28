@@ -24,12 +24,17 @@ export class UnionQueryService extends AbstractOSWBackendRequest {
 
             try {
 
-                const unionQueryConfig: QueryConfig = {
-                    text: 'SELECT * FROM content.tdei_union_dataset($1,$2)',
-                    values: [params.tdei_dataset_id_one, params.tdei_dataset_id_two],
+                if (params.proximity && params.proximity != null && typeof params.proximity !== 'number') {
+                    await Utility.publishMessage(message, false, 'Invalid proximity parameter');
+                    return reject('Invalid proximity parameter');
                 }
 
-                this.process_upload_dataset(params.tdei_dataset_id_one, uploadContext, message, unionQueryConfig);
+                const unionQueryConfig: QueryConfig = {
+                    text: 'SELECT * FROM content.tdei_union_dataset($1,$2,$3)',
+                    values: [params.tdei_dataset_id_one, params.tdei_dataset_id_two, params.proximity ?? 0.5],
+                }
+
+                await this.process_upload_dataset(params.tdei_dataset_id_one, uploadContext, message, unionQueryConfig);
                 return resolve(true);
 
             } catch (error) {

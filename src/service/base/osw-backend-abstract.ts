@@ -116,11 +116,11 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
                     dataObject[file_name].firstFlag = false;
                     await this.uploadStreamToAzureBlob(dataObject[file_name].stream, uploadContext, `osw.${file_name}.geojson`);
                     console.log(`Uploaded ${file_name} to Storage`);
-                    return resolve(true);
+                    resolve(true);
                 }
             } catch (error) {
                 console.error('Error streaming data:', error);
-                return reject(`Error streaming data:, ${error}`);
+                reject(`Error streaming data:, ${error}`);
             }
         });
     }
@@ -196,7 +196,7 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
                     try {
                         await this.handleStreamDataEvent(data, file_name, dataObject, uploadContext);
                     } catch (error) {
-                        await Utility.publishMessage(message, false, 'Error streaming data');
+                        stream.destroy();
                         reject(`Error streaming data: ${error}`);
                     }
                 });
@@ -212,6 +212,7 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
                         stream.on('error', async (error: any) => {
                             console.error('Error streaming data:', error);
                             await Utility.publishMessage(message, false, 'Error streaming data');
+                            stream.destroy();
                             rejectCur(error);
                         });
                     });

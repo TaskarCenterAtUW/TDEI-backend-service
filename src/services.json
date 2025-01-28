@@ -86,6 +86,11 @@
                 "name": "tdei_dataset_id_two",
                 "type": "string",
                 "required": true
+            },
+            {
+                "name": "proximity",
+                "type": "number",
+                "required": false
             }
         ]
     }

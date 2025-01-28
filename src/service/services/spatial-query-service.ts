@@ -31,7 +31,7 @@ export class SpatialQueryService extends AbstractOSWBackendRequest {
                     values: [spatialQueryService.target_dataset_id, dynamicQuery, spatialQueryService.target_dimension],
                 }
 
-                this.process_upload_dataset(spatialQueryService.target_dataset_id, uploadContext, message, spatialQueryConfig);
+                await this.process_upload_dataset(spatialQueryService.target_dataset_id, uploadContext, message, spatialQueryConfig);
                 return resolve(true);
 
             } catch (error) {
