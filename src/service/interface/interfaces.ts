@@ -2,7 +2,8 @@ import { QueueMessage } from "nodets-ms-core/lib/core/queue";
 import { AbstractDomainEntity, Prop } from "nodets-ms-core/lib/models";
 import { InputException } from "../../exceptions/http/http-exceptions";
 import { QueryConfig } from "pg";
-
+import { Parser } from "node-sql-parser";
+const parser = new Parser();
 /**
  * Represents a backend request.
  */
@@ -35,7 +36,7 @@ export interface IUploadContext {
     outputFileName?: string;
 }
 
-export interface AttributeDetails { alias: string, column: string, aggregate?: string }
+export interface AttributeDetails { alias: string, column: string[], aggregate?: string }
 
 export class SpatialJoinRequestParams extends AbstractDomainEntity {
 
@@ -84,13 +85,56 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
         }
     }
 
-    private prefixColumns(query: string, prefix: string): string {
+    private prefixColumns(query: string, prefix: string, isExtensionFile: boolean): string {
         // Regular expression to match column names (assuming column names are word characters)
         const columnPattern = /\b(?!geometry_target\b)(?!geometry_source\b)(\w+)\b(?=\s*(=|!=|>|<|>=|<=))/g;
 
         // Replace matched column names with 'source.' prepended
+        if (isExtensionFile) {
+            return query.replace(columnPattern, `${prefix}.feature->'properties'->>'$1'::text`);
+        }
         return query.replace(columnPattern, `${prefix}.$1`);
     }
+
+    // private prefixColumns(query: string, prefix: string, isExtensionFile: boolean): string {
+    //     try {
+    //         const parsedQuery = parser.astify(`SELECT * FROM dummy_table WHERE ${query}`);
+
+    //         function traverse(node: any) {
+    //             if (node.type === 'column_ref' && node.column !== 'geometry_target' && node.column !== 'geometry_source') {
+    //                 if (isExtensionFile) {
+    //                     node.column = `${prefix}.feature->'properties'->>'${node.column}'::text`.toString();
+    //                 }
+    //                 else {
+    //                     node.column = `${prefix}.${node.column}`.toString();
+    //                 }
+    //             }
+    //             if (node.left) traverse(node.left);
+    //             if (node.right) traverse(node.right);
+    //             if (node.expr) traverse(node.expr);
+    //             if (node.args?.value) node.args.value.forEach((arg: any) => traverse(arg));
+    //             if (node.args?.expr) traverse(node.args?.expr);
+    //             if (node.value) traverse(node.value);
+    //             if (node.columns) node.columns.forEach((col: any) => traverse(col));
+    //         }
+
+    //         let whereClause;
+    //         if (Array.isArray(parsedQuery)) {
+    //             whereClause = (parsedQuery[0] as any).where;
+    //         } else {
+    //             whereClause = (parsedQuery as any).where;
+    //         }
+
+    //         traverse(whereClause);
+
+    //         (parsedQuery as any).where = whereClause;
+
+    //         const modifiedWhereClause = parser.sqlify({ where: whereClause } as any);
+    //         return modifiedWhereClause;
+    //     } catch (error) {
+    //         throw new Error('Invalid query syntax');
+    //     }
+    // }
 
     private removeExtraSpacesFromString(str: string): string {
         str = str.trim();
@@ -140,7 +184,6 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
                 target_table = 'content.edge target';
                 transform_geometry_target = 'target.edge_loc_3857';
                 target_select_required_fields = 'target.edge_id, target.edge_loc, target.orig_node_id, target.dest_node_id';
-
                 break;
             case 'node':
                 target_table = 'content.node target';
@@ -157,7 +200,7 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
         }
 
         let source_table = '';
-
+        let isExtensionFile = false;
         //based on the source dimension, select the source table, and transform the geometry
         switch (this.source_dimension) {
             case 'edge':
@@ -184,6 +227,11 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
                 source_table = 'content.extension_polygon source';
                 transform_geometry_source = 'ST_Transform(source.polygon_loc, 3857)';
                 break;
+            case 'extension':
+                source_table = 'content.extension source';
+                transform_geometry_source = 'source.ext_loc_3857';
+                isExtensionFile = true;
+                break;
             default:
                 throw new InputException('Invalid source dimension');
         }
@@ -192,21 +240,25 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
         let aggregate_compiled: AttributeDetails[] = [];
         try {
             if (this.aggregate?.length) {
-                aggregate_compiled = this.aggregate.map((aggregate) => {
-                    const name = aggregate.split('(')[1].split(')')[0];
-                    aggregate = aggregate.replace(name, `source.${name}`);
-                    let columnName = `source.${name}`;
+                // aggregate_compiled = this.aggregate.map((aggregate) => {
+                //     const name = aggregate.split('(')[1].split(')')[0];
+                //     aggregate = aggregate.replace(name, `source.${name}`);
+                //     let columnName = `source.${name}`;
 
-                    //if aggregate has alias then take the alias as the name
-                    if (aggregate.toLowerCase().includes(' as ')) {
-                        const alias_name = aggregate.toLowerCase().split(' as ')[1];
-                        //remove the alias from the aggregate
-                        aggregate = aggregate.toLowerCase().split(' as ')[0];
-                        return { alias: `${alias_name}`, column: columnName, aggregate: aggregate };
-                    }
-                    else {
-                        return { alias: `${name}`, column: columnName, aggregate: aggregate };
-                    }
+                //     //if aggregate has alias then take the alias as the name
+                //     if (aggregate.toLowerCase().includes(' as ')) {
+                //         const alias_name = aggregate.toLowerCase().split(' as ')[1];
+                //         //remove the alias from the aggregate
+                //         aggregate = aggregate.toLowerCase().split(' as ')[0];
+                //         return { alias: `${alias_name}`, column: columnName, aggregate: aggregate };
+                //     }
+                //     else {
+                //         return { alias: `${name}`, column: columnName, aggregate: aggregate };
+                //     }
+                // });
+                aggregate_compiled = this.aggregate.map((aggregate) => {
+                    const { alias, column, aggregate: modifiedAggregate } = this.replaceColumnNamesFromAggregate(aggregate, isExtensionFile);
+                    return { alias, column, aggregate: modifiedAggregate };
                 });
             }
         } catch (error) {
@@ -221,11 +273,11 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
 
         //Filter filter attribute alias names
         if (this.join_filter_target && this.join_filter_target != '') {
-            this.join_filter_target = this.prefixColumns(this.join_filter_target, 'target');
+            this.join_filter_target = this.prefixColumns(this.join_filter_target, 'target', false);
         }
 
         if (this.join_filter_source && this.join_filter_source != '') {
-            this.join_filter_source = this.prefixColumns(this.join_filter_source, 'source');
+            this.join_filter_source = this.prefixColumns(this.join_filter_source, 'source', true);
         }
         //In the case filters are on geometry, transform the geometry
         this.join_filter_target = this.join_filter_target?.replace('geometry_target', transform_geometry_target);
@@ -280,10 +332,13 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
      */
     generateCaseStatements(aggregatedAttributes: AttributeDetails[]) {
         const aggCases = aggregatedAttributes.map(attr => {
+            const columns = Array.isArray(attr.column) ? attr.column : [attr.column];
+            const whereClause = columns.map(col => `${col} IS NOT NULL`).join(' AND ');
+
             return `
             CASE
-              WHEN ${attr.aggregate} FILTER (WHERE ${attr.column} IS NOT NULL) IS NOT NULL THEN
-                JSONB_BUILD_OBJECT('ext:${attr.alias}', ${attr.aggregate} FILTER (WHERE ${attr.column} IS NOT NULL))
+              WHEN ${attr.aggregate} FILTER (WHERE ${whereClause}) IS NOT NULL THEN
+                JSONB_BUILD_OBJECT('ext:${attr.alias}', ${attr.aggregate} FILTER (WHERE ${whereClause}))
               ELSE '{}'::jsonb
             END
           `;
@@ -292,7 +347,57 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
         return [...aggCases].join(' || ');
     }
 
+    /**
+     * Replaces column names in an aggregate with the corresponding source prefix.
+     * 
+     * @param aggregate - The aggregate to be modified.
+     * @returns An object containing the modified aggregate, alias, and column.
+     */
+    replaceColumnNamesFromAggregate(aggregate: string, isExtensionFile: boolean): { alias: string, column: string[], aggregate: string } {
+        const parsedQuery = parser.astify(`SELECT ${aggregate} FROM dummy_table`);
+        let alias_name = '';
+        let columnNames: Set<string> = new Set();
 
+        function traverse(node: any) {
+            if (node.type === 'column_ref') {
+                columnNames.add(node.column);
+            }
+            if (node.as) {
+                alias_name = node.as;
+            }
+            if (node.left) traverse(node.left);
+            if (node.right) traverse(node.right);
+            if (node.expr) traverse(node.expr);
+            if (node.args?.value) node.args.value.forEach((arg: any) => traverse(arg));
+            if (node.args?.expr) traverse(node.args?.expr);
+            if (node.value) traverse(node.value);
+            if (node.columns) node.columns.forEach((col: any) => traverse(col));
+        }
+
+        traverse(parsedQuery);
+
+        let modifiedAggregate = aggregate;
+        let columnNamesReplaced: string[] = [];
+        columnNames.forEach(columnName => {
+            if (columnName) {
+                const regex = new RegExp(`\\b${columnName}\\b`, 'g');
+                if (isExtensionFile) {
+                    columnName = `(source.feature->'properties'->>'${columnName}'::text)`;
+                    columnNamesReplaced.push(columnName);
+                }
+                else {
+                    columnName = `(source.${columnName})`;
+                    columnNamesReplaced.push(columnName);
+                }
+                //remove the alias from the aggregate
+                modifiedAggregate = modifiedAggregate.replace(regex, `${columnName}`).split(' as ')[0];
+
+            }
+        });
+
+
+        return { alias: alias_name || Array.from(columnNames).join('_'), column: columnNamesReplaced, aggregate: modifiedAggregate };
+    }
 
     /**
      * Replaces placeholders in a query text with corresponding values.
