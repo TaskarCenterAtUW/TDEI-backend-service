@@ -3,6 +3,7 @@ import { AbstractOSWBackendRequest } from "../base/osw-backend-abstract";
 import { BackendRequest, SpatialJoinRequestParams } from "../interface/interfaces";
 import { Utility } from "../../utility/utility";
 import { QueryConfig } from "pg";
+import { InputException } from "../../exceptions/http/http-exceptions";
 
 export class SpatialQueryService extends AbstractOSWBackendRequest {
 
@@ -36,7 +37,10 @@ export class SpatialQueryService extends AbstractOSWBackendRequest {
 
             } catch (error) {
                 console.error('Error executing query:', error);
-                await Utility.publishMessage(message, false, 'Error executing query');
+                if (error instanceof InputException)
+                    await Utility.publishMessage(message, false, error.message);
+                else
+                    await Utility.publishMessage(message, false, 'Error executing query');
                 reject(`Error executing query: ${error}`);
             }
         });

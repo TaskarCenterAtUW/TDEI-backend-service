@@ -90,7 +90,7 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
         const columnPattern = /\b(?!geometry_target\b)(?!geometry_source\b)(\w+)\b(?=\s*(=|!=|>|<|>=|<=))/g;
 
         // Replace matched column names with 'source.' prepended
-        if (isExtensionFile) {
+        if (isExtensionFile || query.includes('ext:')) {
             return query.replace(columnPattern, `${prefix}.feature->'properties'->>'$1'::text`);
         }
         return query.replace(columnPattern, `${prefix}.$1`);
@@ -273,11 +273,12 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
 
         //Filter filter attribute alias names
         if (this.join_filter_target && this.join_filter_target != '') {
+            //Target filter cannot be extension file , pass false
             this.join_filter_target = this.prefixColumns(this.join_filter_target, 'target', false);
         }
 
         if (this.join_filter_source && this.join_filter_source != '') {
-            this.join_filter_source = this.prefixColumns(this.join_filter_source, 'source', true);
+            this.join_filter_source = this.prefixColumns(this.join_filter_source, 'source', isExtensionFile);
         }
         //In the case filters are on geometry, transform the geometry
         this.join_filter_target = this.join_filter_target?.replace('geometry_target', transform_geometry_target);
@@ -381,7 +382,7 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
         columnNames.forEach(columnName => {
             if (columnName) {
                 const regex = new RegExp(`\\b${columnName}\\b`, 'g');
-                if (isExtensionFile) {
+                if (isExtensionFile || columnName.includes('ext:')) {
                     columnName = `(source.feature->'properties'->>'${columnName}'::text)`;
                     columnNamesReplaced.push(columnName);
                 }
