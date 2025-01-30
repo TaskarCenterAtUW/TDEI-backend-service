@@ -87,26 +87,30 @@ export class BackendService {
             }
         }
 
-        switch (service.service) {
-            case "bbox_intersect":
-                await this.bboxService.bboxIntersect(message);
-                break;
-            case "dataset_tag_road":
-                await this.datasetTagRoadService.datasetTagRoad(message);
-                break;
-            case "spatial_join":
-                await this.spatialQueryService.executeSpatialQuery(message);
-                break;
-            case "union_dataset":
-                await this.unionQueryService.executeUnionQuery(message);
-                break;
-            default:
-                await Utility.publishMessage(message, false, "Service not found");
-                return false;
+        try {
+            switch (service.service) {
+                case "bbox_intersect":
+                    await this.bboxService.bboxIntersect(message);
+                    break;
+                case "dataset_tag_road":
+                    await this.datasetTagRoadService.datasetTagRoad(message);
+                    break;
+                case "spatial_join":
+                    await this.spatialQueryService.executeSpatialQuery(message);
+                    break;
+                case "union_dataset":
+                    await this.unionQueryService.executeUnionQuery(message);
+                    break;
+                default:
+                    await Utility.publishMessage(message, false, "Service not found");
+                    return false;
+            }
+            return true;
+        } catch (error) {
+            console.error(error);
+            return false;
         }
-        return true;
     }
-
 }
 
 const backendService = new BackendService(services);

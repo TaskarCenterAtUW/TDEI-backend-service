@@ -65,26 +65,29 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
  * @param message - The message object.
  */
     public async handleStreamEndEvent(dataObject: any, uploadContext: IUploadContext, message: any) {
-
-        for (const dataType of this.dataTypes) {
-            dataObject[dataType].stream.push("]}");
-            dataObject[dataType].stream.push(null);
-        }
-        console.log('All result sets streamed and uploaded.');
-        await Utility.sleep(5000);
-        //Verify if atlease one file is uploaded
-        if (uploadContext.remoteUrls.length == 0) {
-            await Utility.publishMessage(message, true, 'No data found for given prarameters.');
-            return;
-        }
-        await Utility.sleep(15000);
-        this.zipStream(uploadContext).then(async () => {
-            console.log('Zip file uploaded.');
-            message.data.file_upload_path = uploadContext.zipUrl;
-            await Utility.publishMessage(message, true, 'Dataset uploaded successfully!');
-        }).catch(async (error) => {
-            console.error('Error zipping data:', error);
-            await Utility.publishMessage(message, false, 'Error zipping data');
+        return new Promise(async (resolve, reject) => {
+            for (const dataType of this.dataTypes) {
+                dataObject[dataType].stream.push("]}");
+                dataObject[dataType].stream.push(null);
+            }
+            console.log('All result sets streamed and uploaded.');
+            await Utility.sleep(5000);
+            //Verify if atlease one file is uploaded
+            if (uploadContext.remoteUrls.length == 0) {
+                await Utility.publishMessage(message, true, 'No data found for given prarameters.');
+                return resolve(true);
+            }
+            await Utility.sleep(15000);
+            this.zipStream(uploadContext).then(async () => {
+                console.log('Zip file uploaded.');
+                message.data.file_upload_path = uploadContext.zipUrl;
+                await Utility.publishMessage(message, true, 'Dataset uploaded successfully!');
+                resolve(true);
+            }).catch(async (error) => {
+                console.error('Error zipping data:', error);
+                await Utility.publishMessage(message, false, 'Error zipping data');
+                resolve(true);
+            });
         });
     }
     /**
@@ -95,22 +98,26 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
      * @param uploadContext - The upload context.
      */
     public async handleStreamDataEvent(data: any, dataObject: any, uploadContext: IUploadContext) {
-        try {
-            let input_dataType = "";
-            for (const dataType of this.dataTypes) {
-                if (data[dataType]) {
-                    input_dataType = dataType;
-                    dataObject[dataType].stream.push(`${dataObject[dataType].firstFlag ? dataObject[dataType].constJson : ","}${JSON.stringify(data[dataType])}`);
+        return new Promise(async (resolve, reject) => {
+            try {
+                let input_dataType = "";
+                for (const dataType of this.dataTypes) {
+                    if (data[dataType]) {
+                        input_dataType = dataType;
+                        dataObject[dataType].stream.push(`${dataObject[dataType].firstFlag ? dataObject[dataType].constJson : ","}${JSON.stringify(data[dataType])}`);
+                    }
                 }
+                if (dataObject[input_dataType].firstFlag) {
+                    dataObject[input_dataType].firstFlag = false;
+                    await this.uploadStreamToAzureBlob(dataObject[input_dataType].stream, uploadContext, `osw.${input_dataType.replace("extensions_", "")}.geojson`);
+                    console.log(`Uploaded ${input_dataType} to Storage`);
+                    return resolve(true);
+                }
+            } catch (error) {
+                console.error('Error streaming data:', error);
+                return reject(`Error streaming data:, ${error}`);
             }
-            if (dataObject[input_dataType].firstFlag) {
-                dataObject[input_dataType].firstFlag = false;
-                await this.uploadStreamToAzureBlob(dataObject[input_dataType].stream, uploadContext, `osw.${input_dataType.replace("extensions_", "")}.geojson`)
-                    .then(() => console.log(`Uploaded ${input_dataType} to Storage`));
-            }
-        } catch (error) {
-            console.error('Error streaming data:', error);
-        }
+        });
     }
 
     buildAdditionalInfo(info: any): string {
