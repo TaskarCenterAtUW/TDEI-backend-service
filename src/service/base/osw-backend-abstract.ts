@@ -6,9 +6,11 @@ import { Core } from "nodets-ms-core";
 import { Readable } from "stream";
 import stream from 'stream';
 import { environment } from "../../environment/environment";
+import QueryStream from "pg-query-stream";
+import { QueryConfig, QueryResult } from "pg";
+import dbClient from "../../database/data-source";
 
 export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
-    dataTypes = ['edges', 'nodes', 'zones', 'extensions_points', 'extensions_polygons', 'extensions_lines'];
 
     /**
      * Uploads a stream to an Azure Blob storage container.
@@ -64,13 +66,21 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
  * @param uploadContext - The upload context.
  * @param message - The message object.
  */
-    public async handleStreamEndEvent(dataObject: any, uploadContext: IUploadContext, message: any) {
+    public async handleStreamEndEvent(dataObject: any, file_name: string) {
+
+        dataObject[file_name].stream.push("]}");
+        dataObject[file_name].stream.push(null);
+
+        console.log(`Finished streaming ${file_name}`);
+    }
+
+    /**
+     * Zips and uploads the data to Azure Blob Storage.
+     * @param uploadContext - The upload context.
+     * @param message - The message object.
+     */
+    public async zipAndUpload(uploadContext: IUploadContext, message: any) {
         return new Promise(async (resolve, reject) => {
-            for (const dataType of this.dataTypes) {
-                dataObject[dataType].stream.push("]}");
-                dataObject[dataType].stream.push(null);
-            }
-            console.log('All result sets streamed and uploaded.');
             await Utility.sleep(5000);
             //Verify if atlease one file is uploaded
             if (uploadContext.remoteUrls.length == 0) {
@@ -97,36 +107,32 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
      * @param dataObject - The data object to be updated.
      * @param uploadContext - The upload context.
      */
-    public async handleStreamDataEvent(data: any, dataObject: any, uploadContext: IUploadContext) {
+    public async handleStreamDataEvent(data: any, file_name: string, dataObject: any, uploadContext: IUploadContext) {
         return new Promise(async (resolve, reject) => {
             try {
-                let input_dataType = "";
-                for (const dataType of this.dataTypes) {
-                    if (data[dataType]) {
-                        input_dataType = dataType;
-                        dataObject[dataType].stream.push(`${dataObject[dataType].firstFlag ? dataObject[dataType].constJson : ","}${JSON.stringify(data[dataType])}`);
-                    }
-                }
-                if (dataObject[input_dataType].firstFlag) {
-                    dataObject[input_dataType].firstFlag = false;
-                    await this.uploadStreamToAzureBlob(dataObject[input_dataType].stream, uploadContext, `osw.${input_dataType.replace("extensions_", "")}.geojson`);
-                    console.log(`Uploaded ${input_dataType} to Storage`);
-                    return resolve(true);
+                dataObject[file_name].stream.push(`${dataObject[file_name].firstFlag ? dataObject[file_name].constJson : ","}${JSON.stringify(data["feature"])}`);
+
+                if (dataObject[file_name].firstFlag) {
+                    dataObject[file_name].firstFlag = false;
+                    await this.uploadStreamToAzureBlob(dataObject[file_name].stream, uploadContext, `osw.${file_name}.geojson`);
+                    console.log(`Uploaded ${file_name} to Storage`);
+                    resolve(true);
                 }
             } catch (error) {
                 console.error('Error streaming data:', error);
-                return reject(`Error streaming data:, ${error}`);
+                reject(`Error streaming data:, ${error}`);
             }
         });
     }
 
-    buildAdditionalInfo(info: any): string {
-        const properties = ['dataSource', 'region', 'dataTimestamp', 'pipelineVersion', '$schema'];
-        let jsonParts = properties.map(prop => {
-            const data = this.getData(info?.[prop]);
-            return data && data != "" ? `"${prop}": ${data},` : '';
-        });
-
+    private buildAdditionalInfo(info: any): string {
+        const jsonParts: string[] = [];
+        if (info) {
+            Object.keys(info).forEach((key: any) => {
+                const data = this.getData(info?.[key]);
+                jsonParts.push(data && data != "" ? `"${key}": ${data},` : '');
+            });
+        }
         if (!jsonParts.toString().includes('$schema'))
             jsonParts.push(`"$schema": "${environment.oswSchemaUrl}",`);
 
@@ -135,7 +141,97 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
         return `{ ${jsonParts.join(' ').trimStart()} `;
     }
 
-    getData(data: any): string {
+    private getData(data: any): string {
         return data && data != '' ? JSON.stringify(data) : "";
+    }
+
+
+    async process_upload_dataset(tdei_dataset_id: string, uploadContext: IUploadContext, message: any, queryConfig: QueryConfig) {
+        return new Promise(async (resolve, reject) => {
+            const databaseClient = await dbClient.getDbClient();
+            await databaseClient.query('BEGIN');
+            //Get dataset details
+            const datasetQuery = {
+                text: 'SELECT event_info as edge, node_info as node, zone_info as zone, ext_point_info as point, ext_line_info as line, ext_polygon_info as polygon FROM content.dataset WHERE tdei_dataset_id = $1 limit 1',
+                values: [tdei_dataset_id],
+            }
+            const datasetResult = await databaseClient.query(datasetQuery);
+            //Get dataset extension details
+            const datasetExtensionQuery = {
+                text: 'SELECT file_meta, name FROM content.extension_file WHERE tdei_dataset_id = $1',
+                values: [tdei_dataset_id],
+            }
+            const datasetExtensionResult = await databaseClient.query(datasetExtensionQuery);
+
+            //Build file metadata
+            let dataObject: any = [];
+            datasetResult.rows.forEach((row: any) => {
+                Object.keys(row).forEach((key: any) => {
+                    dataObject[key] = {
+                        constJson: this.buildAdditionalInfo(row[key]),
+                        stream: new Readable({ read() { } }),
+                        firstFlag: true
+                    };
+                });
+            });
+            datasetExtensionResult.rows.forEach((row: any) => {
+                dataObject[row["name"]] = {
+                    constJson: this.buildAdditionalInfo(row["file_meta"]),
+                    stream: new Readable({ read() { } }),
+                    firstFlag: true
+                };
+            });
+
+            const result: QueryResult = await databaseClient.query(queryConfig);
+            // Execute the query
+            let success = true;
+            for (const row of result.rows) {
+                const { file_name, cursor_ref } = row;
+
+                // Stream the cursor's data
+                const query = new QueryStream(`FETCH ALL FROM "${cursor_ref}"`);
+                const stream = await dbClient.queryStream(databaseClient, query);
+
+                stream.on('data', async (data: any) => {
+                    try {
+                        await this.handleStreamDataEvent(data, file_name, dataObject, uploadContext);
+                    } catch (error) {
+                        stream.destroy();
+                        reject(`Error streaming data: ${error}`);
+                    }
+                });
+
+                try {
+                    await new Promise((resolveCur, rejectCur) => {
+                        // Event listener for end event
+                        stream.on('end', async () => {
+                            resolveCur(await this.handleStreamEndEvent(dataObject, file_name));
+                        });
+
+                        // Event listener for error event
+                        stream.on('error', async (error: any) => {
+                            console.error('Error streaming data:', error);
+                            await Utility.publishMessage(message, false, 'Error streaming data');
+                            stream.destroy();
+                            rejectCur(error);
+                        });
+                    });
+                } catch (error) {
+                    success = false;
+                    break;
+                }
+
+                // Close the cursor
+                await databaseClient.query(`CLOSE "${cursor_ref}"`);
+            }
+
+            // Commit the transaction
+            await databaseClient.query('COMMIT');
+            await dbClient.releaseDbClient(databaseClient);
+
+            if (success)
+                await this.zipAndUpload(uploadContext, message);
+            resolve(true);
+        });
     }
 }

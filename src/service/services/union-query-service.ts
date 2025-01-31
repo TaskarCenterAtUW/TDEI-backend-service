@@ -1,11 +1,8 @@
 import { QueueMessage } from "nodets-ms-core/lib/core/queue";
-import QueryStream from "pg-query-stream";
-import dbClient from "../../database/data-source";
 import { AbstractOSWBackendRequest } from "../base/osw-backend-abstract";
 import { BackendRequest } from "../interface/interfaces";
-import { Readable } from "stream";
 import { Utility } from "../../utility/utility";
-import { InputException } from "../../exceptions/http/http-exceptions";
+import { QueryConfig } from "pg";
 
 export class UnionQueryService extends AbstractOSWBackendRequest {
 
@@ -22,68 +19,25 @@ export class UnionQueryService extends AbstractOSWBackendRequest {
                 filePath: `backend-jobs/${message.messageId}/${params.tdei_dataset_id_one}_${params.tdei_dataset_id_two}`,
                 remoteUrls: [],
                 zipUrl: "",
-                outputFileName: ''
+                outputFileName: `union_dataset-jobId_${message.messageId}.zip`
             };
 
             try {
-                //Get dataset details
-                const datasetQuery = {
-                    text: 'SELECT name, event_info as edges, node_info as nodes, zone_info as zones, ext_point_info as extensions_points, ext_line_info as extensions_lines, ext_polygon_info as extensions_polygons FROM content.dataset WHERE tdei_dataset_id in ($1, $2)',
-                    values: [params.tdei_dataset_id_one, params.tdei_dataset_id_two],
+
+                if (params.proximity && params.proximity != null && typeof params.proximity !== 'number') {
+                    await Utility.publishMessage(message, false, 'Invalid proximity parameter');
+                    return reject('Invalid proximity parameter');
                 }
-                const datasetResult = await dbClient.query(datasetQuery);
 
-                uploadContext.outputFileName = `union_dataset-jobId_${message.messageId}.zip`;
+                const unionQueryConfig: QueryConfig = {
+                    text: 'SELECT * FROM content.tdei_union_dataset($1,$2,$3)',
+                    values: [params.tdei_dataset_id_one, params.tdei_dataset_id_two, params.proximity ?? 0.5],
+                }
 
-                // Create a query stream
-                const query = new QueryStream(`SELECT * FROM content.tdei_union_dataset($1,$2) `, [params.tdei_dataset_id_one, params.tdei_dataset_id_two], { highWaterMark: 100 });
-                // Execute the query
-                const databaseClient = await dbClient.getDbClient();
-                const stream = await dbClient.queryStream(databaseClient, query);
-                //Build run context
-                const dataObject = this.dataTypes.reduce((obj: any, dataType: any) => {
-                    obj[dataType] = {
-                        // Constant JSON string to be used for all the data types
-                        constJson: this.buildAdditionalInfo(datasetResult.rows[0][`${dataType}`]),
-                        stream: new Readable({ read() { } }),
-                        firstFlag: true
-                    };
-                    return obj;
-                }, {});
+                await this.process_upload_dataset(params.tdei_dataset_id_one, uploadContext, message, unionQueryConfig);
+                return resolve(true);
 
-
-                // Create streams for each data type
-                stream.on('data', async data => {
-                    try {
-                        await this.handleStreamDataEvent(data, dataObject, uploadContext);
-                    } catch (error) {
-                        await Utility.publishMessage(message, false, 'Error streaming data');
-                        reject(`Error streaming data: ${error}`);
-                    }
-                });
-
-                // Event listener for end event
-                stream.on('end', async () => {
-                    await this.handleStreamEndEvent(dataObject, uploadContext, message);
-                    await dbClient.releaseDbClient(databaseClient);
-                    resolve(true);
-                });
-
-                // Event listener for error event
-                stream.on('error', async error => {
-                    console.error('Error streaming data:', error);
-                    await Utility.publishMessage(message, false, 'Error streaming data');
-                    reject(`Error streaming query: ${error}`);
-                });
             } catch (error) {
-
-                if (error instanceof InputException) {
-                    console.error('Error executing query:', error);
-                    await Utility.publishMessage(message, false, error.message);
-                    reject(`Error executing query: ${error}`);
-                    return;
-                }
-
                 console.error('Error executing query:', error);
                 await Utility.publishMessage(message, false, 'Error executing query');
                 reject(`Error executing query: ${error}`);
