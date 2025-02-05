@@ -217,15 +217,15 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
                 break;
             case 'point':
                 source_table = 'content.extension_point source';
-                transform_geometry_source = 'ST_Transform(source.point_loc, 3857)';
+                transform_geometry_source = 'source.point_loc_3857';
                 break;
             case 'line':
                 source_table = 'content.extension_line source';
-                transform_geometry_source = 'ST_Transform(source.line_loc, 3857)';
+                transform_geometry_source = 'source.line_loc_3857';
                 break;
             case 'polygon':
                 source_table = 'content.extension_polygon source';
-                transform_geometry_source = 'ST_Transform(source.polygon_loc, 3857)';
+                transform_geometry_source = 'source.polygon_loc_3857';
                 break;
             case 'extension':
                 source_table = 'content.extension source';
