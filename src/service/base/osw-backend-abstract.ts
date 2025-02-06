@@ -148,90 +148,95 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
 
     async process_upload_dataset(tdei_dataset_id: string, uploadContext: IUploadContext, message: any, queryConfig: QueryConfig) {
         return new Promise(async (resolve, reject) => {
-            const databaseClient = await dbClient.getDbClient();
-            await databaseClient.query('BEGIN');
-            //Get dataset details
-            const datasetQuery = {
-                text: 'SELECT event_info as edge, node_info as node, zone_info as zone, ext_point_info as point, ext_line_info as line, ext_polygon_info as polygon FROM content.dataset WHERE tdei_dataset_id = $1 limit 1',
-                values: [tdei_dataset_id],
-            }
-            const datasetResult = await databaseClient.query(datasetQuery);
-            //Get dataset extension details
-            const datasetExtensionQuery = {
-                text: 'SELECT file_meta, name FROM content.extension_file WHERE tdei_dataset_id = $1',
-                values: [tdei_dataset_id],
-            }
-            const datasetExtensionResult = await databaseClient.query(datasetExtensionQuery);
+            try {
+                const databaseClient = await dbClient.getDbClient();
+                await databaseClient.query('BEGIN');
+                //Get dataset details
+                const datasetQuery = {
+                    text: 'SELECT event_info as edge, node_info as node, zone_info as zone, ext_point_info as point, ext_line_info as line, ext_polygon_info as polygon FROM content.dataset WHERE tdei_dataset_id = $1 limit 1',
+                    values: [tdei_dataset_id],
+                }
+                const datasetResult = await databaseClient.query(datasetQuery);
+                //Get dataset extension details
+                const datasetExtensionQuery = {
+                    text: 'SELECT file_meta, name FROM content.extension_file WHERE tdei_dataset_id = $1',
+                    values: [tdei_dataset_id],
+                }
+                const datasetExtensionResult = await databaseClient.query(datasetExtensionQuery);
 
-            //Build file metadata
-            let dataObject: any = [];
-            datasetResult.rows.forEach((row: any) => {
-                Object.keys(row).forEach((key: any) => {
-                    dataObject[key] = {
-                        constJson: this.buildAdditionalInfo(row[key]),
+                //Build file metadata
+                let dataObject: any = [];
+                datasetResult.rows.forEach((row: any) => {
+                    Object.keys(row).forEach((key: any) => {
+                        dataObject[key] = {
+                            constJson: this.buildAdditionalInfo(row[key]),
+                            stream: new Readable({ read() { } }),
+                            firstFlag: true
+                        };
+                    });
+                });
+                datasetExtensionResult.rows.forEach((row: any) => {
+                    dataObject[row["name"]] = {
+                        constJson: this.buildAdditionalInfo(row["file_meta"]),
                         stream: new Readable({ read() { } }),
                         firstFlag: true
                     };
                 });
-            });
-            datasetExtensionResult.rows.forEach((row: any) => {
-                dataObject[row["name"]] = {
-                    constJson: this.buildAdditionalInfo(row["file_meta"]),
-                    stream: new Readable({ read() { } }),
-                    firstFlag: true
-                };
-            });
 
-            const result: QueryResult = await databaseClient.query(queryConfig);
-            // Execute the query
-            let success = true;
-            for (const row of result.rows) {
-                const { file_name, cursor_ref } = row;
+                const result: QueryResult = await databaseClient.query(queryConfig);
+                // Execute the query
+                let success = true;
+                for (const row of result.rows) {
+                    const { file_name, cursor_ref } = row;
 
-                // Stream the cursor's data
-                const query = new QueryStream(`FETCH ALL FROM "${cursor_ref}"`);
-                const stream = await dbClient.queryStream(databaseClient, query);
+                    // Stream the cursor's data
+                    const query = new QueryStream(`FETCH ALL FROM "${cursor_ref}"`);
+                    const stream = await dbClient.queryStream(databaseClient, query);
 
-                stream.on('data', async (data: any) => {
-                    try {
-                        await this.handleStreamDataEvent(data, file_name, dataObject, uploadContext);
-                    } catch (error) {
-                        stream.destroy();
-                        reject(`Error streaming data: ${error}`);
-                    }
-                });
-
-                try {
-                    await new Promise((resolveCur, rejectCur) => {
-                        // Event listener for end event
-                        stream.on('end', async () => {
-                            resolveCur(await this.handleStreamEndEvent(dataObject, file_name));
-                        });
-
-                        // Event listener for error event
-                        stream.on('error', async (error: any) => {
-                            console.error('Error streaming data:', error);
-                            await Utility.publishMessage(message, false, 'Error streaming data');
+                    stream.on('data', async (data: any) => {
+                        try {
+                            await this.handleStreamDataEvent(data, file_name, dataObject, uploadContext);
+                        } catch (error) {
                             stream.destroy();
-                            rejectCur(error);
-                        });
+                            reject(`Error streaming data: ${error}`);
+                        }
                     });
-                } catch (error) {
-                    success = false;
-                    break;
+
+                    try {
+                        await new Promise((resolveCur, rejectCur) => {
+                            // Event listener for end event
+                            stream.on('end', async () => {
+                                resolveCur(await this.handleStreamEndEvent(dataObject, file_name));
+                            });
+
+                            // Event listener for error event
+                            stream.on('error', async (error: any) => {
+                                console.error('Error streaming data:', error);
+                                await Utility.publishMessage(message, false, 'Error streaming data');
+                                stream.destroy();
+                                rejectCur(error);
+                            });
+                        });
+                    } catch (error) {
+                        success = false;
+                        break;
+                    }
+
+                    // Close the cursor
+                    await databaseClient.query(`CLOSE "${cursor_ref}"`);
                 }
 
-                // Close the cursor
-                await databaseClient.query(`CLOSE "${cursor_ref}"`);
+                // Commit the transaction
+                await databaseClient.query('COMMIT');
+                await dbClient.releaseDbClient(databaseClient);
+
+                if (success)
+                    await this.zipAndUpload(uploadContext, message);
+                resolve(true);
+            } catch (error) {
+                console.error('Error executing query:', error);
+                reject(`Error executing query: ${error}`);
             }
-
-            // Commit the transaction
-            await databaseClient.query('COMMIT');
-            await dbClient.releaseDbClient(databaseClient);
-
-            if (success)
-                await this.zipAndUpload(uploadContext, message);
-            resolve(true);
         });
     }
 }

@@ -217,15 +217,15 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
                 break;
             case 'point':
                 source_table = 'content.extension_point source';
-                transform_geometry_source = 'ST_Transform(source.point_loc, 3857)';
+                transform_geometry_source = 'source.point_loc_3857';
                 break;
             case 'line':
                 source_table = 'content.extension_line source';
-                transform_geometry_source = 'ST_Transform(source.line_loc, 3857)';
+                transform_geometry_source = 'source.line_loc_3857';
                 break;
             case 'polygon':
                 source_table = 'content.extension_polygon source';
-                transform_geometry_source = 'ST_Transform(source.polygon_loc, 3857)';
+                transform_geometry_source = 'source.polygon_loc_3857';
                 break;
             case 'extension':
                 source_table = 'content.extension source';
@@ -310,8 +310,8 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
                 FROM $${param_counter++}
                 LEFT JOIN $${param_counter++} on  $${param_counter++}
                 AND source.tdei_dataset_id = '$${param_counter++}'
-                ${this.join_filter_target ? `AND $${param_counter++}` : `$${param_counter++}`}
-                ${this.join_filter_source ? `AND $${param_counter++}` : `$${param_counter++}`}
+                ${this.join_filter_target ? `AND ($${param_counter++})` : `$${param_counter++}`}
+                ${this.join_filter_source ? `AND ($${param_counter++})` : `$${param_counter++}`}
                 WHERE
                 target.tdei_dataset_id = '$${param_counter++}'
                 GROUP BY $${param_counter++}

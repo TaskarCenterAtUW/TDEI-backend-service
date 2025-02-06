@@ -18,7 +18,31 @@ describe('BackendService', () => {
     });
 
     describe('buildSpatialQuery', () => {
-        it('should build the spatial query correctly for edge target and node source', () => {
+        it('should build the spatial query correctly for edge target and extension source', () => {
+            // Call the method under test
+            const query = spatialServiceParams.buildSpatialQuery();
+            console.log(query);
+            // Assertions
+            expect(query).toContain('SELECT');
+            expect(query).toContain('FROM');
+            expect(query).toContain('LEFT JOIN');
+            expect(query).toContain('WHERE');
+            expect(query).toContain('GROUP BY');
+        });
+
+        it('should build the spatial query correctly for edge target and point source', () => {
+            spatialServiceParams = SpatialJoinRequestParams.from({
+                target_dimension: 'edge',
+                source_dimension: 'point',
+                aggregate: ['ARRAY_AGG(highway) as lamps'],
+                // join_condition: 'ST_Intersects(ST_Buffer(geometry_target, 5), geometry_source)',
+                join_condition: 'ST_Intersects(ST_Buffer(geometry_target, 5), geometry_source)',
+                join_filter_target: "highway='footway'",
+                join_filter_source: "highway='street_lamp'",
+                target_dataset_id: 'ddc9a128-1afb-4be3-a7dc-52bd201a6ebe',
+                source_dataset_id: '0880b241-3c4c-4900-8005-7c99b1497641'
+            });
+
             // Call the method under test
             const query = spatialServiceParams.buildSpatialQuery();
             console.log(query);
