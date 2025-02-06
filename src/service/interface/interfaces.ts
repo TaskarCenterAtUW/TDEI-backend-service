@@ -310,8 +310,8 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
                 FROM $${param_counter++}
                 LEFT JOIN $${param_counter++} on  $${param_counter++}
                 AND source.tdei_dataset_id = '$${param_counter++}'
-                ${this.join_filter_target ? `AND $${param_counter++}` : `$${param_counter++}`}
-                ${this.join_filter_source ? `AND $${param_counter++}` : `$${param_counter++}`}
+                ${this.join_filter_target ? `AND ($${param_counter++})` : `$${param_counter++}`}
+                ${this.join_filter_source ? `AND ($${param_counter++})` : `$${param_counter++}`}
                 WHERE
                 target.tdei_dataset_id = '$${param_counter++}'
                 GROUP BY $${param_counter++}
