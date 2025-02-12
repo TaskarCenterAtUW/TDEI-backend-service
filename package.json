@@ -33,7 +33,7 @@
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
     "node-sql-parser": "^5.3.6",
-    "nodets-ms-core": "^0.0.17",
+    "nodets-ms-core": "^0.0.16",
     "pg": "^8.11.3",
     "pg-query-stream": "^4.5.3",
     "rimraf": "^5.0.5"
