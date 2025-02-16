@@ -6,18 +6,43 @@ describe('BackendService', () => {
     beforeEach(() => {
         spatialServiceParams = SpatialJoinRequestParams.from({
             target_dimension: 'edge',
-            source_dimension: 'point',
-            aggregate: ['array_agg(highway) as my_way', 'MAX(footway) as max_footway'],
-            join_condition: 'ST_Intersects(ST_Buffer(geometry_target, 5), geometry_source)',
+            source_dimension: 'extension',
+            aggregate: ['array_agg(ext:qm:fixed || \' \' || ext:qm:fixed) as qm', 'MAX(ext:qm:fixed) as max_qm'],
+            // join_condition: 'ST_Intersects(ST_Buffer(geometry_target, 5), geometry_source)',
+            join_condition: 'ST_DWITHIN(geometry_target, geometry_source, 10)',
             join_filter_target: "highway='footway' AND footway='sidewalk'",
-            join_filter_source: "highway='street_lamp'",
-            target_dataset_id: 'fa8e12ea-6b0c-4d3e-8b38-5b87b268e76b',
-            source_dataset_id: '0d661b69495d47fb838862edf699fe09'
+            join_filter_source: "amenity='bench'",
+            target_dataset_id: 'd1d11dc0-2c2c-4c22-b090-19f67a5af292',
+            source_dataset_id: '3f7e7db6-a9dd-4fb7-825a-8d5581a77929'
         });
     });
 
     describe('buildSpatialQuery', () => {
-        it('should build the spatial query correctly for edge target and node source', () => {
+        it('should build the spatial query correctly for edge target and extension source', () => {
+            // Call the method under test
+            const query = spatialServiceParams.buildSpatialQuery();
+            console.log(query);
+            // Assertions
+            expect(query).toContain('SELECT');
+            expect(query).toContain('FROM');
+            expect(query).toContain('LEFT JOIN');
+            expect(query).toContain('WHERE');
+            expect(query).toContain('GROUP BY');
+        });
+
+        it('should build the spatial query correctly for edge target and point source', () => {
+            spatialServiceParams = SpatialJoinRequestParams.from({
+                target_dimension: 'edge',
+                source_dimension: 'point',
+                aggregate: ['ARRAY_AGG(highway) as lamps'],
+                // join_condition: 'ST_Intersects(ST_Buffer(geometry_target, 5), geometry_source)',
+                join_condition: 'ST_Intersects(ST_Buffer(geometry_target, 5), geometry_source)',
+                join_filter_target: "highway='footway'",
+                join_filter_source: "highway='street_lamp'",
+                target_dataset_id: 'ddc9a128-1afb-4be3-a7dc-52bd201a6ebe',
+                source_dataset_id: '0880b241-3c4c-4900-8005-7c99b1497641'
+            });
+
             // Call the method under test
             const query = spatialServiceParams.buildSpatialQuery();
             console.log(query);
