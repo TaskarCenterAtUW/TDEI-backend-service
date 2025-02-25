@@ -114,7 +114,8 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
 
                 if (dataObject[file_name].firstFlag) {
                     dataObject[file_name].firstFlag = false;
-                    await this.uploadStreamToAzureBlob(dataObject[file_name].stream, uploadContext, `osw.${file_name}.geojson`);
+
+                    await this.uploadStreamToAzureBlob(dataObject[file_name].stream, uploadContext, `osw.${file_name}s.geojson`);
                     console.log(`Uploaded ${file_name} to Storage`);
                     resolve(true);
                 }
@@ -172,6 +173,7 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
                             constJson: this.buildAdditionalInfo(row[key]),
                             stream: new Readable({ read() { } }),
                             firstFlag: true
+                            // file_prefix: `${key}s` // Edges , Nodes, Zones to be used as file name for OSW compatibility
                         };
                     });
                 });
