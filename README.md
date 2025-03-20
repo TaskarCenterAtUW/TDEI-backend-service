@@ -56,7 +56,10 @@ Follow the steps to install the node packages required for testing the applicati
 
 ## Service request signatures documentation
 
-[Service signatures](./src/services.json)
+Service request signatures are defined under [Service signatures](./src/services.json)
+
+## Subscription 
+Subscriptions to listening topics are configured in the `/src/subscription.json` file. This file defines the topics that the system listens to for incoming messages.
 
 ## Message bbox Request 
 
