@@ -5,7 +5,7 @@ The Backend Service is responsible for processing dataset query operations, incl
 The project is built on NodeJS framework. All the regular nuances for a NodeJS project are valid for this.
 
 ## System requirements
-| Software | Version|
+| Software | Version| 
 |----|---|
 | NodeJS | 16.17.0|
 | Typescript | 4.8.2|
