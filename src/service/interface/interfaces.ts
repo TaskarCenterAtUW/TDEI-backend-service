@@ -36,6 +36,13 @@ export interface IUploadContext {
     outputFileName?: string;
 }
 
+export interface IUploadXMLContext {
+    tdei_dataset_id: string;
+    containerName: string;
+    filePath: string;
+    remoteUrl: string;
+}
+
 export interface AttributeDetails { alias: string, column: string[], aggregate?: string }
 
 export class SpatialJoinRequestParams extends AbstractDomainEntity {
