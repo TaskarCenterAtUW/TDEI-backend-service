@@ -37,7 +37,7 @@ export class OswOsmQueryService extends AbstractOSMBackendRequest {
                 }
 
                 const osmQueryConfig: QueryConfig = {
-                    text: 'SELECT export_osm_xml_cursor as line FROM content.export_osm_xml_cursor($1)',
+                    text: 'SELECT export_osm_xml as line FROM content.export_osm_xml($1)',
                     values: [params.tdei_dataset_id],
                 }
 
