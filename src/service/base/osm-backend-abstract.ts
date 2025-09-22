@@ -114,6 +114,10 @@ export abstract class AbstractOSMBackendRequest extends AbstractBackendService {
                 // Commit the transaction
                 await databaseClient.query('COMMIT');
                 await dbClient.releaseDbClient(databaseClient);
+                //Wait for blob to be available
+                if (success) {
+                    await Utility.waitForBlobAvailability(uploadContext.tdei_dataset_id, uploadContext.remoteUrl);
+                }
 
                 resolve(true);
             } catch (error) {
