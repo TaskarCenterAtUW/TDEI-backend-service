@@ -64,8 +64,9 @@ export abstract class AbstractOSMBackendRequest extends AbstractBackendService {
 
     async process_upload_dataset(uploadContext: IUploadXMLContext, message: any, queryConfig: QueryConfig) {
         return new Promise(async (resolve, reject) => {
+            let databaseClient: any = null;
             try {
-                const databaseClient = await dbClient.getDbClient();
+                databaseClient = await dbClient.getDbClient();
                 await databaseClient.query('BEGIN');
 
                 let dataObject: any = {
@@ -113,12 +114,20 @@ export abstract class AbstractOSMBackendRequest extends AbstractBackendService {
 
                 // Commit the transaction
                 await databaseClient.query('COMMIT');
-                await dbClient.releaseDbClient(databaseClient);
+                //Wait for blob to be available
+                if (success) {
+                    await Utility.waitForBlobAvailability(uploadContext.tdei_dataset_id, uploadContext.remoteUrl);
+                }
 
                 resolve(true);
             } catch (error) {
                 console.error('Error executing query:', error);
                 reject(`Error executing query: ${error}`);
+            } finally {
+                // Always release the database connection
+                if (databaseClient) {
+                    await dbClient.releaseDbClient(databaseClient);
+                }
             }
         });
     }

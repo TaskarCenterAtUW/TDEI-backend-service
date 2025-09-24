@@ -22,9 +22,10 @@ export class OswOsmQueryService extends AbstractOSMBackendRequest {
                 tdei_dataset_id: params.tdei_dataset_id
             };
 
+            let databaseClient: any = null;
             try {
 
-                const databaseClient = await dbClient.getDbClient();
+                databaseClient = await dbClient.getDbClient();
                 //Get dataset details
                 const datasetQuery = {
                     text: 'SELECT tdei_dataset_id, name FROM content.dataset WHERE tdei_dataset_id = $1 limit 1',
@@ -32,7 +33,6 @@ export class OswOsmQueryService extends AbstractOSMBackendRequest {
                 }
                 const datasetResult = await databaseClient.query(datasetQuery);
                 if (datasetResult.rowCount === 0) {
-                    await dbClient.releaseDbClient(databaseClient);
                     return reject(`Dataset with ID ${params.tdei_dataset_id} not found.`);
                 }
 
@@ -45,11 +45,15 @@ export class OswOsmQueryService extends AbstractOSMBackendRequest {
                 message.data.file_upload_path = uploadContext.remoteUrl;
                 await Utility.publishMessage(message, true, 'OSM uploaded successfully!');
                 return resolve(true);
-
             } catch (error) {
                 console.error('Error executing query:', error);
                 await Utility.publishMessage(message, false, 'Error executing query');
                 reject(`Error executing query: ${error}`);
+            } finally {
+                // Always release the database connection
+                if (databaseClient) {
+                    await dbClient.releaseDbClient(databaseClient);
+                }
             }
         });
     }

@@ -70,7 +70,14 @@ class DataSource {
      * @returns A Promise that resolves to a PoolClient object representing the database client.
      */
     async getDbClient(): Promise<PoolClient> {
+        const stats = this.getPoolStats();
+        console.log(`[DB Pool] Getting client - Total: ${stats.totalCount}, Idle: ${stats.idleCount}, Waiting: ${stats.waitingCount}`);
+
         const client = await this.pool.connect();
+
+        const statsAfter = this.getPoolStats();
+        console.log(`[DB Pool] Client obtained - Total: ${statsAfter.totalCount}, Idle: ${statsAfter.idleCount}, Waiting: ${statsAfter.waitingCount}`);
+
         return client;
     }
 
@@ -79,7 +86,25 @@ class DataSource {
      * @param client - The database client to release.
      */
     async releaseDbClient(client: PoolClient) {
+        const statsBefore = this.getPoolStats();
+        console.log(`[DB Pool] Releasing client - Total: ${statsBefore.totalCount}, Idle: ${statsBefore.idleCount}, Waiting: ${statsBefore.waitingCount}`);
+
         client.release();
+
+        const statsAfter = this.getPoolStats();
+        console.log(`[DB Pool] Client released - Total: ${statsAfter.totalCount}, Idle: ${statsAfter.idleCount}, Waiting: ${statsAfter.waitingCount}`);
+    }
+
+    /**
+     * Gets connection pool statistics for monitoring
+     * @returns Pool statistics object
+     */
+    getPoolStats() {
+        return {
+            totalCount: this.pool.totalCount,
+            idleCount: this.pool.idleCount,
+            waitingCount: this.pool.waitingCount
+        };
     }
 
     /**
