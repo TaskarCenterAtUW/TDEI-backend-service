@@ -114,8 +114,8 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
 
                 if (dataObject[file_name].firstFlag) {
                     dataObject[file_name].firstFlag = false;
-                    let file_prefix = dataObject[file_name].file_prefix;
-                    await this.uploadStreamToAzureBlob(dataObject[file_name].stream, uploadContext, `osw.${file_prefix}.geojson`);
+
+                    await this.uploadStreamToAzureBlob(dataObject[file_name].stream, uploadContext, `osw.${file_name}s.geojson`);
                     console.log(`Uploaded ${file_name} to Storage`);
                     resolve(true);
                 }
@@ -149,8 +149,9 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
 
     async process_upload_dataset(tdei_dataset_id: string, uploadContext: IUploadContext, message: any, queryConfig: QueryConfig) {
         return new Promise(async (resolve, reject) => {
+            let databaseClient: any = null;
             try {
-                const databaseClient = await dbClient.getDbClient();
+                databaseClient = await dbClient.getDbClient();
                 await databaseClient.query('BEGIN');
                 //Get dataset details
                 const datasetQuery = {
@@ -172,8 +173,8 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
                         dataObject[key] = {
                             constJson: this.buildAdditionalInfo(row[key]),
                             stream: new Readable({ read() { } }),
-                            firstFlag: true,
-                            file_prefix: `${key}s` // Edges , Nodes, Zones to be used as file name for OSW compatibility
+                            firstFlag: true
+                            // file_prefix: `${key}s` // Edges , Nodes, Zones to be used as file name for OSW compatibility
                         };
                     });
                 });
@@ -230,7 +231,6 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
 
                 // Commit the transaction
                 await databaseClient.query('COMMIT');
-                await dbClient.releaseDbClient(databaseClient);
 
                 if (success)
                     await this.zipAndUpload(uploadContext, message);
@@ -238,6 +238,11 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
             } catch (error) {
                 console.error('Error executing query:', error);
                 reject(`Error executing query: ${error}`);
+            } finally {
+                // Always release the database connection
+                if (databaseClient) {
+                    await dbClient.releaseDbClient(databaseClient);
+                }
             }
         });
     }

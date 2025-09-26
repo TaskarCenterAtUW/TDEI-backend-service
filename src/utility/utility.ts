@@ -5,6 +5,31 @@ import { Core } from "nodets-ms-core";
 import { QueueMessage } from "nodets-ms-core/lib/core/queue";
 
 export class Utility {
+    static async waitForBlobAvailability(tdei_dataset_id: string, remoteUrl: string) {
+
+        // Verify the file is uploaded and check for 2 retries every 5 seconds
+        let retries = 0;
+        const maxRetries = 2;
+        const retryDelay = 5000; // 5 seconds
+        //Initial wait before checking for file availability
+        await Utility.sleep(retryDelay);
+        //Check for file availability with retries
+        while (retries < maxRetries) {
+            try {
+                const client = Core.getStorageClient();
+                const containerWithFile = await client?.getFileFromUrl(remoteUrl);
+                console.log(`File for dataset ${tdei_dataset_id} is available in Azure Blob Storage. File name: ${containerWithFile?.fileName}`);
+                return; // File is found, exit the function
+            } catch (error) {
+                retries++;
+                console.warn(`File not available. Retry ${retries}/${maxRetries} in ${retryDelay / 1000} seconds...`);
+                if (retries >= maxRetries) {
+                    console.error(`File for dataset ${tdei_dataset_id} not found after ${maxRetries} retries.`);
+                }
+                await Utility.sleep(retryDelay);
+            }
+        }
+    }
 
     public static sleep(ms: number): Promise<void> {
         return new Promise(resolve => {
