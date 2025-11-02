@@ -264,7 +264,7 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
                 //     }
                 // });
                 aggregate_compiled = this.aggregate.map((aggregate) => {
-                    const { alias, column, aggregate: modifiedAggregate } = this.replaceColumnNamesFromAggregate(aggregate, isExtensionFile);
+                    const { alias, column, aggregate: modifiedAggregate } = this.replaceColumnNamesFromAggregate(aggregate, isExtensionFile, this.source_dimension);
                     return { alias, column, aggregate: modifiedAggregate };
                 });
             }
@@ -275,8 +275,8 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
         group_by = `${target_select_required_fields}, target.feature::jsonb`;
 
         //Transform the join geometry conditionally
-        let join_condition_compiled = this.join_condition.replace('geometry_target', transform_geometry_target);
-        join_condition_compiled = join_condition_compiled.replace('geometry_source', transform_geometry_source);
+        let join_condition_compiled = this.join_condition.replace(/geometry_target/g, transform_geometry_target);
+        join_condition_compiled = join_condition_compiled.replace(/geometry_source/g, transform_geometry_source);
 
         //Filter filter attribute alias names
         if (this.join_filter_target && this.join_filter_target != '') {
@@ -288,8 +288,8 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
             this.join_filter_source = this.prefixColumns(this.join_filter_source, 'source', isExtensionFile);
         }
         //In the case filters are on geometry, transform the geometry
-        this.join_filter_target = this.join_filter_target?.replace('geometry_target', transform_geometry_target);
-        this.join_filter_source = this.join_filter_source?.replace('geometry_source', transform_geometry_source);
+        this.join_filter_target = this.join_filter_target?.replace(/geometry_target/g, transform_geometry_target);
+        this.join_filter_source = this.join_filter_source?.replace(/geometry_source/g, transform_geometry_source);
 
         //Select attributes
         select_attributes = `${target_select_required_fields}`;
@@ -361,7 +361,7 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
      * @param aggregate - The aggregate to be modified.
      * @returns An object containing the modified aggregate, alias, and column.
      */
-    replaceColumnNamesFromAggregate(aggregate: string, isExtensionFile: boolean): { alias: string, column: string[], aggregate: string } {
+    replaceColumnNamesFromAggregate(aggregate: string, isExtensionFile: boolean, sourceDimension: string): { alias: string, column: string[], aggregate: string } {
         const parsedQuery = parser.astify(`SELECT ${aggregate} FROM dummy_table`);
         let alias_name = '';
         let columnNames: Set<string> = new Set();
@@ -394,7 +394,19 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
                     columnNamesReplaced.push(columnName);
                 }
                 else {
-                    columnName = `(source.${columnName})`;
+
+                    if (columnName == "_id") {
+                        columnName = `source.${sourceDimension}${columnName}`;
+                    }
+                    else if (columnName == "_u_id" && sourceDimension == "edge") {
+                        columnName = `source.orig_node_id`;
+                    }
+                    else if (columnName == "_v_id" && sourceDimension == "edge") {
+                        columnName = `source.dest_node_id`;
+                    }
+                    else {
+                        columnName = `source.${columnName}`;
+                    }
                     columnNamesReplaced.push(columnName);
                 }
                 //remove the alias from the aggregate

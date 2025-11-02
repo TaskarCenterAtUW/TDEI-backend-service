@@ -4,6 +4,7 @@ import { BackendRequest, SpatialJoinRequestParams } from "../interface/interface
 import { Utility } from "../../utility/utility";
 import { QueryConfig } from "pg";
 import { InputException } from "../../exceptions/http/http-exceptions";
+import DatabaseException from "../../exceptions/db/database-exceptions";
 
 export class SpatialQueryService extends AbstractOSWBackendRequest {
 
@@ -37,7 +38,7 @@ export class SpatialQueryService extends AbstractOSWBackendRequest {
 
             } catch (error) {
                 console.error('Error executing query:', error);
-                if (error instanceof InputException)
+                if (error instanceof InputException || error instanceof DatabaseException)
                     await Utility.publishMessage(message, false, error.message);
                 else
                     await Utility.publishMessage(message, false, 'Error executing query');
