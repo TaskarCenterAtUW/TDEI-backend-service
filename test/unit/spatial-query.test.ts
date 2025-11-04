@@ -6,18 +6,26 @@ describe('BackendService', () => {
     beforeEach(() => {
         spatialServiceParams = SpatialJoinRequestParams.from({
             target_dimension: 'edge',
-            source_dimension: 'extension',
-            aggregate: ['array_agg(ext:qm:fixed || \' \' || ext:qm:fixed) as qm', 'MAX(ext:qm:fixed) as max_qm'],
-            // join_condition: 'ST_Intersects(ST_Buffer(geometry_target, 5), geometry_source)',
-            join_condition: 'ST_DWITHIN(geometry_target, geometry_source, 10)',
-            join_filter_target: "highway='footway' AND footway='sidewalk'",
-            join_filter_source: "amenity='bench'",
-            target_dataset_id: 'd1d11dc0-2c2c-4c22-b090-19f67a5af292',
-            source_dataset_id: '3f7e7db6-a9dd-4fb7-825a-8d5581a77929'
+            source_dimension: 'edge',
+            aggregate: ['ARRAY_AGG(point_id) as SDOT_curb_ramp_id',
+                'ARRAY_AGG(ext:unit_id) as SDOT_curb_ramp_unit_id',
+                'ARRAY_AGG(ramp_width_mt) as SDOT_curb_ramp_width',
+                'ARRAY_AGG(ada_compliant) as SDOT_curb_ramp_ada_compliant',
+                'ARRAY_AGG(ext:description) as SDOT_curb_ramp_desc',
+                'ARRAY_AGG(ext:sw_st_side) as SDOT_curb_ramp_sw_st_side',
+                'ARRAY_AGG(ext:direction) as SDOT_curb_ramp_direction',
+                'ARRAY_AGG(ext:condition) as SDOT_curb_ramp_condition',
+                'ARRAY_AGG(ext:style) as SDOT_curb_ramp_style'],
+            join_condition: 'ST_Intersects(ST_Buffer(geometry_target, 2), geometry_source) and degrees( ST_Angle(geometry_target, geometry_source) ) < 30 ',
+            join_filter_target: "",
+            join_filter_source: "",
+            target_dataset_id: '2e7b2904-f2e7-4784-b18a-aae31be0b1c0',
+            source_dataset_id: 'a3afe3cf-8db5-4898-a602-8e5e49175c13'
         });
     });
 
     describe('buildSpatialQuery', () => {
+
         it('should build the spatial query correctly for edge target and extension source', () => {
             // Call the method under test
             const query = spatialServiceParams.buildSpatialQuery();
@@ -28,6 +36,94 @@ describe('BackendService', () => {
             expect(query).toContain('LEFT JOIN');
             expect(query).toContain('WHERE');
             expect(query).toContain('GROUP BY');
+            expect(query).not.toContain('geometry_target');
+            expect(query).not.toContain('geometry_source');
+        });
+
+        it('should build the spatial query correctly for aggregate _id , _v_id, _u_id columns for edge source with db column', () => {
+            // Call the method under test
+            spatialServiceParams = SpatialJoinRequestParams.from({
+                target_dimension: 'edge',
+                source_dimension: 'edge',
+                aggregate: ['ARRAY_AGG(_id) as SDOT_curb_ramp_id',
+                    'ARRAY_AGG(_u_id) as source_id',
+                    'ARRAY_AGG(_v_id) as dest_id'],
+                join_condition: 'ST_Intersects(ST_Buffer(geometry_target, 2), geometry_source) and degrees( ST_Angle(geometry_target, geometry_source) ) < 30 ',
+                join_filter_target: "",
+                join_filter_source: "",
+                target_dataset_id: '2e7b2904-f2e7-4784-b18a-aae31be0b1c0',
+                source_dataset_id: 'a3afe3cf-8db5-4898-a602-8e5e49175c13'
+            });
+            const query = spatialServiceParams.buildSpatialQuery();
+            console.log(query);
+            // Assertions
+            expect(query).toContain('SELECT');
+            expect(query).toContain('FROM');
+            expect(query).toContain('LEFT JOIN');
+            expect(query).toContain('WHERE');
+            expect(query).toContain('GROUP BY');
+            expect(query).toContain('edge_id');
+            expect(query).not.toContain('geometry_target');
+            expect(query).not.toContain('geometry_source');
+            expect(query).not.toContain('_u_id');
+            expect(query).not.toContain('_v_id');
+        });
+
+        it('should build the spatial query correctly for aggregate _id , _v_id, _u_id columns for edge source with db column', () => {
+            // Call the method under test
+            spatialServiceParams = SpatialJoinRequestParams.from({
+                target_dimension: 'edge',
+                source_dimension: 'point',
+                aggregate: ['ARRAY_AGG(_id) as SDOT_curb_ramp_id'],
+                join_condition: 'ST_Intersects(ST_Buffer(geometry_target, 2), geometry_source) and degrees( ST_Angle(geometry_target, geometry_source) ) < 30 ',
+                join_filter_target: "",
+                join_filter_source: "",
+                target_dataset_id: '2e7b2904-f2e7-4784-b18a-aae31be0b1c0',
+                source_dataset_id: 'a3afe3cf-8db5-4898-a602-8e5e49175c13'
+            });
+            const query = spatialServiceParams.buildSpatialQuery();
+            console.log(query);
+            // Assertions
+            expect(query).toContain('SELECT');
+            expect(query).toContain('FROM');
+            expect(query).toContain('LEFT JOIN');
+            expect(query).toContain('WHERE');
+            expect(query).toContain('GROUP BY');
+            expect(query).toContain('point_id');
+            expect(query).not.toContain('geometry_target');
+            expect(query).not.toContain('geometry_source');
+        });
+
+        it('should build the spatial query correctly for complex multiple join conditions', () => {
+            // Call the method under test
+            spatialServiceParams = SpatialJoinRequestParams.from({
+                target_dimension: 'edge',
+                source_dimension: 'edge',
+                aggregate: ['ARRAY_AGG(point_id) as SDOT_curb_ramp_id',
+                    'ARRAY_AGG(ext:unit_id) as SDOT_curb_ramp_unit_id',
+                    'ARRAY_AGG(ramp_width_mt) as SDOT_curb_ramp_width',
+                    'ARRAY_AGG(ada_compliant) as SDOT_curb_ramp_ada_compliant',
+                    'ARRAY_AGG(ext:description) as SDOT_curb_ramp_desc',
+                    'ARRAY_AGG(ext:sw_st_side) as SDOT_curb_ramp_sw_st_side',
+                    'ARRAY_AGG(ext:direction) as SDOT_curb_ramp_direction',
+                    'ARRAY_AGG(ext:condition) as SDOT_curb_ramp_condition',
+                    'ARRAY_AGG(ext:style) as SDOT_curb_ramp_style'],
+                join_condition: 'ST_Intersects(ST_Buffer(geometry_target, 2), geometry_source) and degrees( ST_Angle(geometry_target, geometry_source) ) < 30 ',
+                join_filter_target: "",
+                join_filter_source: "",
+                target_dataset_id: '2e7b2904-f2e7-4784-b18a-aae31be0b1c0',
+                source_dataset_id: 'a3afe3cf-8db5-4898-a602-8e5e49175c13'
+            });
+            const query = spatialServiceParams.buildSpatialQuery();
+            console.log(query);
+            // Assertions
+            expect(query).toContain('SELECT');
+            expect(query).toContain('FROM');
+            expect(query).toContain('LEFT JOIN');
+            expect(query).toContain('WHERE');
+            expect(query).toContain('GROUP BY');
+            expect(query).not.toContain('geometry_target');
+            expect(query).not.toContain('geometry_source');
         });
 
         it('should build the spatial query correctly for edge target and point source', () => {
