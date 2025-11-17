@@ -1,7 +1,7 @@
-import { Pool, PoolClient, QueryConfig, QueryResult, Submittable } from 'pg';
+import { Pool, PoolClient, Query, QueryConfig, QueryResult, Submittable } from 'pg';
 import { PostgresError } from '../constants/pg-error-constants';
 import { environment } from '../environment/environment';
-import UniqueKeyDbException, { ForeignKeyDbException } from '../exceptions/db/database-exceptions';
+import UniqueKeyDbException, { AmbiguousColumnDbException, ForeignKeyDbException, QuerySyntaxErrorDbException, UndefinedColumnDbException, UndefinedFunctionDbException } from '../exceptions/db/database-exceptions';
 import QueryStream from 'pg-query-stream';
 
 class DataSource {
@@ -55,6 +55,17 @@ class DataSource {
                     throw new UniqueKeyDbException("Duplicate");
                 case PostgresError.FOREIGN_KEY_VIOLATION:
                     throw new ForeignKeyDbException(e.constraint);
+                case PostgresError.UNDEFINED_COLUMN:
+                    throw new UndefinedColumnDbException(`Undefined column: ${e.message}`);
+                case PostgresError.SYNTAX_ERROR:
+                    console.error(`Syntax error in SQL: ${e}`);
+                    throw new QuerySyntaxErrorDbException(`Query Syntax error`);
+                case PostgresError.UNDEFINED_FUNCTION:
+                    console.error(`Undefined function in SQL: ${e.message}`);
+                    throw new UndefinedFunctionDbException(`Undefined function error : ${e.message}`);
+                case PostgresError.AMBIGUOUS_COLUMN:
+                    console.error(`Ambiguous column in SQL: ${e.message}`);
+                    throw new AmbiguousColumnDbException(`Ambiguous column error : ${e.message}`);
                 default:
                     break;
             }
@@ -123,6 +134,17 @@ class DataSource {
                     throw new UniqueKeyDbException("Duplicate");
                 case PostgresError.FOREIGN_KEY_VIOLATION:
                     throw new ForeignKeyDbException(e.constraint);
+                case PostgresError.UNDEFINED_COLUMN:
+                    throw new UndefinedColumnDbException(`Undefined column: ${e.message}`);
+                case PostgresError.SYNTAX_ERROR:
+                    console.error(`Syntax error in SQL: ${e}`);
+                    throw new QuerySyntaxErrorDbException(`Query Syntax error`);
+                case PostgresError.UNDEFINED_FUNCTION:
+                    console.error(`Undefined function in SQL: ${e.message}`);
+                    throw new UndefinedFunctionDbException(`Undefined function error : ${e.message}`);
+                case PostgresError.AMBIGUOUS_COLUMN:
+                    console.error(`Ambiguous column in SQL: ${e.message}`);
+                    throw new AmbiguousColumnDbException(`Ambiguous column error : ${e.message}`);
                 default:
                     break;
             }

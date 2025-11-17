@@ -7,8 +7,10 @@ import { Readable } from "stream";
 import stream from 'stream';
 import { environment } from "../../environment/environment";
 import QueryStream from "pg-query-stream";
-import { QueryConfig, QueryResult } from "pg";
+import { DatabaseError, QueryConfig, QueryResult } from "pg";
 import dbClient from "../../database/data-source";
+import { PostgresError } from "../../constants/pg-error-constants";
+import { UndefinedColumnDbException, QuerySyntaxErrorDbException, UndefinedFunctionDbException, AmbiguousColumnDbException } from "../../exceptions/db/database-exceptions";
 
 export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
 
@@ -237,7 +239,32 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
                 resolve(true);
             } catch (error) {
                 console.error('Error executing query:', error);
-                reject(`Error executing query: ${error}`);
+                if (error instanceof DatabaseError) {
+                    const dbError = error as DatabaseError;
+                    // Clean up error message
+                    let message = dbError.message.replace(/source\./g, '');
+                    message = message.replace(/target\./g, '');
+                    switch (dbError.code) {
+                        case PostgresError.UNDEFINED_COLUMN:
+                            console.error(`Syntax error in SQL: ${dbError.message}`);
+                            return reject(new UndefinedColumnDbException(`Undefined column: ${message}`));
+                        case PostgresError.SYNTAX_ERROR:
+                            console.error(`Syntax error in SQL: ${dbError.message}`);
+                            return reject(new QuerySyntaxErrorDbException(`Query syntax error: ${message}`));
+                        case PostgresError.UNDEFINED_FUNCTION:
+                            console.error(`Undefined function in SQL: ${dbError.message}`);
+                            return reject(new UndefinedFunctionDbException(`Undefined function error: ${message}`));
+                        case PostgresError.AMBIGUOUS_COLUMN:
+                            console.error(`Ambiguous column in SQL: ${dbError.message}`);
+                            return reject(new AmbiguousColumnDbException(`Ambiguous column error: ${message}`));
+                        default:
+                            console.error('Unhandled database error:', dbError);
+                            break;
+                    }
+                } else {
+                    console.error('Error executing query:', error);
+                }
+                reject(error);
             } finally {
                 // Always release the database connection
                 if (databaseClient) {
