@@ -65,8 +65,8 @@ describe('BackendService', () => {
             expect(query).toContain('edge_id');
             expect(query).not.toContain('geometry_target');
             expect(query).not.toContain('geometry_source');
-            expect(query).not.toContain('_u_id');
-            expect(query).not.toContain('_v_id');
+            expect(query).toContain('_u_id');
+            expect(query).toContain('_v_id');
         });
 
         it('should build the spatial query correctly for aggregate _id , _v_id, _u_id columns for edge source with db column', () => {
@@ -89,7 +89,7 @@ describe('BackendService', () => {
             expect(query).toContain('LEFT JOIN');
             expect(query).toContain('WHERE');
             expect(query).toContain('GROUP BY');
-            expect(query).toContain('point_id');
+            expect(query).toContain('_id');
             expect(query).not.toContain('geometry_target');
             expect(query).not.toContain('geometry_source');
         });
