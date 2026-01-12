@@ -29,7 +29,7 @@ export class SpatialQueryService extends AbstractOSWBackendRequest {
                 let dynamicQuery = spatialQueryService.buildSpatialQuery();
 
                 const spatialQueryConfig: QueryConfig = {
-                    text: 'SELECT * FROM content.tdei_dataset_spatial_join($1, $2, $3)',
+                    text: 'SELECT * FROM content.tdei_dataset_spatial_join($1, $2::text[], $3)',
                     values: [spatialQueryService.target_dataset_id, dynamicQuery, spatialQueryService.target_dimension],
                 }
 
