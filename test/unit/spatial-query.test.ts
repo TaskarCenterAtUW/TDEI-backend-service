@@ -1,5 +1,5 @@
 import { InputException } from '../../src/exceptions/http/http-exceptions';
-import { AssignmentLogic, SpatialJoinRequestParams } from '../../src/service/interface/interfaces';
+import { AssignmentMethod, SpatialJoinRequestParams } from '../../src/service/interface/interfaces';
 describe('BackendService', () => {
     let spatialServiceParams: SpatialJoinRequestParams;
 
@@ -35,7 +35,7 @@ describe('BackendService', () => {
 
         it('should build the spatial query correctly for default query with assignment_logic', () => {
             // Call the method under test
-            spatialServiceParams.assignment_logic = AssignmentLogic.COMPETITIVE_ASSIGNMENT;
+            spatialServiceParams.assignment_method = AssignmentMethod.EXCLUSIVE;
             const query = spatialServiceParams.buildSpatialQuery();
             console.log(query);
             // Assertions
@@ -49,7 +49,7 @@ describe('BackendService', () => {
             expect(query.toString()).not.toContain('geometry_source');
 
             //reset assignment logic
-            spatialServiceParams.assignment_logic = AssignmentLogic.ONE_TO_MANY;
+            spatialServiceParams.assignment_method = AssignmentMethod.DEFAULT;
         });
 
         it('should build the spatial query correctly for aggregate _id , _v_id, _u_id columns for edge source with db column', () => {

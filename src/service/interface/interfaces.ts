@@ -43,9 +43,9 @@ export interface IUploadXMLContext {
     remoteUrl: string;
 }
 
-export enum AssignmentLogic {
-    ONE_TO_MANY = "one_to_many",
-    COMPETITIVE_ASSIGNMENT = "competitive_assignment"
+export enum AssignmentMethod {
+    DEFAULT = "default",
+    EXCLUSIVE = "exclusive"
 }
 
 export interface AttributeDetails { alias: string, column: string[], aggregate?: string }
@@ -69,7 +69,7 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
     @Prop()
     aggregate: string[] = []; //attributes from source dimension to be aggregated
     @Prop()
-    assignment_logic: AssignmentLogic = AssignmentLogic.ONE_TO_MANY;
+    assignment_method: AssignmentMethod = AssignmentMethod.DEFAULT;
     /**
      * Basic SQL injection check
      * @param obj
@@ -182,7 +182,7 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
 
         let querySteps: string[] = [];
 
-        if (this.assignment_logic === AssignmentLogic.COMPETITIVE_ASSIGNMENT) {
+        if (this.assignment_method === AssignmentMethod.EXCLUSIVE) {
 
             querySteps = [
 
@@ -245,7 +245,7 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
 
                 /* 4. index */
                 `CREATE INDEX idx_tmp_final_t_id ON tmp_final_assign (t_id)`,
-                 `CREATE INDEX idx_tmp_final_s_id ON tmp_final_assign (s_id)`,
+                `CREATE INDEX idx_tmp_final_s_id ON tmp_final_assign (s_id)`,
 
                 /* 5. final result */
                 `
@@ -275,7 +275,7 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
 
         } else {
 
-            /* ONE-TO-MANY logic */
+            /* Default : ONE-TO-MANY logic */
             querySteps = [
                 `
             CREATE TEMP TABLE temp_dataset_join_result ON COMMIT DROP AS
