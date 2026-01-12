@@ -208,6 +208,7 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
                 LIMIT ${MAX_KNN}
             ) source ON TRUE
             WHERE target.tdei_dataset_id = '${this.target_dataset_id}'
+                ${filter_target ? `AND (${filter_target})` : ''}
             `,
 
                 /* 2. indexes */

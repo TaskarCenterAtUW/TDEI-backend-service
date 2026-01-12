@@ -7,12 +7,12 @@ describe('BackendService', () => {
         spatialServiceParams = SpatialJoinRequestParams.from({
             target_dimension: 'node',
             source_dimension: 'node',
-            aggregate: ['ARRAY_AGG(ext:pole_height) as PoleHeight'],
+            aggregate: ['ARRAY_AGG(ext:ramp_width_mt) as ramp_width_mt', 'ARRAY_AGG(ext:unit_id) as unit_id', 'ARRAY_AGG(ext:condition) as conditions'],
             join_condition: 'ST_DWithin(geometry_target, geometry_source, 4)',
-            join_filter_target: "",
+            join_filter_target: "barrier='kerb'",
             join_filter_source: "barrier='kerb'",
-            target_dataset_id: '8a9c887f-6d13-442f-aaea-ea93c3eee032',
-            source_dataset_id: '86c80060-cc77-485b-bd4c-3bf2d12d1bc4'
+            target_dataset_id: '7d6ae05c-8928-4727-bb0d-4717e46242f1',
+            source_dataset_id: '80296cbe-53ac-463b-b5f6-dad8b8e5e788'
         });
     });
 
@@ -37,7 +37,7 @@ describe('BackendService', () => {
             // Call the method under test
             spatialServiceParams.assignment_method = AssignmentMethod.EXCLUSIVE;
             const query = spatialServiceParams.buildSpatialQuery();
-            console.log(query);
+            console.log(query.join(';').toString());
             // Assertions
             expect(query.toString()).toContain('SELECT');
             expect(query.toString()).toContain('FROM');
