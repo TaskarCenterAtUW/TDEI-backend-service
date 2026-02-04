@@ -280,7 +280,7 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
             querySteps = [
 
                 /* ------------------------------------------------------------------
-                 * 1. Generate candidates (KNN per TARGET)
+                 * 1. Generate candidates
                  * ------------------------------------------------------------------ */
                 `
                 CREATE TEMP TABLE tmp_candidates ON COMMIT DROP AS
@@ -336,7 +336,7 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
                 `CREATE INDEX idx_tmp_final_s_id ON tmp_final_assign (s_id)`,
 
                 /* ------------------------------------------------------------------
-                 * 5. Build final dataset (fan-out enrichment)
+                 * 5. Build final dataset
                  * ------------------------------------------------------------------ */
                 `
                 CREATE TEMP TABLE temp_dataset_join_result ON COMMIT DROP AS
