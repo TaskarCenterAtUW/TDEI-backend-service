@@ -78,7 +78,7 @@
                 "options": [
                     "default",
                     "exclusive",
-                    "one_to_many"
+                    "shared"
                 ],
                 "required": false
             }
