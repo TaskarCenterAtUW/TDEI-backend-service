@@ -46,7 +46,7 @@ export interface IUploadXMLContext {
 export enum AssignmentMethod {
     DEFAULT = "default", // MANY-TO-MANY logic
     EXCLUSIVE = "exclusive", // one to one logic
-    SHARED = "one_to_many" // one to many logic
+    SHARED = "shared" // one to many logic
 }
 
 export interface AttributeDetails { alias: string, column: string[], aggregate?: string }
