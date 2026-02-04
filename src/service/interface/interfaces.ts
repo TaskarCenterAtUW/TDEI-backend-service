@@ -44,8 +44,9 @@ export interface IUploadXMLContext {
 }
 
 export enum AssignmentMethod {
-    DEFAULT = "default",
-    EXCLUSIVE = "exclusive"
+    DEFAULT = "default", // MANY-TO-MANY logic
+    EXCLUSIVE = "exclusive", // one to one logic
+    SHARED = "one_to_many" // one to many logic
 }
 
 export interface AttributeDetails { alias: string, column: string[], aggregate?: string }
@@ -274,9 +275,100 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
             `
             ];
 
-        } else {
+        }
+        else if (this.assignment_method === AssignmentMethod.SHARED) {
+            querySteps = [
 
-            /* Default : ONE-TO-MANY logic */
+                /* ------------------------------------------------------------------
+                 * 1. Generate candidates
+                 * ------------------------------------------------------------------ */
+                `
+                CREATE TEMP TABLE tmp_candidates ON COMMIT DROP AS
+                SELECT
+                    target.${this.target_dimension}_id AS t_id,
+                    source.${this.source_dimension === 'extension'
+                    ? 'ext_id'
+                    : `${this.source_dimension}_id`} AS s_id,
+                    ST_Distance(
+                        ${meta.transform_geometry_target},
+                        ${meta.transform_geometry_source}
+                    ) AS dist_m,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY target.${this.target_dimension}_id
+                        ORDER BY ${meta.transform_geometry_target} <-> ${meta.transform_geometry_source}
+                    ) AS source_rank
+                FROM ${meta.target_table}
+                LEFT JOIN LATERAL (
+                    SELECT *
+                    FROM ${meta.source_table}
+                    WHERE source.tdei_dataset_id = '${this.source_dataset_id}'
+                      AND ${join_condition_compiled}
+                      ${filter_source ? `AND (${filter_source})` : ''}
+                    ORDER BY ${meta.transform_geometry_target} <-> ${meta.transform_geometry_source}
+                    LIMIT ${MAX_KNN}
+                ) source ON TRUE
+                WHERE target.tdei_dataset_id = '${this.target_dataset_id}'
+                  ${filter_target ? `AND (${filter_target})` : ''}
+                `,
+
+                /* ------------------------------------------------------------------
+                 * 2. Indexes (performance)
+                 * ------------------------------------------------------------------ */
+                `CREATE INDEX idx_tmp_candidates_t_rank ON tmp_candidates (t_id, source_rank)`,
+                `CREATE INDEX idx_tmp_candidates_s_id ON tmp_candidates (s_id)`,
+
+                /* ------------------------------------------------------------------
+                 * 3. Final assignment (ONE source per target)
+                 * ------------------------------------------------------------------ */
+                `
+                CREATE TEMP TABLE tmp_final_assign ON COMMIT DROP AS
+                SELECT
+                    t_id,
+                    s_id
+                FROM tmp_candidates
+                WHERE source_rank = 1
+                `,
+
+                /* ------------------------------------------------------------------
+                 * 4. Indexes
+                 * ------------------------------------------------------------------ */
+                `CREATE INDEX idx_tmp_final_t_id ON tmp_final_assign (t_id)`,
+                `CREATE INDEX idx_tmp_final_s_id ON tmp_final_assign (s_id)`,
+
+                /* ------------------------------------------------------------------
+                 * 5. Build final dataset
+                 * ------------------------------------------------------------------ */
+                `
+                CREATE TEMP TABLE temp_dataset_join_result ON COMMIT DROP AS
+                SELECT
+                    ${meta.target_select_required_fields},
+                    ${aggregate_compiled.length
+                    ? `JSONB_SET(
+                             target.feature::jsonb,
+                             '{properties}',
+                             COALESCE(target.feature::jsonb -> 'properties', '{}'::jsonb)
+                             || (${caseStatements}),
+                             TRUE
+                           )::json AS feature`
+                    : `(target.feature::jsonb)::json AS feature`
+                }
+                FROM ${meta.target_table}
+                LEFT JOIN tmp_final_assign tfa
+                  ON target.${this.target_dimension}_id = tfa.t_id
+                LEFT JOIN ${meta.source_table}
+                  ON source.${this.source_dimension === 'extension'
+                    ? 'ext_id'
+                    : `${this.source_dimension}_id`} = tfa.s_id
+                 AND source.tdei_dataset_id = '${this.source_dataset_id}'
+                 ${filter_source ? `AND (${filter_source})` : ''}
+                WHERE target.tdei_dataset_id = '${this.target_dataset_id}'
+                GROUP BY ${meta.target_select_required_fields}, target.feature::jsonb
+                `
+            ];
+        }
+        else {
+
+            /* Default : MANY-TO-MANY logic */
             querySteps = [
                 `
             CREATE TEMP TABLE temp_dataset_join_result ON COMMIT DROP AS

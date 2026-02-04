@@ -76,8 +76,9 @@
                 "name": "assignment_logic",
                 "type": "enum",
                 "options": [
-                    "one_to_many",
-                    "competitive_assignment"
+                    "default",
+                    "exclusive",
+                    "one_to_many"
                 ],
                 "required": false
             }
