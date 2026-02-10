@@ -33,9 +33,28 @@ describe('BackendService', () => {
             //reset assignment logic
         });
 
-        it('should build the spatial query correctly for default query with assignment_logic', () => {
+        it('should build the spatial query correctly for default query with EXCLUSIVE assignment_logic', () => {
             // Call the method under test
             spatialServiceParams.assignment_method = AssignmentMethod.EXCLUSIVE;
+            const query = spatialServiceParams.buildSpatialQuery();
+            console.log(query.join(';').toString());
+            // Assertions
+            expect(query.toString()).toContain('SELECT');
+            expect(query.toString()).toContain('FROM');
+            expect(query.toString()).toContain('LEFT JOIN');
+            expect(query.toString()).toContain('WHERE');
+            expect(query.toString()).toContain('GROUP BY');
+            expect(query.toString()).toContain('tmp_final_assign');
+            expect(query.toString()).not.toContain('geometry_target');
+            expect(query.toString()).not.toContain('geometry_source');
+
+            //reset assignment logic
+            spatialServiceParams.assignment_method = AssignmentMethod.DEFAULT;
+        });
+
+                it('should build the spatial query correctly for default query with SHARED assignment_logic', () => {
+            // Call the method under test
+            spatialServiceParams.assignment_method = AssignmentMethod.SHARED;
             const query = spatialServiceParams.buildSpatialQuery();
             console.log(query.join(';').toString());
             // Assertions
