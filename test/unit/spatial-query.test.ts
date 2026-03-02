@@ -1,26 +1,18 @@
 import { InputException } from '../../src/exceptions/http/http-exceptions';
-import { SpatialJoinRequestParams } from '../../src/service/interface/interfaces';
+import { AssignmentMethod, SpatialJoinRequestParams } from '../../src/service/interface/interfaces';
 describe('BackendService', () => {
     let spatialServiceParams: SpatialJoinRequestParams;
 
     beforeEach(() => {
         spatialServiceParams = SpatialJoinRequestParams.from({
-            target_dimension: 'edge',
-            source_dimension: 'edge',
-            aggregate: ['ARRAY_AGG(point_id) as SDOT_curb_ramp_id',
-                'ARRAY_AGG(ext:unit_id) as SDOT_curb_ramp_unit_id',
-                'ARRAY_AGG(ramp_width_mt) as SDOT_curb_ramp_width',
-                'ARRAY_AGG(ada_compliant) as SDOT_curb_ramp_ada_compliant',
-                'ARRAY_AGG(ext:description) as SDOT_curb_ramp_desc',
-                'ARRAY_AGG(ext:sw_st_side) as SDOT_curb_ramp_sw_st_side',
-                'ARRAY_AGG(ext:direction) as SDOT_curb_ramp_direction',
-                'ARRAY_AGG(ext:condition) as SDOT_curb_ramp_condition',
-                'ARRAY_AGG(ext:style) as SDOT_curb_ramp_style'],
-            join_condition: 'ST_Intersects(ST_Buffer(geometry_target, 2), geometry_source) and degrees( ST_Angle(geometry_target, geometry_source) ) < 30 ',
-            join_filter_target: "",
-            join_filter_source: "",
-            target_dataset_id: '2e7b2904-f2e7-4784-b18a-aae31be0b1c0',
-            source_dataset_id: 'a3afe3cf-8db5-4898-a602-8e5e49175c13'
+            target_dimension: 'node',
+            source_dimension: 'node',
+            aggregate: ['ARRAY_AGG(ext:ramp_width_mt) as ramp_width_mt', 'ARRAY_AGG(ext:unit_id) as unit_id', 'ARRAY_AGG(ext:condition) as conditions'],
+            join_condition: 'ST_DWithin(geometry_target, geometry_source, 4)',
+            join_filter_target: "barrier='kerb'",
+            join_filter_source: "barrier='kerb'",
+            target_dataset_id: '7d6ae05c-8928-4727-bb0d-4717e46242f1',
+            source_dataset_id: '80296cbe-53ac-463b-b5f6-dad8b8e5e788'
         });
     });
 
@@ -29,15 +21,54 @@ describe('BackendService', () => {
         it('should build the spatial query correctly for edge target and extension source', () => {
             // Call the method under test
             const query = spatialServiceParams.buildSpatialQuery();
-            console.log(query);
+            console.log(query.join(';').toString());
             // Assertions
-            expect(query).toContain('SELECT');
-            expect(query).toContain('FROM');
-            expect(query).toContain('LEFT JOIN');
-            expect(query).toContain('WHERE');
-            expect(query).toContain('GROUP BY');
-            expect(query).not.toContain('geometry_target');
-            expect(query).not.toContain('geometry_source');
+            expect(query.toString()).toContain('SELECT');
+            expect(query.toString()).toContain('FROM');
+            expect(query.toString()).toContain('LEFT JOIN');
+            expect(query.toString()).toContain('WHERE');
+            expect(query.toString()).toContain('GROUP BY');
+            expect(query.toString()).not.toContain('geometry_target');
+            expect(query.toString()).not.toContain('geometry_source');
+            //reset assignment logic
+        });
+
+        it('should build the spatial query correctly for default query with EXCLUSIVE assignment_logic', () => {
+            // Call the method under test
+            spatialServiceParams.assignment_method = AssignmentMethod.EXCLUSIVE;
+            const query = spatialServiceParams.buildSpatialQuery();
+            console.log(query.join(';').toString());
+            // Assertions
+            expect(query.toString()).toContain('SELECT');
+            expect(query.toString()).toContain('FROM');
+            expect(query.toString()).toContain('LEFT JOIN');
+            expect(query.toString()).toContain('WHERE');
+            expect(query.toString()).toContain('GROUP BY');
+            expect(query.toString()).toContain('tmp_final_assign');
+            expect(query.toString()).not.toContain('geometry_target');
+            expect(query.toString()).not.toContain('geometry_source');
+
+            //reset assignment logic
+            spatialServiceParams.assignment_method = AssignmentMethod.DEFAULT;
+        });
+
+                it('should build the spatial query correctly for default query with SHARED assignment_logic', () => {
+            // Call the method under test
+            spatialServiceParams.assignment_method = AssignmentMethod.SHARED;
+            const query = spatialServiceParams.buildSpatialQuery();
+            console.log(query.join(';').toString());
+            // Assertions
+            expect(query.toString()).toContain('SELECT');
+            expect(query.toString()).toContain('FROM');
+            expect(query.toString()).toContain('LEFT JOIN');
+            expect(query.toString()).toContain('WHERE');
+            expect(query.toString()).toContain('GROUP BY');
+            expect(query.toString()).toContain('tmp_final_assign');
+            expect(query.toString()).not.toContain('geometry_target');
+            expect(query.toString()).not.toContain('geometry_source');
+
+            //reset assignment logic
+            spatialServiceParams.assignment_method = AssignmentMethod.DEFAULT;
         });
 
         it('should build the spatial query correctly for aggregate _id , _v_id, _u_id columns for edge source with db column', () => {
@@ -57,16 +88,16 @@ describe('BackendService', () => {
             const query = spatialServiceParams.buildSpatialQuery();
             console.log(query);
             // Assertions
-            expect(query).toContain('SELECT');
-            expect(query).toContain('FROM');
-            expect(query).toContain('LEFT JOIN');
-            expect(query).toContain('WHERE');
-            expect(query).toContain('GROUP BY');
-            expect(query).toContain('edge_id');
-            expect(query).not.toContain('geometry_target');
-            expect(query).not.toContain('geometry_source');
-            expect(query).toContain('_u_id');
-            expect(query).toContain('_v_id');
+            expect(query.toString()).toContain('SELECT');
+            expect(query.toString()).toContain('FROM');
+            expect(query.toString()).toContain('LEFT JOIN');
+            expect(query.toString()).toContain('WHERE');
+            expect(query.toString()).toContain('GROUP BY');
+            expect(query.toString()).toContain('edge_id');
+            expect(query.toString()).not.toContain('geometry_target');
+            expect(query.toString()).not.toContain('geometry_source');
+            expect(query.toString()).toContain('_u_id');
+            expect(query.toString()).toContain('_v_id');
         });
 
         it('should build the spatial query correctly for aggregate _id , _v_id, _u_id columns for edge source with db column', () => {
@@ -84,14 +115,14 @@ describe('BackendService', () => {
             const query = spatialServiceParams.buildSpatialQuery();
             console.log(query);
             // Assertions
-            expect(query).toContain('SELECT');
-            expect(query).toContain('FROM');
-            expect(query).toContain('LEFT JOIN');
-            expect(query).toContain('WHERE');
-            expect(query).toContain('GROUP BY');
-            expect(query).toContain('_id');
-            expect(query).not.toContain('geometry_target');
-            expect(query).not.toContain('geometry_source');
+            expect(query.toString()).toContain('SELECT');
+            expect(query.toString()).toContain('FROM');
+            expect(query.toString()).toContain('LEFT JOIN');
+            expect(query.toString()).toContain('WHERE');
+            expect(query.toString()).toContain('GROUP BY');
+            expect(query.toString()).toContain('_id');
+            expect(query.toString()).not.toContain('geometry_target');
+            expect(query.toString()).not.toContain('geometry_source');
         });
 
         it('should build the spatial query correctly for complex multiple join conditions', () => {
@@ -117,13 +148,13 @@ describe('BackendService', () => {
             const query = spatialServiceParams.buildSpatialQuery();
             console.log(query);
             // Assertions
-            expect(query).toContain('SELECT');
-            expect(query).toContain('FROM');
-            expect(query).toContain('LEFT JOIN');
-            expect(query).toContain('WHERE');
-            expect(query).toContain('GROUP BY');
-            expect(query).not.toContain('geometry_target');
-            expect(query).not.toContain('geometry_source');
+            expect(query.toString()).toContain('SELECT');
+            expect(query.toString()).toContain('FROM');
+            expect(query.toString()).toContain('LEFT JOIN');
+            expect(query.toString()).toContain('WHERE');
+            expect(query.toString()).toContain('GROUP BY');
+            expect(query.toString()).not.toContain('geometry_target');
+            expect(query.toString()).not.toContain('geometry_source');
         });
 
         it('should build the spatial query correctly for edge target and point source', () => {
@@ -143,11 +174,11 @@ describe('BackendService', () => {
             const query = spatialServiceParams.buildSpatialQuery();
             console.log(query);
             // Assertions
-            expect(query).toContain('SELECT');
-            expect(query).toContain('FROM');
-            expect(query).toContain('LEFT JOIN');
-            expect(query).toContain('WHERE');
-            expect(query).toContain('GROUP BY');
+            expect(query.toString()).toContain('SELECT');
+            expect(query.toString()).toContain('FROM');
+            expect(query.toString()).toContain('LEFT JOIN');
+            expect(query.toString()).toContain('WHERE');
+            expect(query.toString()).toContain('GROUP BY');
         });
 
         it('should throw an InputException for invalid target dimension', () => {
@@ -190,7 +221,7 @@ describe('BackendService', () => {
 
             // Call the method under test
             const query = spatialServiceParams.buildSpatialQuery();
-            expect(query).toContain('SELECT');
+            expect(query.toString()).toContain('SELECT');
         });
 
         it('should execute query with required input only', () => {
@@ -200,7 +231,7 @@ describe('BackendService', () => {
             // Call the method under test
             const query = spatialServiceParams.buildSpatialQuery();
             console.log(query);
-            expect(query).toContain('SELECT');
+            expect(query.toString()).toContain('SELECT');
         });
     });
 });

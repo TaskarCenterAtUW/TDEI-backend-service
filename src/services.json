@@ -71,6 +71,16 @@
                 "name": "aggregate",
                 "type": "array",
                 "required": true
+            },
+            {
+                "name": "assignment_logic",
+                "type": "enum",
+                "options": [
+                    "default",
+                    "exclusive",
+                    "shared"
+                ],
+                "required": false
             }
         ]
     },
