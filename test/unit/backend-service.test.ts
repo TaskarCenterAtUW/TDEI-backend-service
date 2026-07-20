@@ -342,4 +342,83 @@ describe('BackendService', () => {
       expect(publishMessageSpy).toHaveBeenCalledWith(message, false, 'Invalid proximity parameter');
     });
   });
+
+  describe('Self Merge Dataset', () => {
+    it('should execute the query and handle the data and end events', async () => {
+      const message: any = {
+        data: {
+          parameters: {
+            tdei_dataset_id: 'your-tdei-dataset-id',
+            proximity: 0.5
+          }
+        },
+        messageId: 'your-message-id'
+      };
+
+      const handleStreamDataEventMock = jest.spyOn(backendService.selfMergeDatasetQueryService, 'process_upload_dataset').mockResolvedValueOnce(true);
+
+      await backendService.selfMergeDatasetQueryService.executeSelfMergeDatasetQuery(message);
+      await Utility.sleep(1);
+
+      expect(handleStreamDataEventMock).toHaveBeenCalled();
+    }, 1000);
+
+    it('should execute the query when proximity is undefined', async () => {
+      const message: any = {
+        data: {
+          parameters: {
+            tdei_dataset_id: 'your-tdei-dataset-id',
+            proximity: undefined
+          }
+        },
+        messageId: 'your-message-id'
+      };
+
+      const handleStreamDataEventMock = jest.spyOn(backendService.selfMergeDatasetQueryService, 'process_upload_dataset').mockResolvedValueOnce(true);
+
+      await backendService.selfMergeDatasetQueryService.executeSelfMergeDatasetQuery(message);
+      await Utility.sleep(1);
+
+      expect(handleStreamDataEventMock).toHaveBeenCalled();
+    }, 1000);
+
+    it('should handle error during query execution and publish error message', async () => {
+      const message: any = {
+        data: {
+          parameters: {
+            tdei_dataset_id: 'your-tdei-dataset-id'
+          }
+        },
+        messageId: 'your-message-id'
+      };
+      const publishMessageMock = jest.fn().mockResolvedValueOnce(undefined);
+      const publishMessageSpy = jest.spyOn(Utility, 'publishMessage').mockImplementation(publishMessageMock);
+
+      const handleStreamDataEventMock = jest.spyOn(backendService.selfMergeDatasetQueryService, 'process_upload_dataset').mockImplementationOnce(() => {
+        throw new Error('Error executing query');
+      });
+      await expect(backendService.selfMergeDatasetQueryService.executeSelfMergeDatasetQuery(message)).rejects.toContain('Error executing query');
+
+      expect(handleStreamDataEventMock).toHaveBeenCalled();
+      expect(publishMessageSpy).toHaveBeenCalledWith(message, false, 'Error executing query');
+    });
+
+    it('should handle error when proximity parameter is of type string', async () => {
+      const message: any = {
+        data: {
+          parameters: {
+            tdei_dataset_id: 'your-tdei-dataset-id',
+            proximity: 'your-proximity'
+          }
+        },
+        messageId: 'your-message-id'
+      };
+      const publishMessageMock = jest.fn().mockResolvedValueOnce(undefined);
+      const publishMessageSpy = jest.spyOn(Utility, 'publishMessage').mockImplementation(publishMessageMock);
+
+      await expect(backendService.selfMergeDatasetQueryService.executeSelfMergeDatasetQuery(message)).rejects.toContain('Invalid proximity parameter');
+
+      expect(publishMessageSpy).toHaveBeenCalledWith(message, false, 'Invalid proximity parameter');
+    });
+  });
 });
