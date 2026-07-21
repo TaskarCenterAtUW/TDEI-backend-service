@@ -105,6 +105,21 @@
         ]
     },
     {
+        "service": "self_merge_dataset",
+        "parameters": [
+            {
+                "name": "tdei_dataset_id",
+                "type": "string",
+                "required": true
+            },
+            {
+                "name": "proximity",
+                "type": "number",
+                "required": false
+            }
+        ]
+    },
+    {
         "service": "osw_osm_query",
         "parameters": [
             {
