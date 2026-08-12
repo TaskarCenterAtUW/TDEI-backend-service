@@ -4,6 +4,156 @@ import { InputException } from "../../exceptions/http/http-exceptions";
 import { QueryConfig } from "pg";
 import { Parser } from "node-sql-parser";
 const parser = new Parser();
+
+// Comment markers and statement separators parse cleanly on their own but would
+// comment out / stack statements once the fragment is interpolated into the
+// generated query, so they are rejected on the raw text.
+const RAW_INJECTION_TOKEN_PATTERN = /;|--|\/\*|\*\//;
+
+// AST node types that may appear inside a validated expression. Anything else
+// (subqueries, DDL, etc.) is rejected.
+const ALLOWED_EXPRESSION_NODE_TYPES = new Set([
+    'binary_expr', 'unary_expr', 'column_ref', 'expr_list', 'function', 'aggr_func',
+    'cast', 'case', 'when', 'else', 'expr', 'default',
+    'number', 'bigint', 'single_quote_string', 'double_quote_string', 'string',
+    'bool', 'null', 'star', 'interval'
+]);
+
+const ALLOWED_BINARY_OPERATORS = new Set([
+    '=', '!=', '<>', '<', '>', '<=', '>=',
+    'AND', 'OR', 'IS', 'IS NOT', 'IN', 'NOT IN',
+    'BETWEEN', 'NOT BETWEEN', 'LIKE', 'NOT LIKE', 'ILIKE', 'NOT ILIKE',
+    '+', '-', '*', '/', '%', '||',
+    '->', '->>', '@>', '<@', '&&', '<->'
+]);
+
+const ALLOWED_UNARY_OPERATORS = new Set(['NOT', '-', '+']);
+
+// Functions that allow reading server state/files, executing side effects or
+// exfiltrating data. Everything else (all ST_* PostGIS functions, lower(),
+// round(), jsonb_build_object(), ...) is allowed.
+const DANGEROUS_FUNCTION_PATTERNS: RegExp[] = [
+    /^pg_/i,            // pg_sleep, pg_read_file, pg_terminate_backend, ...
+    /^dblink/i,
+    /^lo_/i,            // large object functions
+    /^current_setting$/i,
+    /^set_config$/i,
+    /^query_to_xml/i,
+    /^database_to_xml/i,
+    /^table_to_xml/i,
+    /^xmltable$/i
+];
+
+function getFunctionNameParts(node: any): string[] {
+    const name = node.name;
+    if (typeof name === 'string') return name.split('.');
+    if (name && Array.isArray(name.name)) return name.name.map((part: any) => String(part.value ?? ''));
+    return [];
+}
+
+/**
+ * Recursively walks a node-sql-parser expression AST and throws InputException
+ * for subqueries, disallowed node types/operators and denylisted functions.
+ */
+function assertSafeExpressionNode(node: any, fieldName: string): void {
+    if (node === null || node === undefined || typeof node !== 'object') return;
+    if (Array.isArray(node)) {
+        for (const item of node) assertSafeExpressionNode(item, fieldName);
+        return;
+    }
+
+    if (typeof node.type === 'string') {
+        if (node.type === 'select') {
+            throw new InputException(`Subqueries are not allowed in input : ${fieldName}`);
+        }
+        if (!ALLOWED_EXPRESSION_NODE_TYPES.has(node.type)) {
+            throw new InputException(`Unsupported SQL construct '${node.type}' in input : ${fieldName}`);
+        }
+        if (node.type === 'binary_expr') {
+            const operator = String(node.operator ?? '').toUpperCase().replace(/\s+/g, ' ');
+            if (!ALLOWED_BINARY_OPERATORS.has(operator)) {
+                throw new InputException(`Operator '${node.operator}' is not allowed in input : ${fieldName}`);
+            }
+        }
+        if (node.type === 'unary_expr') {
+            const operator = String(node.operator ?? '').toUpperCase();
+            if (!ALLOWED_UNARY_OPERATORS.has(operator)) {
+                throw new InputException(`Operator '${node.operator}' is not allowed in input : ${fieldName}`);
+            }
+        }
+        if (node.type === 'function' || node.type === 'aggr_func') {
+            for (const namePart of getFunctionNameParts(node)) {
+                if (DANGEROUS_FUNCTION_PATTERNS.some(pattern => pattern.test(namePart))) {
+                    throw new InputException(`Function '${namePart}' is not allowed in input : ${fieldName}`);
+                }
+            }
+        }
+    }
+
+    for (const key of Object.keys(node)) {
+        assertSafeExpressionNode(node[key], fieldName);
+    }
+}
+
+/**
+ * Parses a wrapper statement around a user fragment. The default dialect is
+ * tried first because it accepts OSW property names containing ':' (e.g.
+ * ext:update); the postgresql dialect is the fallback for '::' casts.
+ */
+function parseWrappedFragment(sql: string): any {
+    try {
+        return parser.astify(sql);
+    } catch {
+        return parser.astify(sql, { database: 'postgresql' });
+    }
+}
+
+/**
+ * Validates a user-supplied SQL fragment (a boolean condition or a select
+ * expression such as an aggregate) by parsing it and allowlisting the AST
+ * structure. Validation only - the original fragment is interpolated as-is.
+ */
+export function validateSqlExpression(fragment: string, kind: 'condition' | 'expression', fieldName: string): void {
+    if (!fragment || fragment.trim() === '') return;
+
+    if (RAW_INJECTION_TOKEN_PATTERN.test(fragment)) {
+        throw new InputException(`Harmful token found in input : ${fieldName}`);
+    }
+
+    const wrapped = kind === 'condition'
+        ? `SELECT 1 FROM t WHERE ${fragment}`
+        : `SELECT ${fragment} FROM t`;
+
+    let ast: any;
+    try {
+        ast = parseWrappedFragment(wrapped);
+    } catch {
+        throw new InputException(`Invalid SQL expression in input : ${fieldName}`);
+    }
+
+    const statements = Array.isArray(ast) ? ast : [ast];
+    if (statements.length !== 1) {
+        throw new InputException(`Multiple SQL statements are not allowed in input : ${fieldName}`);
+    }
+
+    const root = statements[0];
+    const distinct = root.distinct && (typeof root.distinct === 'string' ? root.distinct : root.distinct.type);
+    const hasGroupBy = root.groupby && (Array.isArray(root.groupby)
+        ? root.groupby.length > 0
+        : (root.groupby.columns?.length ?? 0) > 0);
+    const hasLimit = root.limit && Array.isArray(root.limit.value) && root.limit.value.length > 0;
+    if (root.type !== 'select'
+        || root._next || root.set_op
+        || root.with || distinct || hasGroupBy || root.having || root.orderby || hasLimit
+        || root.window
+        || (root.into && root.into.position)
+        || !Array.isArray(root.from) || root.from.length !== 1 || root.from[0].table !== 't') {
+        throw new InputException(`Unsupported SQL construct in input : ${fieldName}`);
+    }
+
+    // Only walk the user-controlled part of the wrapper statement.
+    assertSafeExpressionNode(kind === 'condition' ? root.where : root.columns, fieldName);
+}
 /**
  * Represents a backend request.
  */
@@ -72,30 +222,15 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
     @Prop()
     assignment_method: AssignmentMethod = AssignmentMethod.DEFAULT;
     /**
-     * Basic SQL injection check
-     * @param obj
+     * Validates user-controlled SQL fragments that get interpolated into the
+     * generated query via AST-based structural validation.
      */
-    private checkForSqlInjection(obj: any) {
-        const harmfulKeywords = [';', 'DROP', 'DELETE', 'UPDATE', 'INSERT', 'ALTER', 'CREATE', 'TRUNCATE'];
-
-        for (let key in obj) {
-            if (typeof obj[key] === 'string') {
-                for (let keyword of harmfulKeywords) {
-                    if (obj[key].toUpperCase().includes(keyword)) {
-                        throw new InputException(`Harmful keyword found in input : ${key}`);
-                    }
-                }
-            } else if (Array.isArray(obj[key])) {
-                for (let item of obj[key]) {
-                    if (typeof item === 'string') {
-                        for (let keyword of harmfulKeywords) {
-                            if (item.toUpperCase().includes(keyword)) {
-                                throw new InputException(`Harmful keyword found in input : ${key}`);
-                            }
-                        }
-                    }
-                }
-            }
+    private validateInputs(): void {
+        validateSqlExpression(this.join_condition, 'condition', 'join_condition');
+        validateSqlExpression(this.join_filter_target, 'condition', 'join_filter_target');
+        validateSqlExpression(this.join_filter_source, 'condition', 'join_filter_source');
+        for (const aggregate of this.aggregate ?? []) {
+            validateSqlExpression(aggregate, 'expression', 'aggregate');
         }
     }
 
@@ -144,7 +279,7 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
     buildSpatialQuery(): string[] {
         const MAX_KNN = 2;      // cap per target
 
-        this.checkForSqlInjection(this);
+        this.validateInputs();
         this.cleanProperties();
 
         const meta = this.getDimensionMetadata();
