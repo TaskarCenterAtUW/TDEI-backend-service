@@ -5,29 +5,64 @@ import { QueryConfig } from "pg";
 import { Parser } from "node-sql-parser";
 const parser = new Parser();
 
-// Comment markers and statement separators parse cleanly on their own but would
-// comment out / stack statements once the fragment is interpolated into the
-// generated query, so they are rejected on the raw text.
-const RAW_INJECTION_TOKEN_PATTERN = /;|--|\/\*|\*\//;
+// Comment markers can comment-out the surrounding generated SQL once interpolated.
+// A mid-fragment semicolon enables stacked statements (trailing ';' alone is fine).
+const COMMENT_TOKEN_PATTERN = /--|\/\*|\*\//;
+const MID_STATEMENT_SEPARATOR_PATTERN = /;\s*\S/;
 
-// AST node types that may appear inside a validated expression. Anything else
-// (subqueries, DDL, etc.) is rejected.
-const ALLOWED_EXPRESSION_NODE_TYPES = new Set([
-    'binary_expr', 'unary_expr', 'column_ref', 'expr_list', 'function', 'aggr_func',
-    'cast', 'case', 'when', 'else', 'expr', 'default',
-    'number', 'bigint', 'single_quote_string', 'double_quote_string', 'string',
-    'bool', 'null', 'star', 'interval'
+// AST statement types that mutate data/schema or change privileges.
+// Compared case sensitively: node-sql-parser emits statement types in lower case
+// ('update', 'delete', ...) while non-statement nodes use upper case values such
+// as ORDER BY's 'DESC', which would otherwise be mistaken for a DESC statement.
+const DENIED_STATEMENT_TYPES = new Set([
+    'insert', 'update', 'delete', 'replace', 'merge',
+    'drop', 'create', 'alter', 'truncate', 'rename',
+    'grant', 'revoke', 'call', 'exec', 'execute',
+    'copy', 'load', 'lock', 'unlock', 'set', 'use', 'declare'
 ]);
 
-const ALLOWED_BINARY_OPERATORS = new Set([
-    '=', '!=', '<>', '<', '>', '<=', '>=',
-    'AND', 'OR', 'IS', 'IS NOT', 'IN', 'NOT IN',
-    'BETWEEN', 'NOT BETWEEN', 'LIKE', 'NOT LIKE', 'ILIKE', 'NOT ILIKE',
-    '+', '-', '*', '/', '%', '||',
-    '->', '->>', '@>', '<@', '&&', '<->'
-]);
-
-const ALLOWED_UNARY_OPERATORS = new Set(['NOT', '-', '+']);
+// Statement phrases, used as a safety net when the AST is unavailable or partial.
+// `\s` covers spaces, tabs and line breaks, so keywords may be split across lines.
+// Each pattern needs a full statement shape, never a bare identifier: a column
+// named `update` or `truncate` must not look like DML.
+const DML_STATEMENT_PATTERNS: RegExp[] = [
+    /\bINSERT\s+INTO\b/i,
+    /\bUPDATE\s+(?:ONLY\s+)?[\w."']+(?:\s+(?:AS\s+)?\w+)?\s+SET\b/i,
+    /\bDELETE\s+FROM\b/i,
+    /\bDROP\s+(?:TABLE|INDEX|VIEW|SCHEMA|DATABASE|FUNCTION|PROCEDURE|ROLE|USER|EXTENSION|TYPE|SEQUENCE|TRIGGER|MATERIALIZED)\b/i,
+    /\bCREATE\s+(?:OR\s+REPLACE\s+)?(?:TEMP\s+|TEMPORARY\s+|UNIQUE\s+)?(?:TABLE|INDEX|VIEW|SCHEMA|DATABASE|FUNCTION|PROCEDURE|ROLE|USER|EXTENSION|TYPE|SEQUENCE|TRIGGER|MATERIALIZED)\b/i,
+    /\bALTER\s+(?:TABLE|INDEX|VIEW|SCHEMA|DATABASE|FUNCTION|PROCEDURE|ROLE|USER|TYPE|SEQUENCE)\b/i,
+    // GRANT/REVOKE are recognised by the privilege keywords Postgres documents, or
+    // by the `GRANT <role> TO` / `REVOKE <role> FROM` role forms. Matching on the
+    // privilege rather than the verb alone keeps a column named `grant` usable.
+    /\bGRANT\s+(?:(?:ALL|SELECT|INSERT|UPDATE|DELETE|TRUNCATE|REFERENCES|TRIGGER|CREATE|CONNECT|TEMPORARY|TEMP|EXECUTE|USAGE|SET|MAINTAIN|ALTER\s+SYSTEM)\b|[\w."']+\s+TO\b)/i,
+    /\bREVOKE\s+(?:(?:GRANT|ADMIN)\s+OPTION\s+FOR\s+)?(?:(?:ALL|SELECT|INSERT|UPDATE|DELETE|TRUNCATE|REFERENCES|TRIGGER|CREATE|CONNECT|TEMPORARY|TEMP|EXECUTE|USAGE|SET|MAINTAIN|ALTER\s+SYSTEM)\b|[\w."']+\s+FROM\b)/i,
+    /\bTRUNCATE\s+TABLE\b/i,
+    // TRUNCATE without the TABLE keyword only counts when the fragment is exactly
+    // that statement, so a column named `truncate` stays usable in a filter.
+    /(?:^|[(;])\s*TRUNCATE\s+[\w."']+\s*(?:CASCADE|RESTART\s+IDENTITY|CONTINUE\s+IDENTITY)?\s*$/i,
+    /(?:^|[(;])\s*CALL\s+[\w."']+\s*\(/i,
+    /(?:^|[(;])\s*COPY\s+[\w."']+\s+(?:FROM|TO)\b/i,
+    /(?:^|[(;])\s*SET\s+\w+\s*(?:=|\bTO\b)/i,
+    /\bMERGE\s+INTO\b/i,
+    /\bALTER\s+SYSTEM\b/i,
+    /\bREFRESH\s+MATERIALIZED\s+VIEW\b/i,
+    /\bIMPORT\s+FOREIGN\s+SCHEMA\b/i,
+    /\bSECURITY\s+LABEL\s+ON\b/i,
+    /\bCOMMENT\s+ON\s+(?:TABLE|COLUMN|SCHEMA|DATABASE|FUNCTION|INDEX|VIEW|TYPE|SEQUENCE|TRIGGER|ROLE|EXTENSION)\b/i,
+    // SELECT ... INTO new_table FROM ... creates a table, unlike a plain SELECT.
+    /\bINTO\s+(?:TEMP\s+|TEMPORARY\s+|UNLOGGED\s+)?[\w."']+\s+FROM\b/i,
+    /\bLOCK\s+TABLE\b/i,
+    /\bREINDEX\b/i,
+    /\bVACUUM\b/i,
+    /\bCHECKPOINT\b/i,
+    /\bDISCARD\s+(?:ALL|PLANS|SEQUENCES|TEMPORARY|TEMP)\b/i,
+    // `cluster`, `notify` and `reset` are plausible column names, so these need a
+    // full statement shape or a statement start rather than the bare keyword.
+    /\bCLUSTER\s+(?:VERBOSE\s+)?[\w."']+\s+USING\b/i,
+    /^\s*(?:LISTEN|UNLISTEN|NOTIFY)\s+[\w."']+\s*(?:,\s*''\s*)?$/i,
+    /^\s*RESET\s+(?:ALL|SESSION\s+AUTHORIZATION|[\w."]+)\s*$/i
+];
 
 // Functions that allow reading server state/files, executing side effects or
 // exfiltrating data. Everything else (all ST_* PostGIS functions, lower(),
@@ -44,6 +79,30 @@ const DANGEROUS_FUNCTION_PATTERNS: RegExp[] = [
     /^xmltable$/i
 ];
 
+// Same denylist as above, matched as a call in raw text. `\s*` before the
+// parenthesis allows any spacing or line breaks between name and arguments.
+const DANGEROUS_FUNCTION_CALL_PATTERN =
+    /\b(pg_\w+|dblink\w*|lo_\w+|current_setting|set_config|query_to_xml\w*|database_to_xml\w*|table_to_xml\w*|xmltable)\s*\(/i;
+
+// Constructs that execute a string as code. They must be rejected before quoted
+// sections are blanked, otherwise the payload they run would be treated as data.
+const DYNAMIC_SQL_PATTERNS: RegExp[] = [
+    /\bEXECUTE\s+IMMEDIATE\b/i,
+    /\bEXECUTE\s*(?:'|\$\$|\$[A-Za-z_]\w*\$)/i,
+    /\bPREPARE\s+[\w."']+\s+AS\b/i,
+    /\bDO\s*(?:'|\$\$|\$[A-Za-z_]\w*\$)/i
+];
+
+// Single-quoted values and double-quoted identifiers are data, not statements,
+// so they are blanked before the raw-text checks run.
+//
+// `E'...'` honours backslash escapes, so `E'\''` is a single string to Postgres.
+// It is matched first, otherwise the scanner would end that string early and
+// resynchronise on a later quote, blanking real code as if it were string content.
+// The lookbehind keeps the prefix a real `E`, so `LIKE'x'` is not read as an
+// E-string, which would make the scanner over-consume in the opposite direction.
+const QUOTED_SECTION_PATTERN = /(?<![\w$])[eE]'(?:[^'\\]|''|\\[\s\S])*'|'(?:[^']|'')*'|"(?:[^"]|"")*"/g;
+
 function getFunctionNameParts(node: any): string[] {
     const name = node.name;
     if (typeof name === 'string') return name.split('.');
@@ -51,35 +110,32 @@ function getFunctionNameParts(node: any): string[] {
     return [];
 }
 
+function normalizeStatements(ast: any): any[] {
+    if (ast == null) return [];
+    return (Array.isArray(ast) ? ast : [ast]).flatMap((item) => {
+        // Bare expressions sometimes parse as [{ stmt, vars }]
+        if (item && typeof item === 'object' && item.stmt && !item.type) {
+            return [item.stmt];
+        }
+        return [item];
+    });
+}
+
 /**
- * Recursively walks a node-sql-parser expression AST and throws InputException
- * for subqueries, disallowed node types/operators and denylisted functions.
+ * Walks the AST and rejects DML/DDL *statement* nodes and denylisted functions.
+ * Column/alias names are irrelevant — only node.type values like 'update'/'delete'.
  */
-function assertSafeExpressionNode(node: any, fieldName: string): void {
+function assertSafeSqlAst(node: any, fieldName: string): void {
     if (node === null || node === undefined || typeof node !== 'object') return;
     if (Array.isArray(node)) {
-        for (const item of node) assertSafeExpressionNode(item, fieldName);
+        for (const item of node) assertSafeSqlAst(item, fieldName);
         return;
     }
 
     if (typeof node.type === 'string') {
-        if (node.type === 'select') {
-            throw new InputException(`Subqueries are not allowed in input : ${fieldName}`);
-        }
-        if (!ALLOWED_EXPRESSION_NODE_TYPES.has(node.type)) {
-            throw new InputException(`Unsupported SQL construct '${node.type}' in input : ${fieldName}`);
-        }
-        if (node.type === 'binary_expr') {
-            const operator = String(node.operator ?? '').toUpperCase().replace(/\s+/g, ' ');
-            if (!ALLOWED_BINARY_OPERATORS.has(operator)) {
-                throw new InputException(`Operator '${node.operator}' is not allowed in input : ${fieldName}`);
-            }
-        }
-        if (node.type === 'unary_expr') {
-            const operator = String(node.operator ?? '').toUpperCase();
-            if (!ALLOWED_UNARY_OPERATORS.has(operator)) {
-                throw new InputException(`Operator '${node.operator}' is not allowed in input : ${fieldName}`);
-            }
+        const type = node.type.toLowerCase();
+        if (DENIED_STATEMENT_TYPES.has(type)) {
+            throw new InputException(`SQL statement type '${node.type}' is not allowed in input : ${fieldName}`);
         }
         if (node.type === 'function' || node.type === 'aggr_func') {
             for (const namePart of getFunctionNameParts(node)) {
@@ -91,16 +147,40 @@ function assertSafeExpressionNode(node: any, fieldName: string): void {
     }
 
     for (const key of Object.keys(node)) {
-        assertSafeExpressionNode(node[key], fieldName);
+        assertSafeSqlAst(node[key], fieldName);
     }
 }
 
 /**
- * Parses a wrapper statement around a user fragment. The default dialect is
- * tried first because it accepts OSW property names containing ':' (e.g.
- * ext:update); the postgresql dialect is the fallback for '::' casts.
+ * Raw-text safety net, applied whether or not the fragment parses (node-sql-parser
+ * rejects reserved words used as identifiers, e.g. a column named `update`).
+ * Only clear DML/DDL statement phrases and denylisted function calls are rejected,
+ * never bare identifier names.
  */
-function parseWrappedFragment(sql: string): any {
+function assertSafeSqlText(sql: string, fieldName: string): void {
+    for (const pattern of DYNAMIC_SQL_PATTERNS) {
+        if (pattern.test(sql)) {
+            throw new InputException(`Dynamic SQL execution is not allowed in input : ${fieldName}`);
+        }
+    }
+
+    const withoutQuotedSections = sql.replace(QUOTED_SECTION_PATTERN, "''");
+
+    if (DANGEROUS_FUNCTION_CALL_PATTERN.test(withoutQuotedSections)) {
+        throw new InputException(`Dangerous function is not allowed in input : ${fieldName}`);
+    }
+    for (const pattern of DML_STATEMENT_PATTERNS) {
+        if (pattern.test(withoutQuotedSections)) {
+            throw new InputException(`SQL DML/DDL statement is not allowed in input : ${fieldName}`);
+        }
+    }
+}
+
+/**
+ * Parses SQL preferring the default dialect (accepts OSW names like ext:update)
+ * and falling back to postgresql (for :: casts / richer Postgres syntax).
+ */
+function parseSql(sql: string): any {
     try {
         return parser.astify(sql);
     } catch {
@@ -108,51 +188,65 @@ function parseWrappedFragment(sql: string): any {
     }
 }
 
+function tryParseSql(sql: string): any | undefined {
+    try {
+        return parseSql(sql);
+    } catch {
+        return undefined;
+    }
+}
+
+function isUsableSelectAst(ast: any): boolean {
+    const statements = normalizeStatements(ast);
+    return statements.length >= 1 && statements.every((s) => s && s.type === 'select');
+}
+
 /**
- * Validates a user-supplied SQL fragment (a boolean condition or a select
- * expression such as an aggregate) by parsing it and allowlisting the AST
- * structure. Validation only - the original fragment is interpolated as-is.
+ * Validates a user-supplied SQL fragment.
+ *
+ * Allowed: free-text SELECT / expressions, subqueries, CTEs, UNION, and
+ * identifiers that happen to be reserved words (e.g. alias `update`).
+ * Rejected: comment tokens, stacked statements, DML/DDL statements, denylisted
+ * functions. Validation only — the original fragment is interpolated as-is.
  */
 export function validateSqlExpression(fragment: string, kind: 'condition' | 'expression', fieldName: string): void {
     if (!fragment || fragment.trim() === '') return;
 
-    if (RAW_INJECTION_TOKEN_PATTERN.test(fragment)) {
+    if (COMMENT_TOKEN_PATTERN.test(fragment)) {
         throw new InputException(`Harmful token found in input : ${fieldName}`);
     }
-
-    const wrapped = kind === 'condition'
-        ? `SELECT 1 FROM t WHERE ${fragment}`
-        : `SELECT ${fragment} FROM t`;
-
-    let ast: any;
-    try {
-        ast = parseWrappedFragment(wrapped);
-    } catch {
-        throw new InputException(`Invalid SQL expression in input : ${fieldName}`);
-    }
-
-    const statements = Array.isArray(ast) ? ast : [ast];
-    if (statements.length !== 1) {
+    if (MID_STATEMENT_SEPARATOR_PATTERN.test(fragment)) {
         throw new InputException(`Multiple SQL statements are not allowed in input : ${fieldName}`);
     }
 
-    const root = statements[0];
-    const distinct = root.distinct && (typeof root.distinct === 'string' ? root.distinct : root.distinct.type);
-    const hasGroupBy = root.groupby && (Array.isArray(root.groupby)
-        ? root.groupby.length > 0
-        : (root.groupby.columns?.length ?? 0) > 0);
-    const hasLimit = root.limit && Array.isArray(root.limit.value) && root.limit.value.length > 0;
-    if (root.type !== 'select'
-        || root._next || root.set_op
-        || root.with || distinct || hasGroupBy || root.having || root.orderby || hasLimit
-        || root.window
-        || (root.into && root.into.position)
-        || !Array.isArray(root.from) || root.from.length !== 1 || root.from[0].table !== 't') {
-        throw new InputException(`Unsupported SQL construct in input : ${fieldName}`);
+    const trimmed = fragment.trim().replace(/;+\s*$/, '');
+
+    assertSafeSqlText(trimmed, fieldName);
+
+    // The AST walk adds precision on top of the text checks: it catches DML nested
+    // in a CTE or subquery, where the top level statement is still a SELECT.
+    const rawAst = tryParseSql(trimmed);
+    if (rawAst) {
+        if (normalizeStatements(rawAst).length !== 1) {
+            throw new InputException(`Multiple SQL statements are not allowed in input : ${fieldName}`);
+        }
+        assertSafeSqlAst(rawAst, fieldName);
+        if (isUsableSelectAst(rawAst)) return;
     }
 
-    // Only walk the user-controlled part of the wrapper statement.
-    assertSafeExpressionNode(kind === 'condition' ? root.where : root.columns, fieldName);
+    const wrapped = kind === 'condition'
+        ? `SELECT 1 FROM t WHERE ${trimmed}`
+        : `SELECT ${trimmed} FROM t`;
+    const wrappedAst = tryParseSql(wrapped);
+    if (wrappedAst) {
+        if (normalizeStatements(wrappedAst).length !== 1) {
+            throw new InputException(`Multiple SQL statements are not allowed in input : ${fieldName}`);
+        }
+        assertSafeSqlAst(wrappedAst, fieldName);
+    }
+
+    // No AST available (e.g. reserved word used as a column or alias): the raw-text
+    // checks above are the validation.
 }
 /**
  * Represents a backend request.
@@ -222,8 +316,9 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
     @Prop()
     assignment_method: AssignmentMethod = AssignmentMethod.DEFAULT;
     /**
-     * Validates user-controlled SQL fragments that get interpolated into the
-     * generated query via AST-based structural validation.
+     * Validates user-controlled SQL fragments: blocks DML/DDL, stacked
+     * statements, comment tokens, and denylisted functions. Subqueries and
+     * CTEs are allowed.
      */
     private validateInputs(): void {
         validateSqlExpression(this.join_condition, 'condition', 'join_condition');
