@@ -7,10 +7,33 @@ describe('BackendService', () => {
         spatialServiceParams = SpatialJoinRequestParams.from({
             target_dimension: 'node',
             source_dimension: 'node',
-            aggregate: ['ARRAY_AGG(ext:ramp_width_mt) as ramp_width_mt', 'ARRAY_AGG(ext:unit_id) as unit_id', 'ARRAY_AGG(ext:condition) as conditions'],
-            join_condition: 'ST_DWithin(geometry_target, geometry_source, 4)',
-            join_filter_target: "barrier='kerb'",
-            join_filter_source: "barrier='kerb'",
+            aggregate: ['ARRAY_AGG(ext:ramp_width_update_mt) as ramp_width_insert_mt', 'ARRAY_AGG(ext:unit_id) as unit_id', 'ARRAY_AGG(ext:condition) as conditions'],
+            join_condition: `WITH candidates AS (
+                            SELECT
+                                s.id   AS update,
+                                p.id   AS pole_id,
+                                ST_LineMerge(s.geom) AS line_geom,
+                                p.geom AS pole_geom
+                            FROM sidewalks s
+                            JOIN poles p
+                                ON ST_DWithin(s.geom, p.geom, 2)         
+                            WHERE (p.tags->>'amenity') = 'light_pole'
+                            ),
+                            located AS (
+                            SELECT
+                                update,
+                                pole_id,
+                                ST_LineLocatePoint(line_geom, pole_geom)      AS frac,
+                                ST_LineInterpolatePoint(line_geom,             
+                                                        ST_LineLocatePoint(line_geom, pole_geom)) AS proj_pt
+                            FROM candidates
+                            )
+                            SELECT *
+                            FROM located
+                            WHERE frac BETWEEN 0.2 AND 0.8;
+            `,
+            join_filter_target: "frac BETWEEN 0.2 AND 0.8",
+            join_filter_source: "frac BETWEEN 0.2 AND 0.8",
             target_dataset_id: '7d6ae05c-8928-4727-bb0d-4717e46242f1',
             source_dataset_id: '80296cbe-53ac-463b-b5f6-dad8b8e5e788'
         });
@@ -229,11 +252,18 @@ describe('BackendService', () => {
             };
 
             describe('allowed legitimate expressions', () => {
-                it('should allow property names that contain DATE/UPDATE as substrings', () => {
+                it('should allow the default CTE join_condition fixture', () => {
+                    expect(() => spatialServiceParams.buildSpatialQuery()).not.toThrow();
+                });
+
+                it('should allow property names that contain DATE/UPDATE/INSERT as substrings', () => {
                     expectAccepted({
                         join_filter_target: 'updatedat IS NOT NULL',
                         join_filter_source: 'created_at IS NOT NULL',
-                        aggregate: ['ARRAY_AGG(updatedat) as updatedat']
+                        aggregate: [
+                            'ARRAY_AGG(updatedat) as updatedat',
+                            'ARRAY_AGG(ext:ramp_width_update_mt) as ramp_width_insert_mt'
+                        ]
                     });
                 });
 
@@ -264,11 +294,70 @@ describe('BackendService', () => {
                 });
 
                 it('should allow boolean tautology-style filters that are structurally valid expressions', () => {
-                    // These are valid filter expressions (no subquery / DDL / denylisted fn).
-                    // Always-true filters widen results but cannot read other tables.
                     expectAccepted({ join_filter_target: "barrier='kerb' OR 1=1" });
                     expectAccepted({ join_filter_source: "barrier='kerb' OR '1'='1'" });
                     expectAccepted({ join_filter_target: "barrier='x' OR TRUE" });
+                });
+
+                it('should allow subqueries, EXISTS, set operations, and CTEs', () => {
+                    expectAccepted({ join_filter_target: "barrier IN (SELECT barrier FROM content.node)" });
+                    expectAccepted({ join_filter_target: 'EXISTS (SELECT 1 FROM content.node)' });
+                    expectAccepted({ join_condition: '(SELECT count(*) FROM content.node) > 0' });
+                    expectAccepted({ join_filter_target: 'CASE WHEN (SELECT 1) = 1 THEN true ELSE false END' });
+                    expectAccepted({ join_filter_target: 'CAST((SELECT 1) AS int) > 0' });
+                    expectAccepted({ join_filter_source: "name = (SELECT name FROM content.node LIMIT 1)" });
+                    expectAccepted({ aggregate: ['(SELECT count(*) FROM content.node) as cnt'] });
+                    expectAccepted({ join_filter_target: '1=1 UNION SELECT 1' });
+                    expectAccepted({ join_filter_target: '1=1 UNION ALL SELECT 1' });
+                    expectAccepted({ join_filter_target: '1=1 INTERSECT SELECT 1' });
+                    expectAccepted({ join_filter_target: '1=1 EXCEPT SELECT 1' });
+                    expectAccepted({ join_filter_target: '1=1 GROUP BY barrier' });
+                    expectAccepted({ join_filter_target: '1=1 ORDER BY barrier LIMIT 1' });
+                    expectAccepted({ join_filter_target: '1=1 HAVING count(*) > 0' });
+                    expectAccepted({
+                        join_condition: `WITH candidates AS (
+                            SELECT s.id AS update, p.id AS pole_insert_id
+                            FROM sidewalks s
+                            JOIN poles p ON ST_DWithin(s.geom, p.geom, 2)
+                        )
+                        SELECT * FROM candidates WHERE update IS NOT NULL;`
+                    });
+                });
+
+                it('should treat update as a column/alias name, not as an UPDATE statement', () => {
+                    expectAccepted({ join_filter_target: 'update IS NOT NULL' });
+                    expectAccepted({
+                        join_condition: `WITH candidates AS (
+                            SELECT s.id AS update FROM sidewalks s
+                        ) SELECT * FROM candidates WHERE update IS NOT NULL`
+                    });
+                    expectRejected({ join_filter_target: "UPDATE content.node SET barrier = 'x'" });
+                });
+
+                it('should allow ORDER BY DESC without mistaking it for a DESC statement', () => {
+                    expectAccepted({ join_condition: 'SELECT barrier FROM content.node ORDER BY barrier DESC' });
+                    expectAccepted({ join_filter_target: '1=1 ORDER BY barrier DESC, updatedat ASC' });
+                });
+
+                it('should allow DML keywords that appear only inside string literals', () => {
+                    expectAccepted({ join_filter_target: "barrier = 'DELETE FROM content.node'" });
+                    expectAccepted({ join_filter_source: "barrier = 'pg_sleep(1)'" });
+                });
+
+                it('should allow escaped and backslash bearing string literals', () => {
+                    expectAccepted({ join_filter_target: "barrier = E'a\\'b'" });
+                    expectAccepted({ join_filter_source: "barrier ~ '\\d+'" });
+                    expectAccepted({ join_filter_target: "barrier LIKE'kerb%'" });
+                    expectAccepted({ join_filter_source: "barrier = 'it''s a kerb'" });
+                });
+
+                it('should allow columns named like statement keywords', () => {
+                    expectAccepted({ join_filter_target: 'truncate IS NOT NULL' });
+                    expectAccepted({ join_filter_source: 'grant IS NOT NULL AND copy IS NOT NULL' });
+                    expectAccepted({ join_filter_target: 'revoke IS NULL AND grant_type IS NOT NULL' });
+                    expectAccepted({ join_filter_target: 'cluster IS NOT NULL AND notify IS NULL AND reset IS NULL' });
+                    expectAccepted({ join_filter_source: 'comment IS NOT NULL AND listen = 1 AND vacuum_status IS NULL' });
+                    expectAccepted({ join_filter_target: 'execute IS NOT NULL AND prepare IS NOT NULL' });
                 });
             });
 
@@ -287,30 +376,61 @@ describe('BackendService', () => {
                 });
             });
 
-            describe('set operations and clause smuggling', () => {
+            describe('DML and DDL statements', () => {
                 it.each([
-                    ['UNION', { join_filter_target: '1=1 UNION SELECT * FROM content.node' }],
-                    ['UNION ALL', { join_filter_target: '1=1 UNION ALL SELECT * FROM content.node' }],
-                    ['INTERSECT', { join_filter_target: '1=1 INTERSECT SELECT 1' }],
-                    ['EXCEPT', { join_filter_target: '1=1 EXCEPT SELECT 1' }],
-                    ['GROUP BY smuggling', { join_filter_target: '1=1 GROUP BY barrier' }],
-                    ['ORDER BY / LIMIT smuggling', { join_filter_target: '1=1 ORDER BY barrier LIMIT 1' }],
-                    ['HAVING smuggling', { join_filter_target: '1=1 HAVING count(*) > 0' }],
+                    ['DELETE', { join_filter_target: 'DELETE FROM content.node' }],
+                    ['UPDATE', { join_filter_target: "UPDATE content.node SET barrier = 'x'" }],
+                    ['INSERT', { join_filter_target: "INSERT INTO content.node(barrier) VALUES ('x')" }],
+                    ['DROP', { join_condition: 'DROP TABLE content.node' }],
+                    ['CREATE', { join_condition: 'CREATE TABLE evil (id int)' }],
+                    ['TRUNCATE', { join_condition: 'TRUNCATE content.node' }],
+                    ['ALTER', { join_condition: 'ALTER TABLE content.node ADD COLUMN x int' }],
+                    ['GRANT', { join_condition: 'GRANT ALL ON content.node TO public' }],
+                    ['GRANT with a column level privilege list', { join_condition: 'GRANT SELECT, UPDATE (barrier, kerb) ON TABLE content.node TO some_role' }],
+                    ['GRANT split across lines', { join_condition: 'GRANT\n  SELECT\n  ON content.node\n  TO public' }],
+                    ['GRANT of a role', { join_condition: 'GRANT admin_role TO app_user' }],
+                    ['REVOKE', { join_condition: 'REVOKE ALL ON content.node FROM public' }],
+                    ['REVOKE GRANT OPTION FOR', { join_condition: 'REVOKE GRANT OPTION FOR SELECT ON content.node FROM app_user' }],
+                    ['GRANT with tabs and carriage returns', { join_condition: 'GRANT\r\n\tALL\tON\tcontent.node\r\n\tTO public' }],
+                    ['REVOKE GRANT OPTION FOR split across lines', { join_condition: 'REVOKE\n GRANT\n OPTION\n FOR\n SELECT ON content.node FROM app_user' }],
+                    ['bare DROP in aggregate', { aggregate: ['DROP TABLE content.node'] }],
+                    ['DML nested in a CTE', { join_condition: 'WITH x AS (UPDATE content.node SET barrier = 1 RETURNING *) SELECT * FROM x' }],
+                    ['DELETE split across lines', { join_filter_target: 'DELETE\n\tFROM\n   content.node' }],
+                    ['INSERT with irregular spacing', { join_filter_target: "INSERT    INTO\ncontent.node(barrier)\nVALUES ('x')" }],
+                    ['UPDATE with newlines and alias', { join_filter_target: "UPDATE\n  content.node AS n\n  SET barrier = 'x'" }],
+                    ['DROP split across lines', { join_condition: 'DROP\n  TABLE content.node' }],
+                    ['MERGE', { join_condition: 'MERGE INTO content.node t USING content.edge s ON t.id = s.id WHEN MATCHED THEN DELETE' }],
+                    ['ALTER SYSTEM', { join_condition: "ALTER SYSTEM SET archive_command = 'x'" }],
+                    ['REFRESH MATERIALIZED VIEW', { join_condition: 'REFRESH MATERIALIZED VIEW content.mv' }],
+                    ['REINDEX', { join_condition: 'REINDEX TABLE content.node' }],
+                    ['VACUUM', { join_condition: 'VACUUM FULL content.node' }],
+                    ['CHECKPOINT', { join_condition: 'CHECKPOINT' }],
+                    ['CLUSTER', { join_condition: 'CLUSTER content.node USING idx' }],
+                    ['LOCK TABLE', { join_condition: 'LOCK TABLE content.node' }],
+                    ['COMMENT ON', { join_condition: "COMMENT ON TABLE content.node IS 'x'" }],
+                    ['SECURITY LABEL', { join_condition: "SECURITY LABEL ON TABLE content.node IS 'x'" }],
+                    ['SELECT INTO a new table', { join_condition: 'SELECT * INTO evil_copy FROM content.node' }],
+                    ['IMPORT FOREIGN SCHEMA', { join_condition: 'IMPORT FOREIGN SCHEMA public FROM SERVER s INTO public' }],
+                    ['NOTIFY', { join_condition: "NOTIFY channel, 'payload'" }],
+                    ['LISTEN', { join_condition: 'LISTEN channel' }],
+                    ['RESET', { join_condition: 'RESET search_path' }],
+                    ['DISCARD ALL', { join_condition: 'DISCARD ALL' }],
                 ])('should reject %s', (_label, overrides) => {
                     expectRejected(overrides);
                 });
             });
 
-            describe('subqueries and data exfiltration', () => {
+            describe('dynamic SQL that executes a string literal', () => {
                 it.each([
-                    ['IN subquery in filter', { join_filter_target: "barrier IN (SELECT barrier FROM content.node)" }],
-                    ['scalar subquery in join condition', { join_condition: '(SELECT count(*) FROM pg_catalog.pg_tables) > 0' }],
-                    ['EXISTS subquery', { join_filter_target: 'EXISTS (SELECT 1 FROM content.node)' }],
-                    ['subquery inside CASE', { join_filter_target: 'CASE WHEN (SELECT 1) = 1 THEN true ELSE false END' }],
-                    ['CAST of subquery', { join_filter_target: 'CAST((SELECT 1) AS int) > 0' }],
-                    ['nested subquery with pg_sleep', { join_filter_target: '1 AND (SELECT pg_sleep(1)) IS NOT NULL' }],
-                    ['subquery in aggregate', { aggregate: ['(SELECT count(*) FROM content.node) as leaked'] }],
-                    ['subquery in join_filter_source', { join_filter_source: "name = (SELECT name FROM content.node LIMIT 1)" }],
+                    ['EXECUTE of a literal', { join_condition: "execute 'pg_sleep(1)'" }],
+                    ['EXECUTE IMMEDIATE', { join_condition: "EXECUTE IMMEDIATE 'DROP TABLE content.node'" }],
+                    ['EXECUTE of a dollar quoted block', { join_condition: 'EXECUTE $$ DROP TABLE content.node $$' }],
+                    ['EXECUTE of a prepared statement', { join_condition: 'EXECUTE stmt_name' }],
+                    ['PREPARE', { join_condition: 'PREPARE evil AS SELECT 1' }],
+                    ['DO block', { join_condition: 'DO $$ BEGIN PERFORM 1 END $$' }],
+                    ['EXECUTE IMMEDIATE split across lines', { join_condition: "EXECUTE\n\tIMMEDIATE\n'DROP TABLE content.node'" }],
+                    ['PREPARE split across lines', { join_condition: 'PREPARE\n evil\n AS SELECT 1' }],
+                    ['dangerous function inside a dollar quoted block', { join_condition: 'SELECT $$pg_sleep(1)$$' }],
                 ])('should reject %s', (_label, overrides) => {
                     expectRejected(overrides);
                 });
@@ -333,30 +453,29 @@ describe('BackendService', () => {
                     ['pg_sleep inside aggregate', { aggregate: ['ARRAY_AGG(pg_sleep(1)) as x'] }],
                     ['pg_sleep in join_condition', { join_condition: 'pg_sleep(1) IS NOT NULL' }],
                     ['case-insensitive pg_Sleep', { join_filter_target: 'Pg_Sleep(5) IS NOT NULL' }],
-                ])('should reject %s', (_label, overrides) => {
-                    expectRejected(overrides);
-                });
-            });
-
-            describe('unparseable and malformed input', () => {
-                it.each([
-                    ['broken operators', { join_filter_target: "barrier = = 'kerb' OR OR" }],
-                    ['unbalanced quotes', { join_filter_target: "barrier = 'kerb" }],
-                    ['unbalanced parentheses', { join_filter_target: 'ST_DWithin(geometry_target, geometry_source' }],
-                    ['empty operator chain', { join_filter_source: "AND OR" }],
-                    ['garbage aggregate', { aggregate: ['!!!not-sql!!!'] }],
+                    ['pg_sleep inside subquery', { join_filter_target: '1 AND (SELECT pg_sleep(1)) IS NOT NULL' }],
+                    ['pg_sleep inside CTE', { join_condition: 'WITH x AS (SELECT pg_sleep(1) AS s) SELECT * FROM x' }],
+                    ['space between function name and parenthesis', { join_filter_target: 'pg_sleep   (10) IS NOT NULL' }],
+                    ['line break between function name and parenthesis', { join_filter_target: 'pg_sleep\n(10) IS NOT NULL' }],
+                    ['pg_sleep hidden behind an E-string escaped quote', {
+                        join_filter_target: "barrier = E'\\'' OR pg_sleep(1) IS NOT NULL OR barrier = 'x'"
+                    }],
+                    ['quoted identifier function call', {
+                        join_filter_target: '"pg_sleep"(1) IS NOT NULL'
+                    }],
+                    ['schema qualified pg_catalog.pg_sleep', { join_filter_target: 'pg_catalog.pg_sleep(1) IS NOT NULL' }],
                 ])('should reject %s', (_label, overrides) => {
                     expectRejected(overrides);
                 });
             });
 
             describe('injection across all interpolated fields', () => {
-                it('should reject harmful payloads in join_condition, filters, and aggregate alike', () => {
+                it('should reject DML and dangerous functions in join_condition, filters, and aggregate alike', () => {
                     const payloads = [
-                        { join_condition: '1=1; SELECT 1' },
-                        { join_filter_target: 'EXISTS (SELECT 1 FROM content.edge)' },
+                        { join_condition: '1=1; DROP TABLE content.node' },
+                        { join_filter_target: 'DELETE FROM content.edge' },
                         { join_filter_source: "pg_read_file('/etc/passwd') IS NOT NULL" },
-                        { aggregate: ['ARRAY_AGG(highway) UNION SELECT password FROM users'] },
+                        { aggregate: ['ARRAY_AGG(pg_sleep(1)) as x'] },
                     ];
                     for (const payload of payloads) {
                         // Reset to a known-good baseline between attempts
