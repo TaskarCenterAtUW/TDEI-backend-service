@@ -101,6 +101,11 @@
                 "name": "proximity",
                 "type": "number",
                 "required": false
+            },
+            {
+                "name": "entity_filters",
+                "type": "object",
+                "required": false
             }
         ]
     },
