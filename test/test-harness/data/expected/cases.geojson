@@ -1,0 +1,782 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.629964
+      ],
+      [
+       -123.0991906,
+       44.629964
+      ],
+      [
+       -123.0991906,
+       44.630036
+      ],
+      [
+       -123.1000506,
+       44.630036
+      ],
+      [
+       -123.1000506,
+       44.629964
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "A",
+    "title": "Exact duplicate sidewalk",
+    "label": "A - Exact duplicate sidewalk",
+    "setup": "Identical sidewalk in both datasets; the DS1 and DS2 end nodes carry different tactile_paving values.",
+    "expected": "One sidewalk. The merged end node keeps DS1's tactile_paving=no, gains DS2-only ext:surface, and audits DS2's 'yes'."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.630144
+      ],
+      [
+       -123.0991906,
+       44.630144
+      ],
+      [
+       -123.0991906,
+       44.6302268
+      ],
+      [
+       -123.1000506,
+       44.6302268
+      ],
+      [
+       -123.1000506,
+       44.630144
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "B",
+    "title": "Drifting near-parallel sidewalk",
+    "label": "B - Drifting near-parallel sidewalk",
+    "setup": "DS2 sidewalk 0.4-1.2 m off the DS1 sidewalk, not quite parallel.",
+    "expected": "DS2 copy removed as a duplicate; only the DS1 sidewalk remains."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0989756,
+       44.629784
+      ],
+      [
+       -123.098495,
+       44.629784
+      ],
+      [
+       -123.098495,
+       44.630756
+      ],
+      [
+       -123.0989756,
+       44.630756
+      ],
+      [
+       -123.0989756,
+       44.629784
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "C",
+    "title": "Road x crossing",
+    "label": "C - Road x crossing",
+    "setup": "DS1 road crossed by a DS2 crossing, no node where they meet.",
+    "expected": "A new intersection node where they cross; road and crossing each split in two, all four pieces meeting at it."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0983813,
+       44.630054
+      ],
+      [
+       -123.0981789,
+       44.630054
+      ],
+      [
+       -123.0981789,
+       44.6301485
+      ],
+      [
+       -123.0983813,
+       44.6301485
+      ],
+      [
+       -123.0983813,
+       44.630054
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "D",
+    "title": "Two kerbs 2.5 m apart",
+    "label": "D - Two kerbs 2.5 m apart",
+    "setup": "Each dataset has a sidewalk ending in a kerb; the kerbs are 2.5 m apart.",
+    "expected": "Kerbs are never merged with each other. At 1 m both sidewalks and kerbs remain. At 3 m the DS2 sidewalk is removed as a duplicate and its kerb goes with it (open design question)."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.630504
+      ],
+      [
+       -123.0991906,
+       44.630504
+      ],
+      [
+       -123.0991906,
+       44.6305895
+      ],
+      [
+       -123.1000506,
+       44.6305895
+      ],
+      [
+       -123.1000506,
+       44.630504
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "E",
+    "title": "Road and sidewalk 1.5 m apart",
+    "label": "E - Road and sidewalk 1.5 m apart",
+    "setup": "DS1 road with a DS2 sidewalk running alongside, inside proximity.",
+    "expected": "Both kept and NOT connected: a road never merges with a sidewalk."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.630774
+      ],
+      [
+       -123.0991906,
+       44.630774
+      ],
+      [
+       -123.0991906,
+       44.630873
+      ],
+      [
+       -123.1000506,
+       44.630873
+      ],
+      [
+       -123.1000506,
+       44.630774
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "F",
+    "title": "Living street vs sidewalk",
+    "label": "F - Living street vs sidewalk",
+    "setup": "Two living streets 0.5 m apart, plus a DS2 sidewalk 3 m away.",
+    "expected": "The living streets merge into one; the sidewalk stays separate (living street is its own category)."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0980272,
+       44.629964
+      ],
+      [
+       -123.0979108,
+       44.629964
+      ],
+      [
+       -123.0979108,
+       44.630576
+      ],
+      [
+       -123.0980272,
+       44.630576
+      ],
+      [
+       -123.0980272,
+       44.629964
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "G",
+    "title": "Short T-stub onto a span",
+    "label": "G - Short T-stub onto a span",
+    "setup": "1.2 m DS2 stub meeting the MIDDLE of a long DS1 sidewalk (no node there).",
+    "expected": "Stub kept (it crosses, it is not a duplicate). The DS1 sidewalk is split where the stub meets it, so all three connect."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.631044
+      ],
+      [
+       -123.0989377,
+       44.631044
+      ],
+      [
+       -123.0989377,
+       44.6311178
+      ],
+      [
+       -123.1000506,
+       44.6311178
+      ],
+      [
+       -123.1000506,
+       44.631044
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "H",
+    "title": "Endpoints 0.36 m apart",
+    "label": "H - Endpoints 0.36 m apart",
+    "setup": "DS2 sidewalk starts 0.36 m from the end of a DS1 sidewalk.",
+    "expected": "The two join at the DS1 node into one continuous path; the merged node keeps DS1's attributes."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0975213,
+       44.629964
+      ],
+      [
+       -123.0974201,
+       44.629964
+      ],
+      [
+       -123.0974201,
+       44.630756
+      ],
+      [
+       -123.0975213,
+       44.630756
+      ],
+      [
+       -123.0975213,
+       44.629964
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "I",
+    "title": "Road only in DS2",
+    "label": "I - Road only in DS2",
+    "setup": "Service road present only in DS2.",
+    "expected": "Kept unchanged \u2014 nothing to merge with."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.631134
+      ],
+      [
+       -123.0989377,
+       44.631134
+      ],
+      [
+       -123.0989377,
+       44.631386
+      ],
+      [
+       -123.1000506,
+       44.631386
+      ],
+      [
+       -123.1000506,
+       44.631134
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "J",
+    "title": "DS1 node on a DS2 span",
+    "label": "J - DS1 node on a DS2 span",
+    "setup": "DS1 spur ends on the middle of a long DS2 sidewalk.",
+    "expected": "The DS2 sidewalk is split at the DS1 node; all three pieces meet there."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0975213,
+       44.631044
+      ],
+      [
+       -123.0966613,
+       44.631044
+      ],
+      [
+       -123.0966613,
+       44.6311196
+      ],
+      [
+       -123.0975213,
+       44.6311196
+      ],
+      [
+       -123.0975213,
+       44.631044
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "K",
+    "title": "Plain footway duplicate",
+    "label": "K - Plain footway duplicate",
+    "setup": "Two plain footways (highway=footway, no subtype) 0.4 m apart.",
+    "expected": "Merged into one."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0972051,
+       44.629964
+      ],
+      [
+       -123.0969142,
+       44.629964
+      ],
+      [
+       -123.0969142,
+       44.630756
+      ],
+      [
+       -123.0972051,
+       44.630756
+      ],
+      [
+       -123.0972051,
+       44.629964
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "L",
+    "title": "Crossing ending on a road node",
+    "label": "L - Crossing ending on a road node",
+    "setup": "DS2 crossing ends EXACTLY on an existing mid node of a DS1 road.",
+    "expected": "The existing node is reused \u2014 no new intersection node. Road split there; crossing joins it."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.631584
+      ],
+      [
+       -123.09957,
+       44.631584
+      ],
+      [
+       -123.09957,
+       44.631656
+      ],
+      [
+       -123.1000506,
+       44.631656
+      ],
+      [
+       -123.1000506,
+       44.631584
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "M",
+    "title": "Duplicate crossing",
+    "label": "M - Duplicate crossing",
+    "setup": "Identical crossing in both datasets.",
+    "expected": "Merged into one."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.631854
+      ],
+      [
+       -123.0993171,
+       44.631854
+      ],
+      [
+       -123.0993171,
+       44.631926
+      ],
+      [
+       -123.1000506,
+       44.631926
+      ],
+      [
+       -123.1000506,
+       44.631854
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "N",
+    "title": "Sidewalk - footway - crossing chain",
+    "label": "N - Sidewalk - footway - crossing chain",
+    "setup": "DS1 sidewalk and plain-footway connector; DS2 crossing continuing the chain.",
+    "expected": "One continuous route: sidewalk to connector to crossing, including across the dataset boundary."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0960037,
+       44.629964
+      ],
+      [
+       -123.0953966,
+       44.629964
+      ],
+      [
+       -123.0953966,
+       44.630171
+      ],
+      [
+       -123.0960037,
+       44.630171
+      ],
+      [
+       -123.0960037,
+       44.629964
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "P",
+    "title": "Duplicate with a crossing attached",
+    "label": "P - Duplicate with a crossing attached",
+    "setup": "DS2 duplicate sidewalk with a DS2 crossing hanging off its end.",
+    "expected": "Duplicate removed; the crossing re-attaches to the DS1 sidewalk and stays connected."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0960037,
+       44.630324
+      ],
+      [
+       -123.0946379,
+       44.630324
+      ],
+      [
+       -123.0946379,
+       44.6303969
+      ],
+      [
+       -123.0960037,
+       44.6303969
+      ],
+      [
+       -123.0960037,
+       44.630324
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "Q",
+    "title": "Three-segment chain between two DS1 ends",
+    "label": "Q - Three-segment chain between two DS1 ends",
+    "setup": "DS2 chain of three sidewalk segments bridging two DS1 sidewalks.",
+    "expected": "One continuous route end to end; all four junctions connect."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0960037,
+       44.630684
+      ],
+      [
+       -123.0946379,
+       44.630684
+      ],
+      [
+       -123.0946379,
+       44.630891
+      ],
+      [
+       -123.0960037,
+       44.630891
+      ],
+      [
+       -123.0960037,
+       44.630684
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "R",
+    "title": "Mid-span duplicate with a spur",
+    "label": "R - Mid-span duplicate with a spur",
+    "setup": "DS2 duplicate along the middle of a DS1 sidewalk, with a DS2 spur off its end.",
+    "expected": "Duplicate removed; DS1 sidewalk split where the spur meets it; spur stays connected."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0960037,
+       44.631044
+      ],
+      [
+       -123.0946379,
+       44.631044
+      ],
+      [
+       -123.0946379,
+       44.631251
+      ],
+      [
+       -123.0960037,
+       44.631251
+      ],
+      [
+       -123.0960037,
+       44.631044
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "S",
+    "title": "T onto a DS1 span",
+    "label": "S - T onto a DS1 span",
+    "setup": "DS2 sidewalk ends on the middle of a DS1 sidewalk.",
+    "expected": "DS1 sidewalk split at that point; the DS2 sidewalk connects there."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0967625,
+       44.631584
+      ],
+      [
+       -123.0953334,
+       44.631584
+      ],
+      [
+       -123.0953334,
+       44.631674
+      ],
+      [
+       -123.0967625,
+       44.631674
+      ],
+      [
+       -123.0967625,
+       44.631584
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "U",
+    "title": "Partial overlap",
+    "label": "U - Partial overlap",
+    "setup": "DS2 sidewalk 2 m off a DS1 sidewalk, continuing 45 m past its end.",
+    "expected": "1 m: kept whole and NOT connected - the DS1 end is 2 m away, beyond proximity. 3 m: the DS1 end is within proximity, so the DS2 sidewalk is split there, the overlapping half is removed as a duplicate, and the continuing half joins the DS1 sidewalk end - one continuous route. (With duplicate_buffer_width 3 m at 1 m, the threshold decides: removed below ~53% overlap.)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.632124
+      ],
+      [
+       -123.0991906,
+       44.632124
+      ],
+      [
+       -123.0991906,
+       44.632196
+      ],
+      [
+       -123.1000506,
+       44.632196
+      ],
+      [
+       -123.1000506,
+       44.632124
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "V",
+    "title": "Duplicate, surfaces differ",
+    "label": "V - Duplicate, surfaces differ",
+    "setup": "Identical sidewalk in both datasets; DS1 tagged surface=concrete, DS2 surface=asphalt.",
+    "expected": "One sidewalk (the DS2 copy is a duplicate). Filter case: under an edge filter only DS1 satisfies, both copies stay - a duplicate is removed only when BOTH sides pass."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0987859,
+       44.632124
+      ],
+      [
+       -123.0983054,
+       44.632124
+      ],
+      [
+       -123.0983054,
+       44.632376
+      ],
+      [
+       -123.0987859,
+       44.632376
+      ],
+      [
+       -123.0987859,
+       44.632124
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "W",
+    "title": "Coincident kerb, attributes differ",
+    "label": "W - Coincident kerb, attributes differ",
+    "setup": "DS1 and DS2 sidewalks meet at a kerb node present in both; DS2's copy adds tactile_paving=yes.",
+    "expected": "The kerbs merge into one node joining both sidewalks; it keeps DS1's tags, gains tactile_paving=yes and audits it. Filter case: filters may stop the attribute merge, never the connection."
+   }
+  }
+ ]
+}
