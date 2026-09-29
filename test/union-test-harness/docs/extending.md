@@ -4,7 +4,8 @@
 
 1. Add the geometry in `harness/generate_dataset.py`. Start every edge `name`
    with the case id (`"X: ..."`).
-2. Add the case to `harness/cases.py`: setup, expected text, assertions.
+2. Add the case to `harness/cases.py`: setup, expected text, assertions. If it checks a rule in
+   [union-expectations.md](union-expectations.md), add the case id to that rule's row.
 3. Regenerate and validate:
    ```bash
    python3 harness/generate_dataset.py     # data/ds1_*, data/ds2_*

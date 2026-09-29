@@ -30,6 +30,7 @@ is 0 only when every run passes.
 | [docs/running.md](docs/running.md) | run the harness: commands, options, output files, steps by hand |
 | [docs/reading-results.md](docs/reading-results.md) | understand the report and what to do when a case fails |
 | [docs/qgis.md](docs/qgis.md) | inspect runs in QGIS and compare input, output, and one run against another |
+| [docs/union-expectations.md](docs/union-expectations.md) | know what the union must always do (connectivity) and what filters control (merging), and which cases check each rule |
 | [docs/filter-scenarios.md](docs/filter-scenarios.md) | test `entity_filters`, and see what filters may and may not change |
 | [docs/test-dataset.md](docs/test-dataset.md) | see what each case A–W sets up and expects |
 | [docs/extending.md](docs/extending.md) | add a case or a scenario, plus a map of the code |
@@ -46,6 +47,6 @@ sql/                   export helper and the psql script that writes the GeoJSON
 harness/               Python: cases, checks, filter scenarios, dataset generator
 data/                  test datasets (ds1_*, ds2_*) and expected/ reference layers
 qgis/                  load_in_qgis.py — styled layer tree for QGIS
-docs/                  documentation (this folder's guides) and images/
+docs/                  guides, the union expectations, and images/
 runs/                  output, one folder per run (not committed)
 ```

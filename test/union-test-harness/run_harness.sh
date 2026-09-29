@@ -95,12 +95,12 @@ run_one() {
     [[ -n "$scen" ]] && cargs=(--scenario "$scen" --baseline "$base")
     mkdir -p "$out"
     echo; echo "== union at ${p} m${scen:+, scenario $scen}  ->  $out/"
-    ( cd "$out" && "${PSQL[@]}" -v ds1="$DS1" -v ds2="$DS2" -v prox="$p" "${fargs[@]}" -f "$HARNESS_ROOT/sql/export_union.psql" 2>&1 ) \
+    ( cd "$out" && "${PSQL[@]}" -v ds1="$DS1" -v ds2="$DS2" -v prox="$p" ${fargs[@]+"${fargs[@]}"} -f "$HARNESS_ROOT/sql/export_union.psql" 2>&1 ) \
         | grep --line-buffered -v 'does not exist, skipping' > "$out/union_log.txt"
     if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
         echo "   union failed — see $out/union_log.txt"; tail -3 "$out/union_log.txt"; overall=1; return
     fi
-    python3 harness/check_cases.py "$out" --proximity "$p" "${cargs[@]}" > "$out/check_report.txt"
+    python3 harness/check_cases.py "$out" --proximity "$p" ${cargs[@]+"${cargs[@]}"} > "$out/check_report.txt"
     local rc=$?
     grep -E "cases passed|Filter scenario|vs baseline|^    (PASS|FAIL)|^  FAIL|^          x" "$out/check_report.txt" | sed 's/^/   /'
     [[ $rc -ne 0 ]] && overall=1
@@ -113,7 +113,7 @@ if [[ "${PROXIMITIES[0]}" == filters ]]; then
     # filters <name>         one scenario
     # filters <name> <name>  ONE run with their filters combined
     # filters .              every scenario, each its own run        (+ baselines)
-    scen_lines=$(python3 harness/scenarios.py "${PROXIMITIES[@]:1}") || exit 2
+    scen_lines=$(python3 harness/scenarios.py ${PROXIMITIES[1]+"${PROXIMITIES[@]:1}"}) || exit 2
     for p in $(cut -f2 <<< "$scen_lines" | sort -u); do
         run_one "runs/prox_$p" "$p"                       # baseline: same proximity, no filters
     done

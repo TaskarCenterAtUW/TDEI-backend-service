@@ -20,6 +20,8 @@ with one small case per behaviour.
 
 ## Cases
 
+Which rule each case checks is listed in [union-expectations.md](union-expectations.md).
+
 | Case | Setup | Expected after union (default settings) |
 |---|---|---|
 | **A** | Identical sidewalk in both datasets | One copy in the output; the DS2 copy is dropped as a duplicate |

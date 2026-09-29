@@ -39,24 +39,18 @@ the feature's properties contain all of its key/values.
 
 ## What filters control, and what they don't
 
-Filters decide what is **merged**, never what is **connected**. This is the
-agreed design: routability outranks filters.
+Filters decide what is **merged**, never what is **connected**:
 
-| Always runs, whatever the filter (connectivity) | Controlled by the filter (merging) |
-|---|---|
-| node snapping within proximity (type guard, kerb×kerb exception; coincident nodes always join) | duplicate removal, node-pair match (Pass 1): only passing DS2 edges are removed, only passing DS1 edges count as the original |
-| DS2 edge split at a DS1 node on its span | duplicate removal, coverage match (Pass 2): failing DS2 edges are always kept |
-| road × crossing: shared `ixn-` node, both split | node attribute merge: only when both nodes pass (always audited in `ext:union_audit_*`) |
-| DS1 edge split where a DS2 edge T's onto it (not roads, ≥ 30°) | |
-| DS2 endpoints aligned to their nodes; stranding guard; orphan cleanup | |
+- **Always runs, whatever the filter:** node snapping (with the type guard and
+  the kerb×kerb exception), edge splitting, road × crossing `ixn-` nodes,
+  endpoint alignment, the stranding guard, and orphan cleanup.
+- **Controlled by the filter:** duplicate removal (Pass 1 node-pair, Pass 2
+  coverage) and node attribute merge. DS2 values are always audited.
 
-So an element that fails the filter is not removed, and its tags are not merged.
-It still snaps and still gets split, so it can come out *modified*.
-
-Example: `f_crossing` at 3 m. Case B's DS2 sidewalk is kept (it's not a
-crossing), but its ends snap onto the DS1 sidewalk's ends. Case D's is kept with
-one end snapped 2.5 m. That is the expected behaviour, and the harness checks
-for it.
+An element that fails the filter is therefore not removed and its tags are not
+merged, but it still snaps and still gets split, so it can come out *modified*.
+The full rule list (C1–C10, M1–M4), with the cases that check each rule, is in
+**[union-expectations.md](union-expectations.md)**.
 
 ## Scenarios
 
