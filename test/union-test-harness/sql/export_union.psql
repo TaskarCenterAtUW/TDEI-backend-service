@@ -1,0 +1,47 @@
+-- =============================================================================
+-- export_union.psql — run the union once and write the six OSW .geojson files
+-- into the CURRENT directory. run_harness.sh calls this for you; to run it by hand:
+--
+--   cd runs/prox_3
+--   psql "$PGCONN" -v ds1=harness-ds1 -v ds2=harness-ds2 -v prox=3 -f ../../sql/export_union.psql
+--
+-- Optional: -v filters='{"edge":{"duplicate_buffer_width":3}}'   (4-argument union only)
+--
+-- Writes client-side with \o, so it works on Azure (no server-side COPY TO file).
+-- Do not replace this with \copy: \copy doubles backslashes and breaks the JSON.
+-- =============================================================================
+\set ON_ERROR_STOP on
+\set QUIET on
+
+SET client_min_messages = warning;
+DROP TABLE IF EXISTS union_out;
+RESET client_min_messages;          -- keep the union's own RAISE NOTICE progress lines
+\if :{?filters}
+CREATE TEMP TABLE union_out AS
+SELECT * FROM content.tdei_union_dataset_geojson(:'ds1', :'ds2', :prox, :'filters'::jsonb);
+\else
+CREATE TEMP TABLE union_out AS
+SELECT * FROM content.tdei_union_dataset_geojson(:'ds1', :'ds2', :prox);
+\endif
+
+\echo
+\echo 'Union output (feature counts):'
+SELECT file_name, feature_count FROM union_out ORDER BY file_name;
+
+\pset tuples_only on
+\pset format unaligned
+\pset footer off
+\o osw_nodes.geojson
+SELECT jsonb_pretty(geojson) FROM union_out WHERE file_name = 'node';
+\o osw_edges.geojson
+SELECT jsonb_pretty(geojson) FROM union_out WHERE file_name = 'edge';
+\o osw_zones.geojson
+SELECT jsonb_pretty(geojson) FROM union_out WHERE file_name = 'zone';
+\o osw_points.geojson
+SELECT jsonb_pretty(geojson) FROM union_out WHERE file_name = 'point';
+\o osw_lines.geojson
+SELECT jsonb_pretty(geojson) FROM union_out WHERE file_name = 'line';
+\o osw_polygons.geojson
+SELECT jsonb_pretty(geojson) FROM union_out WHERE file_name = 'polygon';
+\o
+\echo 'Wrote osw_nodes/edges/zones/points/lines/polygons.geojson'
