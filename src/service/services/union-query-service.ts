@@ -3,6 +3,8 @@ import { AbstractOSWBackendRequest } from "../base/osw-backend-abstract";
 import { BackendRequest } from "../interface/interfaces";
 import { Utility } from "../../utility/utility";
 import { QueryConfig } from "pg";
+import { InputException } from "../../exceptions/http/http-exceptions";
+import { validateUnionOptions } from "../../utility/union-options-validator";
 
 export class UnionQueryService extends AbstractOSWBackendRequest {
 
@@ -29,9 +31,25 @@ export class UnionQueryService extends AbstractOSWBackendRequest {
                     return reject('Invalid proximity parameter');
                 }
 
+                let entityFilters: object | null = null;
+                try {
+                    entityFilters = validateUnionOptions(params.entity_filters);
+                } catch (error) {
+                    const errorMessage = error instanceof InputException
+                        ? error.message
+                        : 'Invalid entity_filters parameter';
+                    await Utility.publishMessage(message, false, errorMessage);
+                    return reject(errorMessage);
+                }
+
                 const unionQueryConfig: QueryConfig = {
-                    text: 'SELECT * FROM content.tdei_union_dataset($1,$2,$3)',
-                    values: [params.tdei_dataset_id_one, params.tdei_dataset_id_two, params.proximity ?? 0.5],
+                    text: 'SELECT * FROM content.tdei_union_dataset($1,$2,$3,$4)',
+                    values: [
+                        params.tdei_dataset_id_one,
+                        params.tdei_dataset_id_two,
+                        params.proximity ?? 0.5,
+                        entityFilters ? JSON.stringify(entityFilters) : null,
+                    ],
                 }
 
                 await this.process_upload_dataset(params.tdei_dataset_id_one, uploadContext, message, unionQueryConfig);

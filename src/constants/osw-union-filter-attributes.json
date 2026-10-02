@@ -1,0 +1,64 @@
+{
+  "edge": [
+    "_id",
+    "_u_id",
+    "_v_id",
+    "climb",
+    "crossing:markings",
+    "description",
+    "foot",
+    "footway",
+    "highway",
+    "incline",
+    "length",
+    "name",
+    "service",
+    "step_count",
+    "surface",
+    "width"
+  ],
+  "node": [
+    "_id",
+    "barrier",
+    "kerb",
+    "tactile_paving"
+  ],
+  "point": [
+    "_id",
+    "amenity",
+    "barrier",
+    "emergency",
+    "highway",
+    "leaf_cycle",
+    "leaf_type",
+    "man_made",
+    "natural",
+    "power"
+  ],
+  "zone": [
+    "_id",
+    "_w_id",
+    "description",
+    "foot",
+    "highway",
+    "name",
+    "surface"
+  ],
+  "line": [
+    "_id",
+    "barrier",
+    "leaf_cycle",
+    "leaf_type",
+    "length",
+    "natural"
+  ],
+  "polygon": [
+    "_id",
+    "building",
+    "leaf_cycle",
+    "leaf_type",
+    "name",
+    "natural",
+    "opening_hours"
+  ]
+}

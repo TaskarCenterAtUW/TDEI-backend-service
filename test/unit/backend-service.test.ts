@@ -341,6 +341,200 @@ describe('BackendService', () => {
       // Assertions
       expect(publishMessageSpy).toHaveBeenCalledWith(message, false, 'Invalid proximity parameter');
     });
+
+    it('should pass validated entity_filters to tdei_union_dataset', async () => {
+      const entity_filters = {
+        edge: {
+          filters: [{ highway: 'footway', footway: 'sidewalk' }],
+        },
+      };
+      const message: any = {
+        data: {
+          parameters: {
+            tdei_dataset_id_one: 'your-tdei-dataset-id',
+            tdei_dataset_id_two: 'your-tdei-dataset-id',
+            proximity: 1.0,
+            entity_filters,
+          },
+        },
+        messageId: 'your-message-id',
+      };
+
+      const handleStreamDataEventMock = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset').mockResolvedValueOnce(true);
+
+      await backendService.unionQueryService.executeUnionQuery(message);
+
+      expect(handleStreamDataEventMock).toHaveBeenCalledWith(
+        'your-tdei-dataset-id',
+        expect.any(Object),
+        message,
+        expect.objectContaining({
+          text: 'SELECT * FROM content.tdei_union_dataset($1,$2,$3,$4)',
+          values: ['your-tdei-dataset-id', 'your-tdei-dataset-id', 1.0, JSON.stringify(entity_filters)],
+        })
+      );
+    });
+
+    it('should pass the full multi-dimension entity_filters sample to tdei_union_dataset', async () => {
+      const entity_filters = {
+        edge: {
+          filters: [
+            { highway: 'footway', footway: 'sidewalk' },
+            { highway: 'footway', footway: 'crossing' },
+          ],
+          duplicate_buffer_width: 2,
+          duplicate_overlap_percentage: 75,
+        },
+        node: {
+          filters: [
+            { barrier: 'kerb' },
+          ],
+        },
+        line: {
+          filters: [
+            { barrier: 'fence' },
+          ],
+          duplicate_buffer_width: 1.5,
+          duplicate_overlap_percentage: 65,
+        },
+        polygon: {
+          filters: [
+            { building: 'yes' },
+          ],
+          duplicate_overlap_percentage: 80,
+        },
+        zone: {
+          duplicate_overlap_percentage: 75,
+        },
+        point: {
+          filters: [
+            { amenity: 'bench' },
+            { highway: 'street_lamp' },
+          ],
+        },
+      };
+      const message: any = {
+        data: {
+          parameters: {
+            tdei_dataset_id_one: 'your-tdei-dataset-id',
+            tdei_dataset_id_two: 'your-tdei-dataset-id',
+            proximity: 1.0,
+            entity_filters,
+          },
+        },
+        messageId: 'your-message-id',
+      };
+
+      const handleStreamDataEventMock = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset').mockResolvedValueOnce(true);
+
+      await backendService.unionQueryService.executeUnionQuery(message);
+
+      expect(handleStreamDataEventMock).toHaveBeenCalledWith(
+        'your-tdei-dataset-id',
+        expect.any(Object),
+        message,
+        expect.objectContaining({
+          text: 'SELECT * FROM content.tdei_union_dataset($1,$2,$3,$4)',
+          values: ['your-tdei-dataset-id', 'your-tdei-dataset-id', 1.0, JSON.stringify(entity_filters)],
+        })
+      );
+    });
+
+    it('should reject invalid entity_filters attributes', async () => {
+      const message: any = {
+        data: {
+          parameters: {
+            tdei_dataset_id_one: 'your-tdei-dataset-id',
+            tdei_dataset_id_two: 'your-tdei-dataset-id',
+            entity_filters: {
+              edge: {
+                filters: [{ not_an_osw_attribute: 'x' }],
+              },
+            },
+          },
+        },
+        messageId: 'your-message-id',
+      };
+      const publishMessageMock = jest.fn().mockResolvedValueOnce(undefined);
+      const publishMessageSpy = jest.spyOn(Utility, 'publishMessage').mockImplementation(publishMessageMock);
+      const handleStreamDataEventMock = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset');
+
+      await expect(backendService.unionQueryService.executeUnionQuery(message)).rejects.toContain(
+        "not a valid OpenSidewalks attribute for 'edge'"
+      );
+
+      expect(handleStreamDataEventMock).not.toHaveBeenCalled();
+      expect(publishMessageSpy).toHaveBeenCalledWith(
+        message,
+        false,
+        expect.stringContaining("not a valid OpenSidewalks attribute for 'edge'")
+      );
+    });
+
+    it('should reject duplicate_buffer_width on unsupported entity_filters dimensions', async () => {
+      const message: any = {
+        data: {
+          parameters: {
+            tdei_dataset_id_one: 'your-tdei-dataset-id',
+            tdei_dataset_id_two: 'your-tdei-dataset-id',
+            entity_filters: {
+              polygon: {
+                filters: [{ building: 'yes' }],
+                duplicate_buffer_width: 2,
+                duplicate_overlap_percentage: 80,
+              },
+            },
+          },
+        },
+        messageId: 'your-message-id',
+      };
+      const publishMessageMock = jest.fn().mockResolvedValueOnce(undefined);
+      const publishMessageSpy = jest.spyOn(Utility, 'publishMessage').mockImplementation(publishMessageMock);
+      const handleStreamDataEventMock = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset');
+
+      await expect(backendService.unionQueryService.executeUnionQuery(message)).rejects.toContain(
+        "'duplicate_buffer_width' is not supported for 'polygon'"
+      );
+
+      expect(handleStreamDataEventMock).not.toHaveBeenCalled();
+      expect(publishMessageSpy).toHaveBeenCalledWith(
+        message,
+        false,
+        expect.stringContaining("'duplicate_buffer_width' is not supported for 'polygon'")
+      );
+    });
+
+    it('should reject duplicate_overlap_percentage on unsupported entity_filters dimensions', async () => {
+      const message: any = {
+        data: {
+          parameters: {
+            tdei_dataset_id_one: 'your-tdei-dataset-id',
+            tdei_dataset_id_two: 'your-tdei-dataset-id',
+            entity_filters: {
+              point: {
+                filters: [{ amenity: 'bench' }],
+                duplicate_overlap_percentage: 80,
+              },
+            },
+          },
+        },
+        messageId: 'your-message-id',
+      };
+      const publishMessageMock = jest.fn().mockResolvedValueOnce(undefined);
+      const publishMessageSpy = jest.spyOn(Utility, 'publishMessage').mockImplementation(publishMessageMock);
+      const handleStreamDataEventMock = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset');
+
+      await expect(backendService.unionQueryService.executeUnionQuery(message)).rejects.toContain(
+        "'duplicate_overlap_percentage' is not supported for 'point'"
+      );
+
+      expect(handleStreamDataEventMock).not.toHaveBeenCalled();
+      expect(publishMessageSpy).toHaveBeenCalledWith(
+        message,
+        false,
+        expect.stringContaining("'duplicate_overlap_percentage' is not supported for 'point'")
+      );
+    });
   });
 
   describe('Self Merge Dataset', () => {
