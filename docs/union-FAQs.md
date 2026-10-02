@@ -53,12 +53,17 @@ An **edge** is a line segment — a stretch of sidewalk, a road, a crossing.
 
 ### How does the union decide an edge is a "duplicate"?
 
-It measures how much of a secondary edge runs alongside a primary edge **of the same type**. If most of the secondary edge (a large majority of its length) is already covered by a same-type primary edge running right next to it, it is considered a duplicate and removed.
+It checks in two passes, after the secondary dataset's points have been snapped onto the primary's:
+
+1. **Same two end points.** If a secondary edge now starts and ends at the same two points as a primary edge, it is the same edge drawn twice, and it is removed.
+2. **Mostly covered.** Otherwise, the union draws a narrow corridor around each primary edge and measures how much of the secondary edge falls inside the corridor of a primary edge **of the same type**. If a large majority of its length is inside, it is a duplicate and is removed.
 
 Two important safeguards:
 
 1. **Same type only.** A sidewalk is only ever compared against sidewalks, a road against roads, a crossing against crossings. A road is never treated as a duplicate of a sidewalk, even if they run side by side.
-2. **Connection safety.** If a small piece of edge is the *only* link holding two parts of the network together, it is kept even if it looks like a duplicate — so the union never accidentally breaks a route.
+2. **Nothing is left hanging.** If something was attached to a removed duplicate, such as a crossing or a short side path, it is re-attached to the matching point on the primary edge. Removing a duplicate never cuts anything off.
+
+**Example.** The secondary dataset repeats a sidewalk the primary already has, and a secondary crossing hangs off the end of it. The duplicate sidewalk is removed, and the crossing is re-attached to the end of the primary sidewalk, so it stays connected.
 
 ### What are the "types" or categories of edges?
 
@@ -103,6 +108,8 @@ Different feature types use a "how much do they overlap?" test to decide whether
 | **Polygons** (building footprints, wooded areas) | Merged if they overlap by **more than 70%** | Added as a new polygon |
 | **Zones** (plazas, open pedestrian areas) | Merged if the secondary substantially overlaps an existing zone (**around 70%**) | Added as a new zone |
 
+These are the **default** thresholds. You can change them for a single run — see [Can I change how strict duplicate detection is?](#can-i-change-how-strict-duplicate-detection-is) below.
+
 **Why the thresholds are high (70–80%):** they are set deliberately high so that only features that *genuinely* represent the same real-world thing are merged. Two features that merely clip or touch at the edges (a low overlap) are treated as distinct and both kept. You need a large majority of overlap before the union concludes "these are the same feature drawn twice."
 
 **Example (extension line).** The primary dataset has a fence along a property. The secondary dataset drew the same fence, and the two versions overlap by 90%. Since that's well above 70%, they're merged into one fence (primary's version kept, secondary's extra details preserved in the audit trail). But if the secondary "fence" only overlapped the primary's by 30%, it would be treated as a *different* fence and kept separately.
@@ -140,6 +147,27 @@ Two conditions must both be true:
 
 If either condition fails, the nodes are left alone as two distinct points.
 
+There is one exception: two nodes at **exactly the same spot** are always joined, even if their types differ (for example a road point and a crossing point). Two points at one location are the same physical point.
+
+### What happens when one path ends in the middle of another?
+
+The longer path is split at that spot so the two connect. Without the split, the shorter path would stop right next to the longer one without actually joining it, and routing would treat it as a dead end.
+
+This works both ways:
+
+- If a primary point lies along a secondary edge, the secondary edge is split at that point.
+- If a secondary path meets the middle of a primary path, the primary path is split there. This isn't done on roads, and the side path must meet at an angle of at least 30°.
+
+**Example.** A short secondary path meets the middle of a long primary sidewalk at a right angle. It isn't a duplicate, because it crosses the sidewalk rather than running alongside it. The primary sidewalk is split where the short path meets it, and the two connect.
+
+### Can a feature be changed without being removed?
+
+Yes. A secondary edge that is kept can still come out slightly different. Its end points may be snapped onto nearby primary points, it may be split where other paths meet it, and its ends are lined up exactly with the points they connect to. This keeps the combined network connected.
+
+### Are any points removed?
+
+Yes. After duplicates are removed, any network node that no edge or zone uses anymore is removed too. For example, the end point of a removed duplicate sidewalk goes with it if nothing else uses it.
+
 ---
 
 ## What happens to properties (the information attached to features)
@@ -153,6 +181,8 @@ Every feature carries **properties** — little labels describing it (for a kerb
 3. **Overwritten values are recorded, not lost.** Where the primary "won" and the secondary's value was set aside, the secondary's value is still saved in a special **audit** label (see below), so nothing disappears silently.
 
 **Example.** A primary lamp node says `height = 9`. A matching secondary lamp node says `height = 9.1` and also `material = steel`. The merged node keeps `height = 9` (primary wins), adds `material = steel` (new information), and records `height = 9.1` in the audit trail (the secondary's value, preserved for reference).
+
+When filters are used, a secondary label is added only if the point passes the filters (see [What rules apply when filters are used?](#what-rules-apply-when-filters-are-used)). If it doesn't, the label is still recorded in the audit trail.
 
 ### How is the audit done — and why?
 
@@ -178,11 +208,13 @@ So the rule is: **when two kerb points are near each other, leave them both exac
 
 **Example.** A crossing has a kerb on the north side and a kerb on the south side, 3 metres apart. The union keeps both kerbs as separate points, correctly representing the two sides of the crossing.
 
+One thing to know: kerbs are never merged with each other, but a kerb can still be removed along with its edge. If a secondary sidewalk is removed as a duplicate, its kerb goes with it.
+
 ### What happens where a road and a crossing meet?
 
 Where a road and a pedestrian crossing intersect, they should share a common point (so the network knows the crossing actually meets the road there). The union creates or reuses a **shared intersection point** at that spot.
 
-If there's already a point at the intersection, the union reuses it. If there isn't, it creates a new one. This keeps the road and crossing properly joined so that routing across the intersection works.
+If the crossing ends exactly on an existing road point, the union reuses that point. Otherwise, it creates a new one and splits both the road and the crossing there. This keeps the road and crossing properly joined so that routing across the intersection works.
 
 ### How are living streets (shared pedestrian/vehicle streets) handled?
 
@@ -240,6 +272,168 @@ This means if you union datasets that were themselves the result of earlier unio
 
 ---
 
+## Customising a union run
+
+### Can I adjust how the union behaves for one run?
+
+Yes. Besides the two datasets and the proximity distance, a union run accepts an optional setting called **`entity_filters`**. It lets you:
+
+1. **Choose which features take part in merging**, using filters.
+2. **Make duplicate detection stricter or looser**, by changing the corridor width and the overlap percentage.
+
+If you leave `entity_filters` out, the union behaves exactly as described in the rest of this document, with all the default values.
+
+### How is `entity_filters` organised?
+
+It is grouped by feature type. There are six groups, one for each kind of feature in a pedestrian network:
+
+| Group | What it covers |
+|---|---|
+| `edge` | Sidewalks, footways, crossings, roads, steps, and other lines in the network |
+| `node` | Points where edges meet, including kerbs |
+| `point` | Street furniture such as benches, lamps, hydrants, and poles |
+| `zone` | Open pedestrian areas such as plazas |
+| `line` | Lines outside the network, such as fences and tree rows |
+| `polygon` | Areas such as buildings and woods |
+
+You only include the groups you want to change. Any other group name is rejected.
+
+### How do filters work?
+
+A filter is a list of labels a feature must have. Inside one filter, a feature must have **all** of the labels listed. If you give several filters for the same group, a feature that matches **any one** of them passes.
+
+**Example.** This filter means "sidewalks or crossings":
+
+```json
+{
+  "edge": {
+    "filters": [
+      { "highway": "footway", "footway": "sidewalk" },
+      { "highway": "footway", "footway": "crossing" }
+    ]
+  }
+}
+```
+
+### What do filters control, and what don't they?
+
+**Filters decide what is merged, never what is connected.** A walkable network matters more than any filter, so the connection steps always run for every feature:
+
+| Always runs, whatever the filter | Controlled by the filter |
+|---|---|
+| Snapping secondary points onto nearby primary points (with the type and kerb rules) | Removing duplicate edges (both passes) |
+| Splitting edges where paths meet | Adding secondary labels onto merged points |
+| Creating the shared point where a road and crossing cross | |
+| Lining edge ends up with their points | |
+| Re-attaching anything left hanging by a removed duplicate | |
+| Removing points nothing uses anymore | |
+
+The audit trail is also always written. Every secondary value is recorded, including ones a filter held back.
+
+So a feature that fails the filter is not removed and its labels are not merged, but it is still snapped and split. It can come out slightly *changed* rather than untouched.
+
+**Example.** With an edge filter for crossings only, a secondary sidewalk that duplicates a primary one is kept, because it isn't a crossing. Its ends are still snapped onto the primary sidewalk's ends, so the two stay connected.
+
+### What rules apply when filters are used?
+
+- **Both copies must pass.** A duplicate is removed only if the secondary edge *and* the primary edge it duplicates both pass the edge filter. Otherwise both are kept.
+- **A node filter only narrows.** Labels are merged onto a point only if the point matches the node filter *and* sits on an edge that passes the edge filter.
+- **A group with no filter adds no restriction of its own.**
+- **A filter never removes more than a run without filters would.**
+
+**Example (both copies must pass).** Both datasets drew the same sidewalk, but the primary's says `surface = concrete` and the secondary's says `surface = asphalt`. With the filter "sidewalk with `surface = concrete`", only the primary copy passes, so both copies are kept. With the filter "`surface = concrete` or `surface = asphalt`", both copies pass, so the secondary copy is removed.
+
+**Example (node filter narrows).** Primary and secondary sidewalks meet at a kerb, and the secondary adds `tactile_paving = yes`. With an edge filter for crossings and a node filter for kerbs, the point is a kerb but isn't on a crossing. So `tactile_paving` is not merged, only recorded in the audit trail. The kerb still joins both sidewalks.
+
+### Which labels can I use in a filter?
+
+Only labels defined by the [OpenSidewalks Schema 0.3](https://raw.githubusercontent.com/OpenSidewalks/OpenSidewalks-Schema/refs/heads/OSW0.3/opensidewalks.schema.json) for that feature type. For example, `kerb` is a valid label for a `node` but not for an `edge`, so using it under `edge` is rejected. Custom labels that start with `ext:` (for example `ext:source`) are always allowed.
+
+The labels allowed for each group are:
+
+| Group | Allowed labels |
+|---|---|
+| `edge` | `_id`, `_u_id`, `_v_id`, `climb`, `crossing:markings`, `description`, `foot`, `footway`, `highway`, `incline`, `length`, `name`, `service`, `step_count`, `surface`, `width` |
+| `node` | `_id`, `barrier`, `kerb`, `tactile_paving` |
+| `point` | `_id`, `amenity`, `barrier`, `emergency`, `highway`, `leaf_cycle`, `leaf_type`, `man_made`, `natural`, `power` |
+| `zone` | `_id`, `_w_id`, `description`, `foot`, `highway`, `name`, `surface` |
+| `line` | `_id`, `barrier`, `leaf_cycle`, `leaf_type`, `length`, `natural` |
+| `polygon` | `_id`, `building`, `leaf_cycle`, `leaf_type`, `name`, `natural`, `opening_hours` |
+
+Only the label *names* are checked. The values (such as `sidewalk` or `bench`) are not checked against the schema.
+
+### Can I change how strict duplicate detection is?
+
+Yes, with two settings placed in the same groups as the filters:
+
+- **`duplicate_buffer_width`** (in metres): how wide the corridor around a primary feature is. Any part of a secondary feature inside this corridor counts as "running alongside" it. A wider corridor catches duplicates that were drawn further apart.
+- **`duplicate_overlap_percentage`** (0 to 100): how much of a secondary feature must fall inside that corridor before it is treated as a duplicate. A lower percentage drops more features as duplicates; a higher percentage drops fewer.
+
+Not every setting makes sense for every feature type, so each one is only accepted where it can be used:
+
+| Setting | Allowed in | Default |
+|---|---|---|
+| `duplicate_buffer_width` | `edge`, `line` | The proximity distance |
+| `duplicate_overlap_percentage` | `edge`, `line`, `polygon`, `zone` | 80% for edges; 70% for lines, polygons, and zones |
+
+Putting a setting in a group that cannot use it (for example `duplicate_buffer_width` under `polygon`, or either setting under `node` or `point`) is rejected with an error. It is never silently ignored.
+
+**Example (corridor width).** Two datasets drew the same sidewalk, but the lines drift between 0.4 and 1.2 metres apart. With a narrow corridor, parts of the secondary copy fall outside it, so it isn't recognised as a duplicate. A wider corridor catches it:
+
+```json
+{ "edge": { "duplicate_buffer_width": 3 } }
+```
+
+**Example (overlap percentage).** A secondary sidewalk runs 2 metres from a primary one, then carries on well past its end. With a 3-metre corridor, about 53% of the secondary sidewalk is inside it. At `duplicate_overlap_percentage: 50` it is removed as a duplicate. At `60` it is kept, because the part that carries on is treated as new.
+
+### What does a complete example look like?
+
+This example uses all six groups:
+
+```json
+{
+  "edge": {
+    "filters": [
+      { "highway": "footway", "footway": "sidewalk" },
+      { "highway": "footway", "footway": "crossing" }
+    ],
+    "duplicate_buffer_width": 2,
+    "duplicate_overlap_percentage": 75
+  },
+  "node": {
+    "filters": [{ "barrier": "kerb" }]
+  },
+  "line": {
+    "filters": [{ "barrier": "fence" }],
+    "duplicate_buffer_width": 1.5,
+    "duplicate_overlap_percentage": 65
+  },
+  "polygon": {
+    "filters": [{ "building": "yes" }],
+    "duplicate_overlap_percentage": 80
+  },
+  "zone": {
+    "duplicate_overlap_percentage": 75
+  },
+  "point": {
+    "filters": [{ "amenity": "bench" }, { "highway": "street_lamp" }]
+  }
+}
+```
+
+### What happens if `entity_filters` contains a mistake?
+
+The run stops before any data is processed, and the job reports an error that says what was wrong. For example:
+
+- an unknown group name, such as `edges` instead of `edge`;
+- an unknown setting inside a group, such as `buffer`;
+- a label that isn't valid for that feature type;
+- a setting in a group that cannot use it;
+- a corridor width below 0, or an overlap percentage outside 0 to 100;
+- a number given as text, such as `"3"` instead of `3`.
+
+---
+
 ## Common questions
 
 ### If both datasets have the same sidewalks, will I see them twice?
@@ -252,7 +446,7 @@ No. Anything that exists in only one of the two datasets is kept. Duplicates are
 
 ### Could the union accidentally break a walking route?
 
-No. The union has a built-in connection safeguard: if a piece of edge is the only thing linking two parts of the network, it is kept even if it otherwise looks like a duplicate. Routes stay connected.
+No. When a duplicate is removed, anything attached to it is re-attached to the primary edge. Paths that end in the middle of another path are split in so they connect. Filters can't switch any of this off. The test harness also checks the whole output: anything connected in either input dataset must still be connected after the union.
 
 ### Why does the primary dataset get to "win" every disagreement?
 
@@ -265,11 +459,13 @@ Proximity is the maximum distance at which two features are considered "the same
 - **Too large**, and you risk merging features that are actually distinct.
 - **Too small**, and genuine matches (drawn slightly differently in each dataset) might not merge.
 
-The right value depends on how precisely your two datasets were drawn. A common practical starting point is a small handful of metres.
+The right value depends on how precisely your two datasets were drawn. A common practical starting point is a small handful of metres. If you don't set it, the default is 0.5 metres.
+
+Proximity is also the default corridor width for edge and line duplicate detection. You can set that corridor separately with `duplicate_buffer_width` (see [Can I change how strict duplicate detection is?](#can-i-change-how-strict-duplicate-detection-is)).
 
 ### Does the union change the shape or position of the primary dataset's features?
 
-No. The primary dataset's geometry is preserved as-is. The only place the union adjusts positions is where a road and crossing must share an intersection point — a deliberate, contained exception needed to keep the network connected.
+It never moves the primary dataset's points or reshapes its lines. It can, however, **split** a primary edge into pieces at a point, so that another path can connect there. This happens where a road and crossing cross, and where a secondary path meets the middle of a primary path. The pieces follow exactly the same line as the original.
 
 ### What kinds of things count as the "type" of a feature?
 
@@ -282,6 +478,12 @@ If the union can't confirm a feature's type from its labels, it errs on the side
 ### Can I trace where every piece of the final map came from?
 
 Yes. Between the source labels, the status labels, and the audit trail, every merged feature records which datasets it came from, whether and when it was scored, and what the secondary dataset contributed. The union is designed to be fully transparent and reviewable.
+
+### How do we know the union really behaves this way?
+
+A test harness checks the union against 21 small, hand-built cases, one per behaviour described here. For example, there are cases for an identical sidewalk, kerbs 2.5 metres apart, a road beside a sidewalk, a road crossing a crossing, and a short path meeting the middle of a sidewalk. Each case is run with default settings at 1 metre and 3 metres proximity, and then under a set of filter scenarios. The harness also checks the whole output: no missed merges, no edges pointing at missing points, no leftover unused points, and nothing disconnected that was connected before.
+
+The harness, its cases, and the full list of rules are in [`test/union-test-harness`](../test/union-test-harness/README.md).
 
 ---
 
