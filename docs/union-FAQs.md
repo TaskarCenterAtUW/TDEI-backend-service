@@ -103,6 +103,8 @@ Different feature types use a "how much do they overlap?" test to decide whether
 | **Polygons** (building footprints, wooded areas) | Merged if they overlap by **more than 70%** | Added as a new polygon |
 | **Zones** (plazas, open pedestrian areas) | Merged if the secondary substantially overlaps an existing zone (**around 70%**) | Added as a new zone |
 
+These are the **default** thresholds. You can change them for a single run — see [Can I change how strict duplicate detection is?](#can-i-change-how-strict-duplicate-detection-is) below.
+
 **Why the thresholds are high (70–80%):** they are set deliberately high so that only features that *genuinely* represent the same real-world thing are merged. Two features that merely clip or touch at the edges (a low overlap) are treated as distinct and both kept. You need a large majority of overlap before the union concludes "these are the same feature drawn twice."
 
 **Example (extension line).** The primary dataset has a fence along a property. The secondary dataset drew the same fence, and the two versions overlap by 90%. Since that's well above 70%, they're merged into one fence (primary's version kept, secondary's extra details preserved in the audit trail). But if the secondary "fence" only overlapped the primary's by 30%, it would be treated as a *different* fence and kept separately.
@@ -240,6 +242,138 @@ This means if you union datasets that were themselves the result of earlier unio
 
 ---
 
+## Customising a union run
+
+### Can I adjust how the union behaves for one run?
+
+Yes. Besides the two datasets and the proximity distance, a union run accepts an optional setting called **`entity_filters`**. It lets you:
+
+1. **Choose which features take part in merging**, using filters.
+2. **Make duplicate detection stricter or looser**, by changing the corridor width and the overlap percentage.
+
+If you leave `entity_filters` out, the union behaves exactly as described in the rest of this document, with all the default values.
+
+### How is `entity_filters` organised?
+
+It is grouped by feature type. There are six groups, one for each kind of feature in a pedestrian network:
+
+| Group | What it covers |
+|---|---|
+| `edge` | Sidewalks, footways, crossings, roads, steps, and other lines in the network |
+| `node` | Points where edges meet, including kerbs |
+| `point` | Street furniture such as benches, lamps, hydrants, and poles |
+| `zone` | Open pedestrian areas such as plazas |
+| `line` | Lines outside the network, such as fences and tree rows |
+| `polygon` | Areas such as buildings and woods |
+
+You only include the groups you want to change. Any other group name is rejected.
+
+### How do filters work?
+
+A filter is a list of labels a feature must have. Inside one filter, a feature must have **all** of the labels listed. If you give several filters for the same group, a feature that matches **any one** of them is included.
+
+**Example.** This filter means "sidewalks or crossings":
+
+```json
+{
+  "edge": {
+    "filters": [
+      { "highway": "footway", "footway": "sidewalk" },
+      { "highway": "footway", "footway": "crossing" }
+    ]
+  }
+}
+```
+
+Features that don't match any filter don't take part in merging. Groups without filters are unaffected.
+
+### Which labels can I use in a filter?
+
+Only labels defined by the [OpenSidewalks Schema 0.3](https://raw.githubusercontent.com/OpenSidewalks/OpenSidewalks-Schema/refs/heads/OSW0.3/opensidewalks.schema.json) for that feature type. For example, `kerb` is a valid label for a `node` but not for an `edge`, so using it under `edge` is rejected. Custom labels that start with `ext:` (for example `ext:source`) are always allowed.
+
+The labels allowed for each group are:
+
+| Group | Allowed labels |
+|---|---|
+| `edge` | `_id`, `_u_id`, `_v_id`, `climb`, `crossing:markings`, `description`, `foot`, `footway`, `highway`, `incline`, `length`, `name`, `service`, `step_count`, `surface`, `width` |
+| `node` | `_id`, `barrier`, `kerb`, `tactile_paving` |
+| `point` | `_id`, `amenity`, `barrier`, `emergency`, `highway`, `leaf_cycle`, `leaf_type`, `man_made`, `natural`, `power` |
+| `zone` | `_id`, `_w_id`, `description`, `foot`, `highway`, `name`, `surface` |
+| `line` | `_id`, `barrier`, `leaf_cycle`, `leaf_type`, `length`, `natural` |
+| `polygon` | `_id`, `building`, `leaf_cycle`, `leaf_type`, `name`, `natural`, `opening_hours` |
+
+Only the label *names* are checked. The values (such as `sidewalk` or `bench`) are not checked against the schema.
+
+### Can I change how strict duplicate detection is?
+
+Yes, with two settings placed in the same groups as the filters:
+
+- **`duplicate_buffer_width`** (in metres): how wide the corridor around a primary feature is. Any part of a secondary feature inside this corridor counts as "running alongside" it. A wider corridor catches duplicates that were drawn further apart.
+- **`duplicate_overlap_percentage`** (0 to 100): how much of a secondary feature must fall inside that corridor before it is treated as a duplicate. A lower percentage drops more features as duplicates; a higher percentage drops fewer.
+
+Not every setting makes sense for every feature type, so each one is only accepted where it can be used:
+
+| Setting | Allowed in | Default |
+|---|---|---|
+| `duplicate_buffer_width` | `edge`, `line` | The proximity distance |
+| `duplicate_overlap_percentage` | `edge`, `line`, `polygon`, `zone` | 80% for edges; 70% for lines, polygons, and zones |
+
+Putting a setting in a group that cannot use it (for example `duplicate_buffer_width` under `polygon`, or either setting under `node` or `point`) is rejected with an error. It is never silently ignored.
+
+**Example.** Two datasets drew the same sidewalk about 2 metres apart. With a proximity of 1 metre, the default corridor is only 1 metre wide, so the secondary copy isn't recognised as a duplicate and both are kept. Widening the corridor fixes this:
+
+```json
+{ "edge": { "duplicate_buffer_width": 3, "duplicate_overlap_percentage": 70 } }
+```
+
+### What does a complete example look like?
+
+This example uses all six groups:
+
+```json
+{
+  "edge": {
+    "filters": [
+      { "highway": "footway", "footway": "sidewalk" },
+      { "highway": "footway", "footway": "crossing" }
+    ],
+    "duplicate_buffer_width": 2,
+    "duplicate_overlap_percentage": 75
+  },
+  "node": {
+    "filters": [{ "barrier": "kerb" }]
+  },
+  "line": {
+    "filters": [{ "barrier": "fence" }],
+    "duplicate_buffer_width": 1.5,
+    "duplicate_overlap_percentage": 65
+  },
+  "polygon": {
+    "filters": [{ "building": "yes" }],
+    "duplicate_overlap_percentage": 80
+  },
+  "zone": {
+    "duplicate_overlap_percentage": 75
+  },
+  "point": {
+    "filters": [{ "amenity": "bench" }, { "highway": "street_lamp" }]
+  }
+}
+```
+
+### What happens if `entity_filters` contains a mistake?
+
+The run stops before any data is processed, and the job reports an error that says what was wrong. For example:
+
+- an unknown group name, such as `edges` instead of `edge`;
+- an unknown setting inside a group, such as `buffer`;
+- a label that isn't valid for that feature type;
+- a setting in a group that cannot use it;
+- a corridor width below 0, or an overlap percentage outside 0 to 100;
+- a number given as text, such as `"3"` instead of `3`.
+
+---
+
 ## Common questions
 
 ### If both datasets have the same sidewalks, will I see them twice?
@@ -265,7 +399,9 @@ Proximity is the maximum distance at which two features are considered "the same
 - **Too large**, and you risk merging features that are actually distinct.
 - **Too small**, and genuine matches (drawn slightly differently in each dataset) might not merge.
 
-The right value depends on how precisely your two datasets were drawn. A common practical starting point is a small handful of metres.
+The right value depends on how precisely your two datasets were drawn. A common practical starting point is a small handful of metres. If you don't set it, the default is 0.5 metres.
+
+Proximity is also the default corridor width for edge and line duplicate detection. You can set that corridor separately with `duplicate_buffer_width` (see [Can I change how strict duplicate detection is?](#can-i-change-how-strict-duplicate-detection-is)).
 
 ### Does the union change the shape or position of the primary dataset's features?
 
