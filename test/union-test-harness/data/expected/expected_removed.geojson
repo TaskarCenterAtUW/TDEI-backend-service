@@ -1,0 +1,177 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63
+     ],
+     [
+      -123.0992412,
+      44.63
+     ]
+    ]
+   },
+   "properties": {
+    "case": "A",
+    "name": "A: duplicate sidewalk",
+    "label": "A: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.6301854
+     ],
+     [
+      -123.0996206,
+      44.6301908
+     ],
+     [
+      -123.0992412,
+      44.6301836
+     ]
+    ]
+   },
+   "properties": {
+    "case": "B",
+    "name": "B: drifting sidewalk",
+    "label": "B: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.6308145
+     ],
+     [
+      -123.0992412,
+      44.6308145
+     ]
+    ]
+   },
+   "properties": {
+    "case": "F",
+    "name": "F: living street",
+    "label": "F: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0974707,
+      44.6310836
+     ],
+     [
+      -123.0967119,
+      44.6310836
+     ]
+    ]
+   },
+   "properties": {
+    "case": "K",
+    "name": "K: plain footway",
+    "label": "K: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63162
+     ],
+     [
+      -123.0996206,
+      44.63162
+     ]
+    ]
+   },
+   "properties": {
+    "case": "M",
+    "name": "M: crossing",
+    "label": "M: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0959531,
+      44.6300018
+     ],
+     [
+      -123.0954472,
+      44.6300018
+     ]
+    ]
+   },
+   "properties": {
+    "case": "P",
+    "name": "P: duplicate sidewalk",
+    "label": "P: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0957002,
+      44.6307218
+     ],
+     [
+      -123.0951943,
+      44.6307218
+     ]
+    ]
+   },
+   "properties": {
+    "case": "R",
+    "name": "R: mid-span duplicate",
+    "label": "R: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63216
+     ],
+     [
+      -123.0992412,
+      44.63216
+     ]
+    ]
+   },
+   "properties": {
+    "case": "V",
+    "name": "V: surface-tagged duplicate",
+    "label": "V: DS2 copy must be REMOVED"
+   }
+  }
+ ]
+}

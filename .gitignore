@@ -133,3 +133,5 @@ build
 test-report.html
 .idea/
 test_results
+
+.DS_Store
