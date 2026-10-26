@@ -80,7 +80,7 @@ config at *path* (dotted, `[n]` 1-based) must compare to *value* (`==` or `len`)
 | `harness/generate_dataset.py`, `harness/validate_dataset.py` | build and validate `data/` |
 | `harness/load_test_data.py` | writes the SQL that loads `data/` (or `--data-dir`) into the six content tables |
 | `qgis/load_in_qgis.py` | loads and styles every run in QGIS |
-| `run_demo.sh`, `demo/` | the demo scene, its raw files, checks and picture ([demo.md](demo.md)); `qgis/load_demo.py` loads it in QGIS |
+| `run_demo.sh`, `demo/` | the demo: its config (`input.json`), scene, raw files, checks, run description and picture ([demo.md](demo.md)); `qgis/load_demo.py` loads it in QGIS |
 | `perf/generate_scale.sql` | builds a synthetic city of any size as two datasets, for scale tests |
 | `perf/run_scale.sh`, `perf/run_once.psql` | time the union on those cities; results in `runs/perf/results.tsv` ([performance.md](performance.md)) |
 | `perf/slow_statements.py` | ranks the statements inside a union run by time, from an auto_explain log |

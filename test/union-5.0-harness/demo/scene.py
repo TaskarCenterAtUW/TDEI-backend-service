@@ -21,8 +21,9 @@ C() turns them into lon/lat (7 dp, like TDEI data). The scene sits about 500 m
 east of the harness test grid, so both can be open in QGIS at once.
 
 SCENARIOS lists the numbered spots the demo picture explains, what DS1 and DS2
-hold there, what the union does with the default rules, and checks that the
-output really does it (demo/check_demo.py runs them).
+hold there, what the union does with the default rules, checks that the output
+really does it (demo/check_demo.py runs them), and where to look when describing
+what any other config did there (demo/describe.py).
 """
 import math
 
@@ -151,7 +152,12 @@ ROAD_WIDTH = {"secondary": 7, "residential": 5, "service": 3, "living_street": 3
 
 # ── numbered spots the demo explains ──
 # at = the spot; badge = where its number sits on the overview; zoom = (x, y, width m)
-# of its close-up. checks apply to default_1m (the published defaults at 1 m):
+# of its close-up; look = the boxes (x0, x1, y0, y1) where this spot's action happens:
+# demo/describe.py reports what a run did inside them ("This run: ..."), whatever the
+# config. input / result say what the sources hold and what the DEFAULT rules at 1 m
+# do there; checks test that result (demo/check_demo.py). Under the default config a
+# failed check is a FAIL; under any other config it just means "differs from default".
+# The checks:
 #   ("node", (x, y), {key: value})   an output node within 5 cm; value None = key present,
 #                                    ABSENT = key absent
 #   ("no_node", (x, y))              no output node within 5 cm
@@ -164,59 +170,70 @@ ROAD_WIDTH = {"secondary": 7, "residential": 5, "service": 3, "living_street": 3
 ABSENT = "<absent>"
 SCENARIOS = [
  dict(n=1, title="Snap", at=(-8, -10), badge=(-24, -19), zoom=(-9, -10.5, 7),
+      look=[(-8.7, -7.5, -10.8, -9.5)],
       input="The survey's sidewalk corner is 0.57 m from the city's.",
       result="Same type, within 1 m: the survey corner joins the city corner, which keeps its place "
              "and records ext:union_absorbed.",
       checks=[("node", (-8, -10), {"ext:union_absorbed": None}), ("no_node", (-8.4, -10.4))]),
  dict(n=2, title="Duplicate sidewalk removed", at=(-35, -10), badge=(-42, -22), zoom=(-35, -10.2, 7),
+      look=[(-40, -30, -11, -9)],
       input="The survey traced 52 m of the south sidewalk again, 0.3 m off.",
       result="Over 80 % of it lies within 1 m of the city's sidewalk, running the same way: "
              "removed. The city's line stays.",
       checks=[("edges", "Harbor Blvd S sidewalk", 2, (-116, -7, -11, -9))]),
  dict(n=3, title="Duplicate crossing removed", at=(-10.3, 5), badge=(-26, 5), zoom=(-10.3, 9.6, 6),
+      look=[(-11, -9.6, -1, 11)],
       input="Both sources have the west crossing; the survey's is 0.4 m east, its kerbs 0.45 m from the city's.",
       result="The survey copy is removed. Kerbs never move or merge, so its kerbs go with it "
              "and the city's crossing keeps its own.",
       checks=[("edges", "Crossing W (Harbor Blvd)", 2, (-11, -10, -11, 11)),
               ("node", (-10.5, 10), {"barrier": "kerb"}), ("no_node", (-10.1, 10.3))]),
  dict(n=4, title="Duplicate road removed", at=(40, 0), badge=(48, 5), zoom=(70, -0.1, 7),
+      look=[(30, 40, -1, 1), (68.5, 71.5, -1, 1)],
       input="The survey traced Harbor Blvd again; its nodes lie 0.36-0.39 m from the city's.",
       result="The road nodes snap onto the city's, the copy then joins the same two nodes "
              "as a city edge, and is removed.",
       checks=[("no_node", (70.2, -0.3)), ("no_node", (0.3, 0.25)), ("edges", "Harbor Blvd", 4, (-1, 166, -1, 1))]),
  dict(n=5, title="New crossing meets the road", at=(10.5, 0), badge=(26, 4), zoom=(10.5, 0, 6),
+      look=[(9.5, 11.5, -1, 1)],
       input="The survey's east crossing crosses Harbor Blvd with no shared node.",
       result="road-crossing: one node where they cross; the crossing and the road are both split there.",
       checks=[("node", (10.5, 0), {"ext:union_rule": "road-crossing"}),
               ("edges", "Crossing E (Harbor Blvd)", 2, (10, 11, -10.5, 10))]),
  dict(n=6, title="Kerb 0.4 m short of the sidewalk", at=(10.5, 9.8), badge=(24, 15), zoom=(10, 9.8, 4),
+      look=[(10, 11, 9.5, 10.5)],
       input="The east crossing's north kerb stops 0.4 m short of the sidewalk.",
       result="The kerb never moves. crossing-sidewalk puts a node on the sidewalk, splits it, "
              "and a 0.4 m connector joins the kerb to it.",
       checks=[("connector", (10.5, 9.8), "crossing-sidewalk"), ("node", (10.5, 9.6), {"barrier": "kerb"}),
               ("node", (10.5, 10), {"ext:union_rule": "crossing-sidewalk"})]),
  dict(n=7, title="Kerb on the sidewalk", at=(10.5, -10), badge=(28, -7), zoom=(10, -10.5, 4),
+      look=[(10, 11, -10.5, -9.5)],
       input="The east crossing's south kerb lies exactly on the sidewalk line.",
       result="Gap of zero: the sidewalk is split at the kerb, which becomes the junction. No connector.",
       checks=[("node", (10.5, -10), {"barrier": "kerb", "ext:union_rule": "crossing-sidewalk"}),
               ("no_connector", (10.5, -10), 0.3)]),
  dict(n=8, title="Kerbs at the same spot join", at=(8, -12.5), badge=(22, -25), zoom=(8, -12.5, 4),
+      look=[(7.5, 8.5, -13, -12)],
       input="The south crossing ends exactly on the kerb ramp the city recorded (no crossing in city data).",
       result="Two kerbs join only when they coincide, as here: one node. The city's "
              "tactile_paving=no stays; the survey's 'yes' is audited, its ext:surveyed added.",
       checks=[("node", (8, -12.5), {"tactile_paving": "no", "ext:union_audit_tactile_paving": None,
                                     "ext:surveyed": "2026-09"})]),
  dict(n=9, title="Crossing runs past the sidewalk", at=(-8, -12.5), badge=(-12, -28), zoom=(-8, -12.5, 4),
+      look=[(-8.6, -7.4, -13, -12)],
       input="The south crossing ends 0.5 m beyond the west sidewalk.",
       result="Overshoot: they join where they cross; the crossing and the sidewalk are both split there.",
       checks=[("node", (-8, -12.5), {"ext:union_rule": "crossing-sidewalk"}),
               ("edges", "Crossing S (Oak St)", 3, (-9, 9, -13, -12))]),
  dict(n=10, title="T-junction: shop path", at=(40, -10.3), badge=(44, -25), zoom=(40, -11, 5),
+      look=[(39.5, 40.5, -10.8, -9.5)],
       input="A path from a shop door ends 0.6 m short of the south sidewalk.",
       result="pedestrian-pedestrian: a node on the sidewalk, which is split, and a 0.6 m connector.",
       checks=[("connector", (40, -10.3), "pedestrian-pedestrian"),
               ("node", (40, -10), {"ext:union_rule": "pedestrian-pedestrian"})]),
  dict(n=11, title="Crossing lands on a living street", at=(115, 8.2), badge=(125, 4), zoom=(115, 7.5, 6),
+      look=[(114.5, 115.5, 7.5, 9), (114.5, 115.5, -0.5, 0.5), (114.5, 115.5, -10.5, -9.5)],
       input="The Willow Lane crossing ends 0.5 m short of the living street, and crosses Harbor Blvd.",
       result="crossing-living-street joins it to Willow Lane's end with a connector; road-crossing "
              "joins it to the road; its south kerb splits the sidewalk.",
@@ -224,11 +241,13 @@ SCENARIOS = [
               ("node", (115, 0), {"ext:union_rule": "road-crossing"}),
               ("node", (115, -10), {"barrier": "kerb"})]),
  dict(n=12, title="Not joined: no rule asks", at=(70, -10), badge=(80, -14), zoom=(70, -10, 8),
+      look=[(69.5, 70.5, -10.5, -9.5), (-50.5, -49.5, 9.5, 10.5)],
       input="The south sidewalk passes over Market Alley.",
       result="No default rule joins a sidewalk to a road, so neither is split there. The park path "
              "the city already joined to the north sidewalk stays as it was.",
       checks=[("no_node", (70, -10)), ("node", (-50, 10), {"ext:union_rule": ABSENT})]),
  dict(n=13, title="Bench, bin, hydrant, building", at=(102, -14.7), badge=(104, -28), zoom=(101.9, -14.8, 3),
+      look=[(101, 103, -15.5, -14), (11.5, 12.5, -14.5, -13.5), (30, 46, 26, 42)],
       input="Both have the bench (0.36 m apart); the survey adds a bin, a hydrant, a storey count.",
       result="Same-type points within 1 m merge (city position, ext:condition added); the bin stays "
              "apart (other type); the hydrant is added; Harbor Hall gains building:levels.",

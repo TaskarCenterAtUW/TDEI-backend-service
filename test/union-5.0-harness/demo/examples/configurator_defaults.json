@@ -1,0 +1,88 @@
+{
+  "snap": {
+    "mode": "custom",
+    "coincident": true,
+    "rules": [
+      {
+        "name": "snap_node_crossing",
+        "type": "crossing",
+        "proximity": 0.5
+      },
+      {
+        "name": "snap_node_sidewalk_footway_pedestrian_road_steps",
+        "type": "pedestrian",
+        "proximity": 0.5
+      },
+      {
+        "name": "snap_node_living_street",
+        "type": "living_street",
+        "proximity": 0.5
+      },
+      {
+        "name": "snap_node_road",
+        "type": "road",
+        "proximity": 0.5
+      }
+    ]
+  },
+  "dedup": {
+    "mode": "custom",
+    "rules": [
+      {
+        "name": "dedup_edge_crossing",
+        "from": "crossing",
+        "to": "crossing",
+        "proximity": 0.5
+      },
+      {
+        "name": "dedup_edge_sidewalk_footway_pedestrian_road_steps",
+        "from": "pedestrian",
+        "to": "pedestrian",
+        "proximity": 0.5
+      },
+      {
+        "name": "dedup_edge_road",
+        "from": "road",
+        "to": "road",
+        "proximity": 0.5
+      }
+    ]
+  },
+  "connect": {
+    "mode": "custom",
+    "rules": [
+      {
+        "name": "connect_crossing_road",
+        "from": "crossing",
+        "to": "road",
+        "operation": "point",
+        "proximity": 0.5
+      },
+      {
+        "name": "connect_crossing_sidewalk",
+        "from": "crossing",
+        "to": "sidewalk",
+        "operation": "geometry",
+        "proximity": 0.5
+      },
+      {
+        "name": "connect_crossing_living_street",
+        "from": "crossing",
+        "to": "living_street",
+        "operation": "geometry",
+        "proximity": 0.5
+      },
+      {
+        "name": "connect_tjunction_sidewalk_footway_pedestrian_road_steps",
+        "from": "pedestrian",
+        "to": "pedestrian",
+        "operation": "geometry",
+        "proximity": 0.5
+      }
+    ]
+  },
+  "extensions": {
+    "mode": "default",
+    "proximity": 0.5
+  }
+}

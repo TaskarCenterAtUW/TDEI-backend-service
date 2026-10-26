@@ -1,34 +1,43 @@
 """
-Check a demo run against what each numbered scenario says the union does.
+Check a demo run spot by spot, and say what it did at each one.
 
-    python3 demo/check_demo.py runs/demo_default_1m --profile default_1m
+    python3 demo/check_demo.py runs/demo_input           (run_demo.sh runs this for you)
 
-The checks (demo/scene.py) describe the published default rules at 1 m, so
-they run for default_1m only; other profiles are drawn but marked "not
-checked". Writes <run>/demo_results.geojson (the scenario spots with PASS / FAIL,
-for the picture and QGIS) and prints one line per scenario. Exit code 0 when
-every scenario passes (or none is checked).
+Prints the applied configuration with what every rule did, then each numbered
+spot: what this run did there (demo/describe.py) and how that compares with the
+default rules. The checks in demo/scene.py describe the published default rules
+at 1 m, so:
+
+  run with exactly the default config   each spot PASS or FAIL (a FAIL is a bug)
+  run with any other config              each spot "same as default" or
+                                         "differs from default" (neither is an error)
+
+"Exactly the default" compares the union's effective config (report.json) with
+the default one run_demo.sh stored in run_config.json, so a pasted config that
+spells the defaults out in full counts too. When comparing another config, rule
+names are not compared (a configurator config names its rules its own way): a
+connector or junction made by any rule counts.
+
+Writes <run>/demo_results.geojson (the spots with status and text, for the
+picture and QGIS). Exit code 1 only when a default run has a FAIL.
 """
-import argparse, json, math, os, sys
+import argparse, json, math, os, sys, textwrap
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import scene
+import scene, describe
 from scene import C, M
 
 ap = argparse.ArgumentParser()
 ap.add_argument("run_dir")
-ap.add_argument("--profile", required=True)
+ap.add_argument("--data-dir", default=os.path.join(HERE, "data"))
 a = ap.parse_args()
 
-def load(name):
-    p = os.path.join(a.run_dir, name)
-    return json.load(open(p))["features"] if os.path.exists(p) else []
-
-nodes = load("osw_nodes.geojson")
-edges = load("osw_edges.geojson")
-points = load("osw_points.geojson")
-polys = load("osw_polygons.geojson")
+run = describe.Run(a.run_dir, a.data_dir)
+nodes, edges, points, polys = run.out["nodes"], run.out["edges"], run.out["points"], run.out["polygons"]
+rc_path = os.path.join(a.run_dir, "run_config.json")
+run_config = json.load(open(rc_path)) if os.path.exists(rc_path) else {}
+is_default = bool(run.effective) and run.effective == run_config.get("default_1m_effective")
 
 def dist(p, q): return math.hypot(p[0] - q[0], p[1] - q[1])
 def xy(c): return M(*c)
@@ -47,6 +56,8 @@ def node_at(p):
 def has(props, want):
     bad = []
     for k, v in want.items():
+        if k == "ext:union_rule" and not is_default and v not in (None, scene.ABSENT):
+            v = None                     # another config may name its rules differently: any rule will do
         if v is None and k not in props: bad.append(f"{k} missing")
         elif v == scene.ABSENT and k in props: bad.append(f"{k}={props[k]} present")
         elif v not in (None, scene.ABSENT) and str(props.get(k)) != str(v): bad.append(f"{k}={props.get(k)} (want {v})")
@@ -64,7 +75,8 @@ def run_check(c):
         pts = [xy(q) for q in e["geometry"]["coordinates"]]
         return min(seg_dist(p, pts[i], pts[i + 1]) for i in range(len(pts) - 1)) <= r
     if kind == "connector":
-        ok = [e for e in conns if near_line(e, c[1], 0.5) and c[2] in e["properties"]["ext:union_rule"].split(",")]
+        ok = [e for e in conns if near_line(e, c[1], 0.5)
+              and (not is_default or c[2] in e["properties"]["ext:union_rule"].split(","))]
         return [] if ok else [f"no {c[2]} connector at {c[1]}"]
     if kind == "no_connector":
         bad = [e for e in conns if near_line(e, c[1], c[2])]
@@ -86,21 +98,39 @@ def run_check(c):
         return [f"no polygon '{c[1]}'"] if not f else [f"{c[1]}: {b}" for b in has(f[0]["properties"], c[2])]
     raise ValueError(kind)
 
-checked = a.profile == "default_1m"
-results, n_ok = [], 0
+source = run_config.get("source", a.run_dir)
+print(f"  config: {source}" + ("  (the published default rules at 1 m)" if is_default else ""))
+for w in run.report.get("warnings", []):
+    print(f"  warning: {w}")
+print("\n== what each rule did")
+for stage, head, lines in describe.config_columns(run):
+    print(f"  {stage:<10} {head}")
+    for l in lines:
+        print(f"  {'':<10}   {l}")
+
+print("\n== the numbered spots" + ("" if is_default else "   (checks describe the default rules: compared, not judged)"))
+results, n_same = [], 0
 for s in scene.SCENARIOS:
-    fails = [m for c in s["checks"] for m in run_check(c)] if checked else []
-    status = ("PASS" if not fails else "FAIL") if checked else "not checked"
-    n_ok += status == "PASS"
+    fails = [m for c in s["checks"] for m in run_check(c)]
+    if is_default:
+        status = "PASS" if not fails else "FAIL"
+    else:
+        status = "same as default" if not fails else "differs from default"
+    n_same += not fails
+    events = describe.spot_events(run, s["look"])
     results.append({"type": "Feature", "geometry": {"type": "Point", "coordinates": C(*s["at"])}, "properties": {
-        "n": s["n"], "title": s["title"], "status": status, "failures": "; ".join(fails),
-        "label": f'{s["n"]}. {s["title"]}' + (f" — {status}" if checked else ""),
-        "input": s["input"], "result": s["result"]}})
-    print(f"  {s['n']:2}. {s['title']:<40} {status}" + (f"   {'; '.join(fails)}" if fails else ""))
+        "n": s["n"], "title": s["title"], "status": status,
+        "label": f'{s["n"]}. {s["title"]} — {status}',
+        "input": s["input"], "this_run": " ".join(events), "default_result": s["result"],
+        "differences": "; ".join(fails)}})
+    print(f"  {s['n']:2}. {s['title']:<40} {status}" + (f"   {'; '.join(fails)}" if fails and is_default else ""))
+    for e in events:
+        print(textwrap.fill(e, 110, initial_indent="        • ", subsequent_indent="          "))
 json.dump({"type": "FeatureCollection", "features": results},
           open(os.path.join(a.run_dir, "demo_results.geojson"), "w"), indent=1)
-if checked:
-    print(f"  {n_ok}/{len(scene.SCENARIOS)} scenarios behave as described")
+total = len(scene.SCENARIOS)
+if is_default:
+    print(f"\n  {n_same}/{total} spots behave as described")
 else:
-    print(f"  scenario checks describe default_1m; {a.profile} is drawn, not checked")
-sys.exit(0 if not checked or n_ok == len(scene.SCENARIOS) else 1)
+    print(f"\n  {n_same}/{total} spots give the same result as the default rules, {total - n_same} differ")
+sys.exit(1 if is_default and n_same < total else 0)

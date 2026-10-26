@@ -1,15 +1,17 @@
 """
 Load the union 5.0 demo into QGIS: the Harbor Blvd × Oak St neighbourhood from
-two sources, and the union of them.
+two sources, and what the union made of it under each config you ran.
 
 In QGIS: Plugins > Python Console > Show Editor > open qgis/load_demo.py > Run.
-Run ./run_demo.sh first — it writes runs/demo_<profile>/. Guide: docs/demo.md
+Run ./run_demo.sh first — it writes runs/demo_<name>/ (demo/input.json ->
+runs/demo_input/). Guide: docs/demo.md
 
   Union 5.0 demo
-  ├─ Scenarios          the numbered spots: label, PASS/FAIL; Identify shows what the
-  │                     sources hold there and what the union does
-  ├─ Runs               one visible at a time (e.g. demo_default_1m, demo_off)
-  │  └─ demo_default_1m
+  ├─ Runs               one visible at a time (e.g. demo_input, demo_default_1m, demo_off)
+  │  └─ demo_input
+  │     ├─ Numbered spots   label + status (PASS / FAIL for the default config,
+  │     │                   same as / differs from default for any other); Identify
+  │     │                   shows the input, what this run did there, the default result
   │     ├─ What changed nodes snapped / created / used, input edge fate, output edge origin
   │     └─ Output       edges (connectors in purple), nodes (kerbs as squares),
   │                     buildings, points, lines
@@ -24,7 +26,7 @@ from qgis.PyQt.QtGui import QColor
 
 # ---- set these -------------------------------------------------------------
 HARNESS_DIR = r""            # harness root; empty = the folder above this script (works once the file is saved)
-SHOW_FIRST = "demo_default_1m"
+SHOW_FIRST = "demo_input"
 # -----------------------------------------------------------------------------
 
 def _is_harness(d):
@@ -98,20 +100,18 @@ def style_nodes(lyr, color):
     rules(lyr, [("\"barrier\" = 'kerb'", marker("square", KERB, "3", filled=False), "kerb"),
                 ("ELSE", marker("circle", color, "1.6"), "node")], QgsMarkerSymbol.createSimple({}))
 
-# ---- Scenarios (from the first run's results) ----------------------------------
-sg = top.addGroup("Scenarios")
-sc = add(sg, os.path.join(RUNS_DIR, runs[0], "demo_results.geojson"), f"numbered spots ({runs[0]})")
-if sc:
-    ring = lambda c: marker("circle", "0,0,0,0", "6", outline=c, filled=False)
-    categorized(sc, "status", [("PASS", ring(GREEN), "PASS", True), ("FAIL", ring(RED), "FAIL", True),
-                               ("not checked", ring("90,90,90"), "not checked", True)])
-    label(sc, "label", 10, "#263238")
-
 # ---- Runs ------------------------------------------------------------------------
 rg = top.addGroup("Runs")
 for r in runs:
     d = os.path.join(RUNS_DIR, r)
     g = rg.addGroup(r)
+    sc = add(g, os.path.join(d, "demo_results.geojson"), "Numbered spots")
+    if sc:
+        ring = lambda c: marker("circle", "0,0,0,0", "6", outline=c, filled=False)
+        categorized(sc, "status", [("PASS", ring(GREEN), "PASS", True), ("FAIL", ring(RED), "FAIL", True),
+                                   ("same as default", ring("85,139,47"), "same as default", True),
+                                   ("differs from default", ring("230,81,0"), "differs from default", True)])
+        label(sc, "label", 10, "#263238")
     ch = g.addGroup("What changed")
     n = add(ch, os.path.join(d, "changes_nodes.geojson"), "nodes")
     if n:

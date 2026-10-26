@@ -30,10 +30,14 @@ configs are rejected with the right message and valid ones expand as specified.
 ## Demo
 
 `./run_demo.sh local` runs the union on one realistic neighbourhood described
-by two sources (a city GIS and a field survey). The scene has sidewalks, four
-crossings, kerbs, T-junctions, a living street, duplicates and extension
-features. It draws a single picture: input and output of the whole scene, with
-a close-up of each of 13 numbered spots. See [docs/demo.md](docs/demo.md).
+by two sources (a city GIS and a field survey), with the config in
+`demo/input.json`. Paste a config from the configurator
+(`docs/union-configurator.html`, "Copy configuration") into that file and run
+it again to see what that config does. The scene has sidewalks, four crossings,
+kerbs, T-junctions, a living street, duplicates and extension features. The
+picture shows the applied config with what each rule did, input and output of
+the whole scene, and a close-up of each of 13 numbered spots saying what this
+run did there. See [docs/demo.md](docs/demo.md).
 
 ## Quick start
 
@@ -68,7 +72,7 @@ The requirement is the "Union 5.0 — Configurable Operations Requirement Spec".
 
 ```
 run_harness.sh         the one command: load → union per profile → export → check → sheet; config suite
-run_demo.sh            the demo: one neighbourhood, two sources, one picture (docs/demo.md)
+run_demo.sh            the demo: one neighbourhood, two sources, your config (demo/input.json), one picture
 local_db.sh            start / redeploy / status / reset the local database
 docker-compose.yml     local PostgreSQL 16 + PostGIS 3 (port 5434)
 docker/                image and first-start scripts (TDEI content schema, union deploy)
@@ -77,7 +81,7 @@ sql/                   export helper and the psql script that writes the GeoJSON
 harness/               Python: cases, profiles, checks, config suite, dataset generator
 data/                  test datasets (ds1_*, ds2_*: six OSW files each) and expected/ reference layers
 qgis/                  load_in_qgis.py, load_demo.py — styled layer trees for QGIS
-demo/                  the demo scene (scene.py), its raw OSW files (data/), checks and picture
+demo/                  the demo config (input.json), scene (scene.py), raw OSW files (data/), checks and picture
 perf/                  scale tests: synthetic city generator, timed runs, slow-statement profiler
 docs/                  guides, the union expectations, and images/ (reference sheets)
 runs/                  output, one folder per profile, and perf/ for scale runs (not committed)

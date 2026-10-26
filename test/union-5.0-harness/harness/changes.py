@@ -3,7 +3,7 @@ What the union changed: compares the input datasets with a union output and
 writes three QGIS layers into the run folder, plus a short summary.
 
     python3 harness/changes.py runs/default_3m --profile default_3m     (check_cases.py runs this for you)
-    python3 harness/changes.py runs/demo_default_1m --profile default_1m --data-dir demo/data
+    python3 harness/changes.py runs/demo_input --proximity 1 --data-dir demo/data
 
 Matching is by GEOMETRY, never by id: output edge ids are renumbered, so input
 and output ids do not correspond.
@@ -181,7 +181,10 @@ if __name__ == "__main__":
     import profiles
     ap = argparse.ArgumentParser()
     ap.add_argument("output_dir")
-    ap.add_argument("--profile", required=True)
+    how = ap.add_mutually_exclusive_group(required=True)
+    how.add_argument("--profile", help="the profile the run used (its proximity)")
+    how.add_argument("--proximity", type=float, help="the run's largest snap distance, metres (a run made "
+                     "from a config file rather than a profile)")
     ap.add_argument("--data-dir", default=DATA, help="the inputs the run was made from (default: data/)")
     a = ap.parse_args()
-    run(a.output_dir, profiles.get(a.profile)["proximity"], data_dir=a.data_dir)
+    run(a.output_dir, a.proximity if a.profile is None else profiles.get(a.profile)["proximity"], data_dir=a.data_dir)
