@@ -1,0 +1,1945 @@
+{
+ "$schema": "https://sidewalks.washington.edu/opensidewalks/0.3/schema.json",
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63
+     ],
+     [
+      -123.0992412,
+      44.63
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500001",
+    "_u_id": "1000001",
+    "_v_id": "1000002",
+    "name": "A: duplicate sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63018
+     ],
+     [
+      -123.0992412,
+      44.63018
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500002",
+    "_u_id": "1000003",
+    "_v_id": "1000004",
+    "name": "B: base sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0987353,
+      44.62982
+     ],
+     [
+      -123.0987353,
+      44.63072
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500003",
+    "_u_id": "1000005",
+    "_v_id": "1000006",
+    "name": "C: road",
+    "highway": "residential"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0983307,
+      44.63009
+     ],
+     [
+      -123.0982295,
+      44.63009
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500004",
+    "_u_id": "1000007",
+    "_v_id": "1000008",
+    "name": "D: sidewalk to kerb",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63054
+     ],
+     [
+      -123.0992412,
+      44.63054
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500005",
+    "_u_id": "1000009",
+    "_v_id": "1000010",
+    "name": "E: road",
+    "highway": "residential"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63081
+     ],
+     [
+      -123.0992412,
+      44.63081
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500006",
+    "_u_id": "1000011",
+    "_v_id": "1000012",
+    "name": "F: living street",
+    "highway": "living_street"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0979766,
+      44.63
+     ],
+     [
+      -123.0979766,
+      44.63054
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500007",
+    "_u_id": "1000013",
+    "_v_id": "1000014",
+    "name": "G: long sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63108
+     ],
+     [
+      -123.0994941,
+      44.63108
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500008",
+    "_u_id": "1000015",
+    "_v_id": "1000016",
+    "name": "H: sidewalk west",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0994941,
+      44.63117
+     ],
+     [
+      -123.0994941,
+      44.63135
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500009",
+    "_u_id": "1000017",
+    "_v_id": "1000018",
+    "name": "J: DS1 spur meeting it",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0974707,
+      44.63108
+     ],
+     [
+      -123.0967119,
+      44.63108
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500010",
+    "_u_id": "1000019",
+    "_v_id": "1000020",
+    "name": "K: plain footway",
+    "highway": "footway"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63189
+     ],
+     [
+      -123.0997471,
+      44.63189
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500011",
+    "_u_id": "1000021",
+    "_v_id": "1000022",
+    "name": "N: sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0997471,
+      44.63189
+     ],
+     [
+      -123.0996206,
+      44.63189
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500012",
+    "_u_id": "1000022",
+    "_v_id": "1000023",
+    "name": "N: plain footway connector",
+    "highway": "footway"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0969648,
+      44.63
+     ],
+     [
+      -123.0969648,
+      44.63036
+     ],
+     [
+      -123.0969648,
+      44.63072
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500013",
+    "_u_id": "1000024",
+    "_v_id": "1000026",
+    "name": "L: road with mid node",
+    "highway": "residential"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63162
+     ],
+     [
+      -123.0996206,
+      44.63162
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500014",
+    "_u_id": "1000027",
+    "_v_id": "1000028",
+    "name": "M: crossing",
+    "highway": "footway",
+    "footway": "crossing"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0959531,
+      44.63
+     ],
+     [
+      -123.0954472,
+      44.63
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500015",
+    "_u_id": "1000029",
+    "_v_id": "1000030",
+    "name": "P: sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0959531,
+      44.63036
+     ],
+     [
+      -123.0957002,
+      44.63036
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500016",
+    "_u_id": "1000031",
+    "_v_id": "1000032",
+    "name": "Q: ds1 west",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0949414,
+      44.63036
+     ],
+     [
+      -123.0946885,
+      44.63036
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500017",
+    "_u_id": "1000033",
+    "_v_id": "1000034",
+    "name": "Q: ds1 east",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0959531,
+      44.63072
+     ],
+     [
+      -123.0946885,
+      44.63072
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500018",
+    "_u_id": "1000035",
+    "_v_id": "1000036",
+    "name": "R: long ds1 sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0959531,
+      44.63108
+     ],
+     [
+      -123.0946885,
+      44.63108
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500019",
+    "_u_id": "1000037",
+    "_v_id": "1000038",
+    "name": "S: ds1 sidewalk span",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0967119,
+      44.63162
+     ],
+     [
+      -123.0959531,
+      44.63162
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500020",
+    "_u_id": "1000039",
+    "_v_id": "1000040",
+    "name": "U: ds1 sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63216
+     ],
+     [
+      -123.0992412,
+      44.63216
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500021",
+    "_u_id": "1000041",
+    "_v_id": "1000042",
+    "name": "V: surface-tagged duplicate",
+    "surface": "concrete",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0987353,
+      44.63216
+     ],
+     [
+      -123.098356,
+      44.63216
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500022",
+    "_u_id": "1000043",
+    "_v_id": "1000044",
+    "name": "W: ds1 sidewalk to kerb",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63297
+     ],
+     [
+      -123.0997471,
+      44.63297
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500023",
+    "_u_id": "1000045",
+    "_v_id": "1000046",
+    "name": "X1: sidewalk west",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0997471,
+      44.63297
+     ],
+     [
+      -123.0997471,
+      44.6327
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500024",
+    "_u_id": "1000046",
+    "_v_id": "1000047",
+    "name": "X1: sidewalk south",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0987353,
+      44.6329646
+     ],
+     [
+      -123.0989883,
+      44.6329646
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500025",
+    "_u_id": "1000048",
+    "_v_id": "1000049",
+    "name": "X2: crossing",
+    "highway": "footway",
+    "footway": "crossing"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0982295,
+      44.6327
+     ],
+     [
+      -123.0982295,
+      44.63297
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500026",
+    "_u_id": "1000050",
+    "_v_id": "1000051",
+    "name": "X3: sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0974707,
+      44.6327
+     ],
+     [
+      -123.0974707,
+      44.63297
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500027",
+    "_u_id": "1000052",
+    "_v_id": "1000053",
+    "name": "X4: sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0967119,
+      44.6327
+     ],
+     [
+      -123.0967119,
+      44.63297
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500028",
+    "_u_id": "1000054",
+    "_v_id": "1000055",
+    "name": "X5: sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0959531,
+      44.6327
+     ],
+     [
+      -123.0959531,
+      44.63297
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500029",
+    "_u_id": "1000056",
+    "_v_id": "1000057",
+    "name": "X6: sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0951943,
+      44.633105
+     ],
+     [
+      -123.0951943,
+      44.63297
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500030",
+    "_u_id": "1000058",
+    "_v_id": "1000059",
+    "name": "X7: crossing to kerb",
+    "highway": "footway",
+    "footway": "crossing"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63324
+     ],
+     [
+      -123.1,
+      44.63351
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500031",
+    "_u_id": "1000060",
+    "_v_id": "1000061",
+    "name": "X8: plain footway",
+    "highway": "footway"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0992412,
+      44.63324
+     ],
+     [
+      -123.0992412,
+      44.63351
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500032",
+    "_u_id": "1000062",
+    "_v_id": "1000063",
+    "name": "X9: sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0982421,
+      44.6332184
+     ],
+     [
+      -123.0982295,
+      44.63324
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500033",
+    "_u_id": "1000064",
+    "_v_id": "1000065",
+    "name": "X10: crossing to corner",
+    "highway": "footway",
+    "footway": "crossing"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0982421,
+      44.6332184
+     ],
+     [
+      -123.0985456,
+      44.633195
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500034",
+    "_u_id": "1000064",
+    "_v_id": "1000066",
+    "name": "X10: crossing west",
+    "highway": "footway",
+    "footway": "crossing"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0982421,
+      44.6332184
+     ],
+     [
+      -123.0984192,
+      44.633015
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500035",
+    "_u_id": "1000064",
+    "_v_id": "1000067",
+    "name": "X10: crossing south",
+    "highway": "footway",
+    "footway": "crossing"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0967119,
+      44.63351
+     ],
+     [
+      -123.0967119,
+      44.633267
+     ],
+     [
+      -123.0967119,
+      44.63324
+     ],
+     [
+      -123.0963325,
+      44.633258
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500036",
+    "_u_id": "1000068",
+    "_v_id": "1000071",
+    "name": "X11: sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0994105,
+      44.6339561
+     ],
+     [
+      -123.0992702,
+      44.6339594
+     ],
+     [
+      -123.0992412,
+      44.63396
+     ],
+     [
+      -123.0992588,
+      44.6340191
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500037",
+    "_u_id": "1000072",
+    "_v_id": "1000075",
+    "name": "X12: sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0984824,
+      44.63396
+     ],
+     [
+      -123.0984748,
+      44.6339597
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500038",
+    "_u_id": "1000076",
+    "_v_id": "1000077",
+    "name": "X13: crossing A-B",
+    "highway": "footway",
+    "footway": "crossing"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0984748,
+      44.6339597
+     ],
+     [
+      -123.0984484,
+      44.6339587
+     ],
+     [
+      -123.0983037,
+      44.6339381
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500039",
+    "_u_id": "1000077",
+    "_v_id": "1000079",
+    "name": "X13: crossing east",
+    "highway": "footway",
+    "footway": "crossing"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0984748,
+      44.6339597
+     ],
+     [
+      -123.0984762,
+      44.6338924
+     ],
+     [
+      -123.0984769,
+      44.6338628
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500040",
+    "_u_id": "1000077",
+    "_v_id": "1000081",
+    "name": "X13: crossing south",
+    "highway": "footway",
+    "footway": "crossing"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63432
+     ],
+     [
+      -123.1,
+      44.63459
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500041",
+    "_u_id": "1000082",
+    "_v_id": "1000083",
+    "name": "LS1: living street",
+    "highway": "living_street"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0989883,
+      44.634455
+     ],
+     [
+      -123.0992412,
+      44.634455
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500042",
+    "_u_id": "1000084",
+    "_v_id": "1000085",
+    "name": "LS2: crossing",
+    "highway": "footway",
+    "footway": "crossing"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0984824,
+      44.63432
+     ],
+     [
+      -123.0984824,
+      44.63459
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500043",
+    "_u_id": "1000086",
+    "_v_id": "1000087",
+    "name": "LS3: living street",
+    "highway": "living_street"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0977236,
+      44.634725
+     ],
+     [
+      -123.0977236,
+      44.6345936
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500044",
+    "_u_id": "1000088",
+    "_v_id": "1000089",
+    "name": "LS4: crossing",
+    "highway": "footway",
+    "footway": "crossing"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0969648,
+      44.63432
+     ],
+     [
+      -123.0969648,
+      44.63459
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500045",
+    "_u_id": "1000090",
+    "_v_id": "1000091",
+    "name": "LS5: living street",
+    "highway": "living_street"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0996965,
+      44.6351084
+     ],
+     [
+      -123.0996838,
+      44.63513
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500046",
+    "_u_id": "1000092",
+    "_v_id": "1000093",
+    "name": "LS6: crossing to corner",
+    "highway": "footway",
+    "footway": "crossing"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0996965,
+      44.6351084
+     ],
+     [
+      -123.1,
+      44.635085
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500047",
+    "_u_id": "1000092",
+    "_v_id": "1000094",
+    "name": "LS6: crossing west",
+    "highway": "footway",
+    "footway": "crossing"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0996965,
+      44.6351084
+     ],
+     [
+      -123.0998735,
+      44.634905
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500048",
+    "_u_id": "1000092",
+    "_v_id": "1000095",
+    "name": "LS6: crossing south",
+    "highway": "footway",
+    "footway": "crossing"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0984192,
+      44.6354
+     ],
+     [
+      -123.0984192,
+      44.635157
+     ],
+     [
+      -123.0984192,
+      44.63513
+     ],
+     [
+      -123.0980398,
+      44.635148
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500049",
+    "_u_id": "1000096",
+    "_v_id": "1000099",
+    "name": "LS7: living street",
+    "highway": "living_street"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.096206,
+      44.63432
+     ],
+     [
+      -123.096206,
+      44.63459
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500050",
+    "_u_id": "1000100",
+    "_v_id": "1000101",
+    "name": "LS8: living street",
+    "highway": "living_street"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63576
+     ],
+     [
+      -123.0997471,
+      44.63576
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500051",
+    "_u_id": "1000102",
+    "_v_id": "1000103",
+    "name": "SN1: ds1 sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0992412,
+      44.63576
+     ],
+     [
+      -123.0989883,
+      44.63576
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500052",
+    "_u_id": "1000104",
+    "_v_id": "1000105",
+    "name": "SN2: ds1 crossing",
+    "highway": "footway",
+    "footway": "crossing"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0984824,
+      44.63576
+     ],
+     [
+      -123.0982295,
+      44.63576
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500053",
+    "_u_id": "1000106",
+    "_v_id": "1000107",
+    "name": "SN3: ds1 sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0982295,
+      44.63576
+     ],
+     [
+      -123.0982295,
+      44.635625
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500054",
+    "_u_id": "1000107",
+    "_v_id": "1000108",
+    "name": "SN3: ds1 crossing",
+    "highway": "footway",
+    "footway": "crossing"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0974707,
+      44.63576
+     ],
+     [
+      -123.0972178,
+      44.63576
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500055",
+    "_u_id": "1000109",
+    "_v_id": "1000110",
+    "name": "SN4: ds1 footway",
+    "highway": "footway"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0967119,
+      44.63576
+     ],
+     [
+      -123.096459,
+      44.63576
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500056",
+    "_u_id": "1000111",
+    "_v_id": "1000112",
+    "name": "SN5: ds1 footway",
+    "highway": "footway"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0959531,
+      44.63576
+     ],
+     [
+      -123.0957002,
+      44.63576
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500057",
+    "_u_id": "1000113",
+    "_v_id": "1000114",
+    "name": "SN6: ds1 footway",
+    "highway": "footway"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63612
+     ],
+     [
+      -123.0997471,
+      44.63612
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500058",
+    "_u_id": "1000115",
+    "_v_id": "1000116",
+    "name": "AN1: ds1 sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0992412,
+      44.63612
+     ],
+     [
+      -123.0989883,
+      44.63612
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500059",
+    "_u_id": "1000117",
+    "_v_id": "1000118",
+    "name": "AN2: ds1 crossing",
+    "highway": "footway",
+    "footway": "crossing"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0984824,
+      44.63612
+     ],
+     [
+      -123.0977236,
+      44.63612
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500060",
+    "_u_id": "1000119",
+    "_v_id": "1000120",
+    "name": "AN3: ds1 copy",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0997471,
+      44.6363
+     ],
+     [
+      -123.0997471,
+      44.63666
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500061",
+    "_u_id": "1000121",
+    "_v_id": "1000122",
+    "name": "CC1: sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0989883,
+      44.6363
+     ],
+     [
+      -123.0989883,
+      44.63666
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500062",
+    "_u_id": "1000123",
+    "_v_id": "1000124",
+    "name": "CC2: sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0982295,
+      44.6363
+     ],
+     [
+      -123.0982295,
+      44.63666
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500063",
+    "_u_id": "1000125",
+    "_v_id": "1000126",
+    "name": "CC3: sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0974707,
+      44.6363
+     ],
+     [
+      -123.0974707,
+      44.63666
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500064",
+    "_u_id": "1000127",
+    "_v_id": "1000128",
+    "name": "CC4: sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0974758,
+      44.6363
+     ],
+     [
+      -123.0974758,
+      44.63666
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500065",
+    "_u_id": "1000129",
+    "_v_id": "1000130",
+    "name": "CC4: road",
+    "highway": "residential"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0967119,
+      44.6363
+     ],
+     [
+      -123.0967119,
+      44.63684
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500066",
+    "_u_id": "1000131",
+    "_v_id": "1000132",
+    "name": "CC5: road",
+    "highway": "residential"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0959531,
+      44.6363
+     ],
+     [
+      -123.0959531,
+      44.63684
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500067",
+    "_u_id": "1000133",
+    "_v_id": "1000134",
+    "name": "CC6: road",
+    "highway": "residential"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.6372
+     ],
+     [
+      -123.0994941,
+      44.6372
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500068",
+    "_u_id": "1000135",
+    "_v_id": "1000136",
+    "name": "CC7: ds1 sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0992412,
+      44.6372
+     ],
+     [
+      -123.0987353,
+      44.6372
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500069",
+    "_u_id": "1000137",
+    "_v_id": "1000138",
+    "name": "CC8: ds1 sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0982295,
+      44.63702
+     ],
+     [
+      -123.0982295,
+      44.63738
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500070",
+    "_u_id": "1000139",
+    "_v_id": "1000140",
+    "name": "CC9: near sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0982232,
+      44.63702
+     ],
+     [
+      -123.0982232,
+      44.63738
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500071",
+    "_u_id": "1000141",
+    "_v_id": "1000142",
+    "name": "CC9: far sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0977236,
+      44.6372
+     ],
+     [
+      -123.0974707,
+      44.6372
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500072",
+    "_u_id": "1000143",
+    "_v_id": "1000144",
+    "name": "CC10: ds1 sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0967119,
+      44.63702
+     ],
+     [
+      -123.0967119,
+      44.63738
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500073",
+    "_u_id": "1000145",
+    "_v_id": "1000146",
+    "name": "CC11: ds1 sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0959531,
+      44.63702
+     ],
+     [
+      -123.0959531,
+      44.63738
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500074",
+    "_u_id": "1000147",
+    "_v_id": "1000148",
+    "name": "CC12: ds1 sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.096206,
+      44.6372
+     ],
+     [
+      -123.0959594,
+      44.6372
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500075",
+    "_u_id": "1000149",
+    "_v_id": "1000150",
+    "name": "CC12: ds1 crossing",
+    "highway": "footway",
+    "footway": "crossing"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0951943,
+      44.63702
+     ],
+     [
+      -123.0951943,
+      44.63738
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500076",
+    "_u_id": "1000151",
+    "_v_id": "1000152",
+    "name": "CC13: sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0944355,
+      44.63702
+     ],
+     [
+      -123.0944355,
+      44.63738
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500077",
+    "_u_id": "1000153",
+    "_v_id": "1000154",
+    "name": "CC14: sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63864
+     ],
+     [
+      -123.0994941,
+      44.63864
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500078",
+    "_u_id": "1000155",
+    "_v_id": "1000156",
+    "name": "DG1: ds1 sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0987353,
+      44.63864
+     ],
+     [
+      -123.0984824,
+      44.63864
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500079",
+    "_u_id": "1000157",
+    "_v_id": "1000158",
+    "name": "DG2: ds1 sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0984824,
+      44.63864
+     ],
+     [
+      -123.0982295,
+      44.63864
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500080",
+    "_u_id": "1000158",
+    "_v_id": "1000159",
+    "name": "DG2: ds1 sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  }
+ ]
+}

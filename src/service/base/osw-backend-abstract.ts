@@ -12,6 +12,16 @@ import dbClient from "../../database/data-source";
 import { PostgresError } from "../../constants/pg-error-constants";
 import { UndefinedColumnDbException, QuerySyntaxErrorDbException, UndefinedFunctionDbException, AmbiguousColumnDbException } from "../../exceptions/db/database-exceptions";
 
+/** Options for process_upload_dataset. */
+export interface IProcessUploadOptions {
+    /**
+     * Cursors that return one JSON document rather than GeoJSON features, mapped to
+     * the file name they are written to in the job's zip — e.g. the union's run
+     * report: { report: "union_report.json" }.
+     */
+    jsonOutputs?: Record<string, string>;
+}
+
 export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
 
     /**
@@ -27,6 +37,16 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
         const file = container?.createFile(`${blobDetails.filePath}/${fileName}`, "application/json");
         blobDetails.remoteUrls.push(file?.remoteUrl);
         await file?.uploadStream(stream);
+    }
+
+    /**
+     * Uploads a JSON document to Azure Blob storage as <fileName>.
+     */
+    async uploadJsonToAzureBlob(value: unknown, blobDetails: any, fileName: string) {
+        const jsonStream = new Readable({ read() { } });
+        jsonStream.push(JSON.stringify(value, null, 2));
+        jsonStream.push(null);
+        await this.uploadStreamToAzureBlob(jsonStream, blobDetails, fileName);
     }
 
     /**
@@ -149,7 +169,8 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
     }
 
 
-    async process_upload_dataset(tdei_dataset_id: string, uploadContext: IUploadContext, message: any, queryConfig: QueryConfig) {
+    async process_upload_dataset(tdei_dataset_id: string, uploadContext: IUploadContext, message: any, queryConfig: QueryConfig,
+        options: IProcessUploadOptions = {}) {
         return new Promise(async (resolve, reject) => {
             let databaseClient: any = null;
             try {
@@ -193,6 +214,24 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
                 let success = true;
                 for (const row of result.rows) {
                     const { file_name, cursor_ref } = row;
+
+                    // A cursor holding one JSON document (e.g. the union's report): write it as-is
+                    const jsonFileName = options.jsonOutputs?.[file_name];
+                    if (jsonFileName) {
+                        const jsonResult: QueryResult = await databaseClient.query(`FETCH ALL FROM "${cursor_ref}"`);
+                        const values = jsonResult.rows.map((r: any) => Object.values(r)[0]);
+                        await this.uploadJsonToAzureBlob(values.length === 1 ? values[0] : values, uploadContext, jsonFileName);
+                        await databaseClient.query(`CLOSE "${cursor_ref}"`);
+                        console.log(`Uploaded ${file_name} to Storage as ${jsonFileName}`);
+                        continue;
+                    }
+
+                    // An output this dataset has no file metadata for cannot be written as OSW: skip it
+                    if (!dataObject[file_name]) {
+                        console.warn(`Skipping output '${file_name}': no OSW file for it in dataset ${tdei_dataset_id}`);
+                        await databaseClient.query(`CLOSE "${cursor_ref}"`);
+                        continue;
+                    }
 
                     // Stream the cursor's data
                     const query = new QueryStream(`FETCH ALL FROM "${cursor_ref}"`);
@@ -239,6 +278,14 @@ export abstract class AbstractOSWBackendRequest extends AbstractBackendService {
                 resolve(true);
             } catch (error) {
                 console.error('Error executing query:', error);
+                // never hand a client in an aborted transaction back to the pool
+                if (databaseClient) {
+                    try {
+                        await databaseClient.query('ROLLBACK');
+                    } catch (rollbackError) {
+                        console.error('Rollback failed:', rollbackError);
+                    }
+                }
                 if (error instanceof DatabaseError) {
                     const dbError = error as DatabaseError;
                     // Clean up error message

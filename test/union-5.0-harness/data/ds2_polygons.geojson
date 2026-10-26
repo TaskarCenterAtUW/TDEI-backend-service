@@ -1,0 +1,77 @@
+{
+ "$schema": "https://sidewalks.washington.edu/opensidewalks/0.3/schema.json",
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.098729,
+       44.63801
+      ],
+      [
+       -123.0984761,
+       44.63801
+      ],
+      [
+       -123.0984761,
+       44.63819
+      ],
+      [
+       -123.098729,
+       44.63819
+      ],
+      [
+       -123.098729,
+       44.63801
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "2900001",
+    "building": "yes",
+    "ext:case": "E3",
+    "ext:levels": "2"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.098356,
+       44.63801
+      ],
+      [
+       -123.0982295,
+       44.63801
+      ],
+      [
+       -123.0982295,
+       44.6381
+      ],
+      [
+       -123.098356,
+       44.6381
+      ],
+      [
+       -123.098356,
+       44.63801
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "2900002",
+    "building": "kiosk",
+    "ext:case": "E3"
+   }
+  }
+ ]
+}

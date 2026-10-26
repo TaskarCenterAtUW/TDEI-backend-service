@@ -1,0 +1,519 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63
+     ],
+     [
+      -123.0992412,
+      44.63
+     ]
+    ]
+   },
+   "properties": {
+    "case": "A",
+    "profile": "default_1m",
+    "name": "A: duplicate sidewalk",
+    "dataset": "DS2",
+    "label": "A: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63
+     ],
+     [
+      -123.0992412,
+      44.63
+     ]
+    ]
+   },
+   "properties": {
+    "case": "A",
+    "profile": "default_3m",
+    "name": "A: duplicate sidewalk",
+    "dataset": "DS2",
+    "label": "A: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.6301854
+     ],
+     [
+      -123.0996206,
+      44.6301908
+     ],
+     [
+      -123.0992412,
+      44.6301836
+     ]
+    ]
+   },
+   "properties": {
+    "case": "B",
+    "profile": "default_1m",
+    "name": "B: drifting sidewalk",
+    "dataset": "DS2",
+    "label": "B: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.6301854
+     ],
+     [
+      -123.0996206,
+      44.6301908
+     ],
+     [
+      -123.0992412,
+      44.6301836
+     ]
+    ]
+   },
+   "properties": {
+    "case": "B",
+    "profile": "default_3m",
+    "name": "B: drifting sidewalk",
+    "dataset": "DS2",
+    "label": "B: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0983307,
+      44.6301125
+     ],
+     [
+      -123.0982295,
+      44.6301125
+     ]
+    ]
+   },
+   "properties": {
+    "case": "D",
+    "profile": "default_3m",
+    "name": "D: sidewalk to kerb",
+    "dataset": "DS2",
+    "label": "D: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.6308145
+     ],
+     [
+      -123.0992412,
+      44.6308145
+     ]
+    ]
+   },
+   "properties": {
+    "case": "F",
+    "profile": "default_1m",
+    "name": "F: living street",
+    "dataset": "DS2",
+    "label": "F: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.6308145
+     ],
+     [
+      -123.0992412,
+      44.6308145
+     ]
+    ]
+   },
+   "properties": {
+    "case": "F",
+    "profile": "default_3m",
+    "name": "F: living street",
+    "dataset": "DS2",
+    "label": "F: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0974707,
+      44.6310836
+     ],
+     [
+      -123.0967119,
+      44.6310836
+     ]
+    ]
+   },
+   "properties": {
+    "case": "K",
+    "profile": "default_1m",
+    "name": "K: plain footway",
+    "dataset": "DS2",
+    "label": "K: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0974707,
+      44.6310836
+     ],
+     [
+      -123.0967119,
+      44.6310836
+     ]
+    ]
+   },
+   "properties": {
+    "case": "K",
+    "profile": "default_3m",
+    "name": "K: plain footway",
+    "dataset": "DS2",
+    "label": "K: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63162
+     ],
+     [
+      -123.0996206,
+      44.63162
+     ]
+    ]
+   },
+   "properties": {
+    "case": "M",
+    "profile": "default_1m",
+    "name": "M: crossing",
+    "dataset": "DS2",
+    "label": "M: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63162
+     ],
+     [
+      -123.0996206,
+      44.63162
+     ]
+    ]
+   },
+   "properties": {
+    "case": "M",
+    "profile": "default_3m",
+    "name": "M: crossing",
+    "dataset": "DS2",
+    "label": "M: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0959531,
+      44.6300018
+     ],
+     [
+      -123.0954472,
+      44.6300018
+     ]
+    ]
+   },
+   "properties": {
+    "case": "P",
+    "profile": "default_1m",
+    "name": "P: duplicate sidewalk",
+    "dataset": "DS2",
+    "label": "P: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0959531,
+      44.6300018
+     ],
+     [
+      -123.0954472,
+      44.6300018
+     ]
+    ]
+   },
+   "properties": {
+    "case": "P",
+    "profile": "default_3m",
+    "name": "P: duplicate sidewalk",
+    "dataset": "DS2",
+    "label": "P: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0957002,
+      44.6307218
+     ],
+     [
+      -123.0951943,
+      44.6307218
+     ]
+    ]
+   },
+   "properties": {
+    "case": "R",
+    "profile": "default_1m",
+    "name": "R: mid-span duplicate",
+    "dataset": "DS2",
+    "label": "R: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0957002,
+      44.6307218
+     ],
+     [
+      -123.0951943,
+      44.6307218
+     ]
+    ]
+   },
+   "properties": {
+    "case": "R",
+    "profile": "default_3m",
+    "name": "R: mid-span duplicate",
+    "dataset": "DS2",
+    "label": "R: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63216
+     ],
+     [
+      -123.0992412,
+      44.63216
+     ]
+    ]
+   },
+   "properties": {
+    "case": "V",
+    "profile": "default_1m",
+    "name": "V: surface-tagged duplicate",
+    "dataset": "DS2",
+    "label": "V: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63216
+     ],
+     [
+      -123.0992412,
+      44.63216
+     ]
+    ]
+   },
+   "properties": {
+    "case": "V",
+    "profile": "default_3m",
+    "name": "V: surface-tagged duplicate",
+    "dataset": "DS2",
+    "label": "V: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0984824,
+      44.6361227
+     ],
+     [
+      -123.0977236,
+      44.6361227
+     ]
+    ]
+   },
+   "properties": {
+    "case": "AN3",
+    "profile": "default_1m",
+    "name": "AN3: ds2 copy",
+    "dataset": "DS2",
+    "label": "AN3: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0984824,
+      44.6361227
+     ],
+     [
+      -123.0977236,
+      44.6361227
+     ]
+    ]
+   },
+   "properties": {
+    "case": "AN3",
+    "profile": "default_3m",
+    "name": "AN3: ds2 copy",
+    "dataset": "DS2",
+    "label": "AN3: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0984824,
+      44.63612
+     ],
+     [
+      -123.0977236,
+      44.63612
+     ]
+    ]
+   },
+   "properties": {
+    "case": "AN3",
+    "profile": "custom_anchor",
+    "name": "AN3: ds1 copy",
+    "dataset": "DS1",
+    "label": "AN3: DS1 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0987353,
+      44.6386427
+     ],
+     [
+      -123.0982295,
+      44.6386427
+     ]
+    ]
+   },
+   "properties": {
+    "case": "DG2",
+    "profile": "default_1m",
+    "name": "DG2: ds2 sidewalk",
+    "dataset": "DS2",
+    "label": "DG2: DS2 copy must be REMOVED"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0987353,
+      44.6386427
+     ],
+     [
+      -123.0982295,
+      44.6386427
+     ]
+    ]
+   },
+   "properties": {
+    "case": "DG2",
+    "profile": "default_3m",
+    "name": "DG2: ds2 sidewalk",
+    "dataset": "DS2",
+    "label": "DG2: DS2 copy must be REMOVED"
+   }
+  }
+ ]
+}

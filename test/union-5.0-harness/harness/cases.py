@@ -1,0 +1,561 @@
+"""
+Case catalogue for the union 5.0 harness — the SINGLE source of truth.
+
+Every case carries plain-language text (shown on the case sheet and in QGIS)
+and machine-checkable assertions, grouped by the run profile they apply to
+(harness/profiles.py). Profile key "default" applies to both default_1m and
+default_3m; a value written {1.0: x, 3.0: y} resolves by the profile's proximity.
+
+Coordinates are metres east/north of the dataset origin; C() converts them to
+lon/lat exactly as the dataset generator does.
+"""
+import math
+
+LON0, LAT0 = -123.1000000, 44.6300000
+MLAT = 111111.0
+MLON = MLAT * math.cos(math.radians(LAT0))
+
+def C(x, y):
+    """metres -> (lon, lat), rounded to the dataset's 7 dp."""
+    return (round(LON0 + x / MLON, 7), round(LAT0 + y / MLAT, 7))
+
+def M(lon, lat):
+    """(lon, lat) -> metres, the inverse of C() (for plotting)."""
+    return ((lon - LON0) * MLON, (lat - LAT0) * MLAT)
+
+ABSENT = "<absent>"   # node_attr / feature_attr value: the key must NOT be present
+
+# Assertion vocabulary (check_cases.py evaluates them). Connector edges (edges
+# carrying ext:union_rule) are treated as part of the junction they make: the
+# two nodes a connector joins count as one junction, and only named edges count
+# towards its degree.
+#   ("count",      name, n)              output edges with this name
+#   ("junction",   (x, y), deg, [names]) a junction within 5 cm of (x, y) joining at
+#                                        least deg named edges, touching every listed name
+#   ("connected",  [names])              all edges with these names form one connected piece
+#   ("apart",      name_a, name_b)       the two never share a connected piece
+#   ("kerbs",      n)                    barrier=kerb nodes inside the case area
+#   ("no_kerb_merge",)                   no kerb node absorbed another kerb
+#   ("minted",     n)                    output nodes in the area at a coordinate no input node has
+#   ("connectors", n[, rule])            connector edges in the area (optionally by rule name)
+#   ("node_attr",  (x, y), {key: value}) node at (x, y) has these values (None = key must exist,
+#                                        ABSENT = key must not exist)
+#   ("node_absent", (x, y))              no output node within 5 cm of (x, y)
+#   ("edge_attr",  rule, {key: value})   the connector(s) made by rule in the area carry these values
+#   ("features",   kind, n)              points / lines / polygons / zones in the area
+#   ("feature_attr", kind, (x, y) | None, {key: value})  the feature of that kind nearest (x, y)
+#                                        — or every one in the area when None — carries these values
+#   ("at",         proximity, assertion) the wrapped assertion applies only at that proximity
+
+CASES = [
+ # ── The network cases carried over from 4.x (A–W) ──────────────────────────
+ dict(id="A", title="Exact duplicate sidewalk",
+      setup="Identical sidewalk in both datasets; the DS1 and DS2 end nodes carry different tactile_paving values.",
+      expected="Coincident ends join; the DS2 copy is removed as a duplicate. The end node keeps DS1's tactile_paving=no, gains DS2-only ext:surface, and audits DS2's 'yes'.",
+      asserts={"default": [("count", "A: duplicate sidewalk", 1),
+                           ("node_attr", (0, 0), {"tactile_paving": "no", "ext:surface": "concrete",
+                                                 "ext:union_audit_tactile_paving": None})],
+               "off": [("count", "A: duplicate sidewalk", 2)],
+               "connect_only": [("count", "A: duplicate sidewalk", 2)]}),
+ dict(id="B", title="Drifting near-parallel sidewalk",
+      setup="DS2 sidewalk 0.4-1.2 m off the DS1 sidewalk, not quite parallel.",
+      expected="Its ends snap onto the DS1 ends and it is removed as a duplicate.",
+      asserts={"default": [("count", "B: base sidewalk", 1), ("count", "B: drifting sidewalk", 0)]}),
+ dict(id="C", title="Road x crossing",
+      setup="DS1 road crossed by a DS2 crossing, no node where they meet.",
+      expected="road-crossing (point) makes one node where they cross; road and crossing each split in two.",
+      asserts={"default": [("count", "C: road", 2), ("count", "C: crossing", 2), ("minted", 1),
+                           ("junction", (100, 30), 4, ["C: road", "C: crossing"])]}),
+ dict(id="D", title="Two kerbs 2.5 m apart",
+      setup="Each dataset has a sidewalk ending in a kerb; the kerbs are 2.5 m apart.",
+      expected="Kerbs never merge with each other. At 1 m both sidewalks and kerbs remain. At 3 m the DS2 "
+               "sidewalk is removed as a duplicate and its kerb goes with it (open design question).",
+      asserts={"default": [("no_kerb_merge",), ("count", "D: sidewalk to kerb", {1.0: 2, 3.0: 1}),
+                           ("kerbs", {1.0: 2, 3.0: 1})]}),
+ dict(id="E", title="Road and sidewalk 1.5 m apart",
+      setup="DS1 road with a DS2 sidewalk running alongside, inside proximity.",
+      expected="Both kept and not connected: no default rule joins a road and a sidewalk.",
+      asserts={"default": [("count", "E: road", 1), ("count", "E: parallel sidewalk", 1),
+                           ("apart", "E: road", "E: parallel sidewalk")]}),
+ dict(id="F", title="Living street vs sidewalk",
+      setup="Two living streets 0.5 m apart, plus a DS2 sidewalk 3 m away.",
+      expected="The living streets merge into one; the sidewalk stays separate.",
+      asserts={"default": [("count", "F: living street", 1), ("count", "F: nearby sidewalk", 1),
+                           ("apart", "F: living street", "F: nearby sidewalk")]}),
+ dict(id="G", title="Short T-stub onto a span",
+      setup="1.2 m DS2 stub meeting the MIDDLE of a long DS1 sidewalk (no node there).",
+      expected="The angle guard keeps the stub (it crosses, it does not run alongside). pedestrian-pedestrian "
+               "splits the DS1 sidewalk where the stub ends on it.",
+      asserts={"default": [("count", "G: long sidewalk", 2), ("count", "G: short T stub", 1),
+                           ("junction", (160, 30), 3, ["G: long sidewalk", "G: short T stub"])]}),
+ dict(id="H", title="Endpoints 0.36 m apart",
+      setup="DS2 sidewalk starts 0.36 m from the end of a DS1 sidewalk.",
+      expected="The DS2 end snaps onto the DS1 node; the node keeps DS1's attributes and gains DS2-only ones.",
+      asserts={"default": [("count", "H: sidewalk west", 1), ("count", "H: sidewalk east", 1),
+                           ("junction", (40, 120), 2, ["H: sidewalk west", "H: sidewalk east"]),
+                           ("node_attr", (40, 120), {"tactile_paving": "no", "ext:note": "ds2 survey"})]}),
+ dict(id="I", title="Road only in DS2",
+      setup="Service road present only in DS2.",
+      expected="Kept unchanged — nothing to merge with.",
+      asserts={"default": [("count", "I: DS2-only service road", 1)]}),
+ dict(id="J", title="DS1 spur ends on a DS2 span",
+      setup="DS1 spur ends on the middle of a long DS2 sidewalk.",
+      expected="pedestrian-pedestrian splits the DS2 sidewalk at the spur's end; all three pieces meet there.",
+      asserts={"default": [("count", "J: long DS2 sidewalk", 2), ("count", "J: DS1 spur meeting it", 1),
+                           ("junction", (40, 150), 3, ["J: long DS2 sidewalk", "J: DS1 spur meeting it"])]}),
+ dict(id="K", title="Plain footway duplicate",
+      setup="Two plain footways (highway=footway, no subtype) 0.4 m apart.",
+      expected="Merged into one.",
+      asserts={"default": [("count", "K: plain footway", 1)]}),
+ dict(id="L", title="Crossing ending on a road node",
+      setup="DS2 crossing ends EXACTLY on an existing mid node of a DS1 road.",
+      expected="The coincident nodes join and the existing node is reused — no new node. The road is split "
+               "there; the crossing joins it.",
+      asserts={"default": [("count", "L: road with mid node", 2), ("count", "L: crossing ending on road node", 1),
+                           ("minted", 0),
+                           ("junction", (240, 40), 3, ["L: road with mid node", "L: crossing ending on road node"]),
+                           ("node_attr", (240, 40), {"ext:survey_date": "2026-05-01"})]}),
+ dict(id="M", title="Duplicate crossing",
+      setup="Identical crossing in both datasets.",
+      expected="Merged into one.",
+      asserts={"default": [("count", "M: crossing", 1)]}),
+ dict(id="N", title="Sidewalk - footway - crossing chain",
+      setup="DS1 sidewalk and plain-footway connector; DS2 crossing continuing the chain at the same coordinate.",
+      expected="One continuous route: the coincident footway and crossing ends join (snap coincident).",
+      asserts={"default": [("junction", (20, 210), 2, ["N: sidewalk", "N: plain footway connector"]),
+                           ("junction", (30, 210), 2, ["N: plain footway connector", "N: crossing"]),
+                           ("connected", ["N: sidewalk", "N: plain footway connector", "N: crossing"])],
+               "off": [("apart", "N: plain footway connector", "N: crossing")]}),
+ dict(id="P", title="Duplicate with a crossing attached",
+      setup="DS2 duplicate sidewalk with a DS2 crossing hanging off its end.",
+      expected="The duplicate's ends snap onto the DS1 ends, taking the crossing along; the duplicate is "
+               "removed and the crossing stays connected.",
+      asserts={"default": [("count", "P: sidewalk", 1), ("count", "P: duplicate sidewalk", 0),
+                           ("count", "P: crossing off duplicate end", 1),
+                           ("junction", (360, 0), 2, ["P: sidewalk", "P: crossing off duplicate end"])]}),
+ dict(id="Q", title="Three-segment chain between two DS1 ends",
+      setup="DS2 chain of three sidewalk segments bridging two DS1 sidewalks.",
+      expected="One continuous route end to end; all four junctions connect.",
+      asserts={"default": [("connected", ["Q: ds1 west", "Q: ds2 link a", "Q: ds2 link b", "Q: ds2 link c", "Q: ds1 east"]),
+                           ("junction", (340, 40), 2, ["Q: ds1 west", "Q: ds2 link a"]),
+                           ("junction", (360, 40), 2, ["Q: ds2 link a", "Q: ds2 link b"]),
+                           ("junction", (380, 40), 2, ["Q: ds2 link b", "Q: ds2 link c"]),
+                           ("junction", (400, 40), 2, ["Q: ds2 link c", "Q: ds1 east"])]}),
+ dict(id="R", title="Mid-span duplicate with a spur",
+      setup="DS2 duplicate along the middle of a DS1 sidewalk, with a DS2 spur off its end.",
+      expected="The duplicate is removed; pedestrian-pedestrian then joins the spur's end to the DS1 sidewalk "
+               "with a connector, so the stranding guard has nothing to restore.",
+      asserts={"default": [("count", "R: long ds1 sidewalk", 2), ("count", "R: mid-span duplicate", 0),
+                           ("count", "R: spur off duplicate", 1),
+                           ("junction", (380, 80), 3, ["R: long ds1 sidewalk", "R: spur off duplicate"])]}),
+ dict(id="S", title="T onto a DS1 span",
+      setup="DS2 sidewalk ends 0.2 m from the middle of a DS1 sidewalk.",
+      expected="The DS1 sidewalk gets a node and is split there; a connector joins the DS2 end to it.",
+      asserts={"default": [("count", "S: ds1 sidewalk span", 2), ("count", "S: ds2 T onto span", 1),
+                           ("connectors", 1),
+                           ("junction", (370, 120), 3, ["S: ds1 sidewalk span", "S: ds2 T onto span"])]}),
+ dict(id="U", title="Partial overlap",
+      setup="DS2 sidewalk 2 m off a DS1 sidewalk, continuing 45 m past its end.",
+      expected="Kept whole and not connected at 1 m and 3 m: about 52% of it overlaps (below 80%), dedup never "
+               "trims an edge, and the ends run alongside the other line, so no T junction (angle guard). "
+               "Changed from 4.x, which split and half-removed it at 3 m.",
+      asserts={"default": [("count", "U: ds1 sidewalk", 1), ("count", "U: partly overlapping sidewalk", 1),
+                           ("apart", "U: ds1 sidewalk", "U: partly overlapping sidewalk")]}),
+ dict(id="V", title="Duplicate, surfaces differ",
+      setup="Identical sidewalk in both datasets; DS1 tagged surface=concrete, DS2 surface=asphalt.",
+      expected="One sidewalk: the DS2 copy is a duplicate whatever its tags.",
+      asserts={"default": [("count", "V: surface-tagged duplicate", 1)]}),
+ dict(id="W", title="Coincident kerb, attributes differ",
+      setup="DS1 and DS2 sidewalks meet at a kerb node present in both; DS2's copy adds tactile_paving=yes.",
+      expected="The coincident kerbs join (kerbs only ever join when coincident): one node joining both "
+               "sidewalks, keeping DS1's tags, gaining tactile_paving=yes and auditing it.",
+      asserts={"default": [("junction", (130, 240), 2, ["W: ds1 sidewalk to kerb", "W: ds2 sidewalk from kerb"]),
+                           ("kerbs", 1),
+                           ("node_attr", (130, 240), {"barrier": "kerb", "kerb": "lowered", "tactile_paving": "yes",
+                                                      "ext:union_audit_tactile_paving": None})],
+               "off": [("kerbs", 2)]}),
+
+ # ── Crossing ↔ sidewalk (X) and crossing ↔ living street (LS): default rules ─
+ dict(id="X1", title="Crossing ends on a sidewalk, next to a corner",
+      setup="DS2 crossing ends on the span of a DS1 sidewalk, 0.6 m below the sidewalk's corner node.",
+      expected="crossing-sidewalk splits the sidewalk at the crossing end (gap 0, no connector); nothing moves "
+               "and the corner stays as it is.",
+      asserts={"default": [("count", "X1: sidewalk south", 2), ("count", "X1: sidewalk west", 1),
+                           ("count", "X1: crossing", 1), ("connectors", 0),
+                           ("junction", (20, 329.4), 3, ["X1: sidewalk south", "X1: crossing"]),
+                           ("junction", (20, 330), 2, ["X1: sidewalk west", "X1: sidewalk south"]),
+                           ("connected", ["X1: sidewalk west", "X1: sidewalk south", "X1: crossing"])]}),
+ dict(id="X2", title="Same, datasets swapped",
+      setup="DS1 crossing ends on the span of a DS2 sidewalk, 0.6 m below the DS2 sidewalk's corner node.",
+      expected="The DS2 sidewalk is split at the DS1 crossing end; the DS2 corner stays as the corner.",
+      asserts={"default": [("count", "X2: sidewalk south", 2), ("count", "X2: sidewalk west", 1),
+                           ("count", "X2: crossing", 1),
+                           ("junction", (80, 329.4), 3, ["X2: sidewalk south", "X2: crossing"]),
+                           ("junction", (80, 330), 2, ["X2: sidewalk west", "X2: sidewalk south"]),
+                           ("connected", ["X2: sidewalk west", "X2: sidewalk south", "X2: crossing"])]}),
+ dict(id="X3", title="Kerb on a sidewalk span",
+      setup="DS2 crossing ends in a kerb lying exactly on the span of a DS1 sidewalk.",
+      expected="The sidewalk is split at the kerb; the kerb keeps its position and joins sidewalk and crossing.",
+      asserts={"default": [("count", "X3: sidewalk", 2), ("count", "X3: crossing to kerb", 1), ("kerbs", 1),
+                           ("junction", (140, 315), 3, ["X3: sidewalk", "X3: crossing to kerb"]),
+                           ("node_attr", (140, 315), {"barrier": "kerb"})],
+               "connect_only": [("count", "X3: sidewalk", 2), ("kerbs", 1),
+                                ("junction", (140, 315), 3, ["X3: sidewalk", "X3: crossing to kerb"])]}),
+ dict(id="X4", title="Kerb 0.4 m short of a sidewalk span",
+      setup="DS2 crossing ends in a kerb 0.4 m short of the span of a DS1 sidewalk.",
+      expected="The kerb never moves. The sidewalk gets a node and is split there; a 0.4 m connector joins the "
+               "kerb to it. The sidewalk keeps its shape (4.x bent it to the kerb).",
+      asserts={"default": [("count", "X4: sidewalk", 2), ("count", "X4: crossing to kerb", 1), ("kerbs", 1),
+                           ("connectors", 1), ("minted", 1),
+                           ("junction", (200, 315), 3, ["X4: sidewalk", "X4: crossing to kerb"]),
+                           ("node_attr", (200.4, 315), {"barrier": "kerb"})],
+               "connect_only": [("count", "X4: sidewalk", 2), ("connectors", 1), ("minted", 1),
+                                ("junction", (200, 315), 3, ["X4: sidewalk", "X4: crossing to kerb"])]}),
+ dict(id="X5", title="Kerb 0.4 m beyond a sidewalk end",
+      setup="DS2 crossing ends in a kerb 0.4 m beyond the end of a DS1 sidewalk, in line with it.",
+      expected="Connected: a connector joins the kerb to the sidewalk's end node (4.x left them apart). The "
+               "kerb does not move.",
+      asserts={"default": [("count", "X5: sidewalk", 1), ("count", "X5: crossing to kerb", 1), ("kerbs", 1),
+                           ("node_attr", (260, 330.4), {"barrier": "kerb"}), ("connectors", 1),
+                           ("junction", (260, 330), 2, ["X5: sidewalk", "X5: crossing to kerb"])]}),
+ dict(id="X6", title="Crossing end 0.4 m beyond a sidewalk end",
+      setup="As X5, but the crossing end is a bare node.",
+      expected="A connector joins the crossing end to the sidewalk's end node; neither moves.",
+      asserts={"default": [("count", "X6: sidewalk", 1), ("count", "X6: crossing", 1), ("connectors", 1),
+                           ("junction", (320, 330), 2, ["X6: sidewalk", "X6: crossing"]),
+                           ("connected", ["X6: sidewalk", "X6: crossing"])]}),
+ dict(id="X7", title="Sidewalk ends 0.4 m short of a DS1 kerb",
+      setup="DS1 crossing ends in a kerb; a DS2 sidewalk ends 0.4 m short of it.",
+      expected="A connector joins the kerb to the sidewalk end. The kerb keeps its position and its tags.",
+      asserts={"default": [("count", "X7: sidewalk", 1), ("count", "X7: crossing to kerb", 1), ("kerbs", 1),
+                           ("connectors", 1),
+                           ("junction", (380, 330), 2, ["X7: sidewalk", "X7: crossing to kerb"]),
+                           ("node_attr", (380, 330), {"barrier": "kerb"})]}),
+ dict(id="X8", title="Crossing ends on a plain footway",
+      setup="DS2 crossing ends on the span of a DS1 plain footway (highway=footway, no subtype).",
+      expected="Not joined: no default rule joins a crossing to a plain footway (add one to get it).",
+      asserts={"default": [("count", "X8: plain footway", 1), ("count", "X8: crossing", 1),
+                           ("apart", "X8: plain footway", "X8: crossing")]}),
+ dict(id="X9", title="Two crossings 0.3 m apart on a sidewalk",
+      setup="Two DS2 crossings end 0.3 m apart on the span of the same DS1 sidewalk.",
+      expected="The sidewalk is split at each crossing end in one pass: three pieces, two junctions.",
+      asserts={"default": [("count", "X9: sidewalk", 3),
+                           ("junction", (60, 375), 3, ["X9: sidewalk", "X9: crossing east"]),
+                           ("junction", (60, 375.3), 3, ["X9: sidewalk", "X9: crossing south-east"]),
+                           ("connected", ["X9: sidewalk", "X9: crossing east", "X9: crossing south-east"])]}),
+ dict(id="X10", title="Crossing junction near a sidewalk corner",
+      setup="DS2 sidewalk bends round a corner as one line. DS1 crossings meet at a junction 2.6 m from the "
+            "corner; one of them ends exactly on the corner.",
+      expected="The coincident corner nodes join and the DS2 sidewalk is split there. The junction 2.6 m away "
+               "never joins the sidewalk: a crossing at it already reaches the corner (nearer end only).",
+      asserts={"default": [("count", "X10: sidewalk", 2), ("count", "X10: crossing to corner", 1),
+                           ("junction", (140, 360), 3, ["X10: sidewalk", "X10: crossing to corner"]),
+                           ("junction", (139, 357.6), 3, ["X10: crossing to corner", "X10: crossing west", "X10: crossing south"]),
+                           ("connected", ["X10: sidewalk", "X10: crossing to corner", "X10: crossing west", "X10: crossing south"])]}),
+ dict(id="X11", title="Same, datasets swapped",
+      setup="DS1 sidewalk bends round a corner as one line. DS2 crossings meet at a junction 2.6 m from the "
+            "corner; one of them ends exactly on the corner.",
+      expected="The DS1 sidewalk is split at the corner, where the crossing joins it. The junction keeps its "
+               "position; no crossing collapses.",
+      asserts={"default": [("count", "X11: sidewalk", 2), ("count", "X11: crossing to corner", 1),
+                           ("junction", (260, 360), 3, ["X11: sidewalk", "X11: crossing to corner"]),
+                           ("junction", (259, 357.6), 3, ["X11: crossing to corner", "X11: crossing west", "X11: crossing south"]),
+                           ("connected", ["X11: sidewalk", "X11: crossing to corner", "X11: crossing west", "X11: crossing south"])]}),
+ dict(id="X12", title="Sidewalk vertex beside a crossing (real data)",
+      setup="DS1 sidewalk bends round a corner as one line, with a vertex S 2.3 m west. DS2 crossings: A on the "
+            "corner, junction B 0.6 m east, an east crossing with a bend 2.7 m from the corner, and a south "
+            "crossing passing 2.3 m from S.",
+      expected="The sidewalk is split only at the corner, where crossing A-B ends. No crossing is cut or moved.",
+      asserts={"default": [("count", "X12: sidewalk", 2), ("count", "X12: crossing A-B", 1),
+                           ("count", "X12: crossing east", 1), ("count", "X12: crossing south", 1),
+                           ("junction", (60, 440), 3, ["X12: sidewalk", "X12: crossing A-B"]),
+                           ("junction", (60.6, 439.97), 3, ["X12: crossing A-B", "X12: crossing east", "X12: crossing south"]),
+                           ("connected", ["X12: sidewalk", "X12: crossing A-B", "X12: crossing east", "X12: crossing south"])]}),
+ dict(id="X13", title="Same, datasets swapped",
+      setup="As X12 with the datasets swapped: DS1 crossings, DS2 sidewalk.",
+      expected="The sidewalk is split only at the corner, where crossing A-B ends. No crossing is cut or moved.",
+      asserts={"default": [("count", "X13: sidewalk", 2), ("count", "X13: crossing A-B", 1),
+                           ("count", "X13: crossing east", 1), ("count", "X13: crossing south", 1),
+                           ("junction", (120, 440), 3, ["X13: sidewalk", "X13: crossing A-B"]),
+                           ("junction", (120.6, 439.97), 3, ["X13: crossing A-B", "X13: crossing east", "X13: crossing south"]),
+                           ("connected", ["X13: sidewalk", "X13: crossing A-B", "X13: crossing east", "X13: crossing south"])]}),
+ dict(id="LS1", title="Crossing ends on a living street",
+      setup="DS2 crossing ends on the span of a DS1 living street.",
+      expected="crossing-living-street splits the living street where the crossing ends.",
+      asserts={"default": [("count", "LS1: living street", 2), ("count", "LS1: crossing", 1),
+                           ("junction", (0, 495), 3, ["LS1: living street", "LS1: crossing"]),
+                           ("connected", ["LS1: living street", "LS1: crossing"])]}),
+ dict(id="LS2", title="Same, datasets swapped",
+      setup="DS1 crossing ends on the span of a DS2 living street.",
+      expected="The DS2 living street is split at the DS1 crossing end.",
+      asserts={"default": [("count", "LS2: living street", 2), ("count", "LS2: crossing", 1),
+                           ("junction", (60, 495), 3, ["LS2: living street", "LS2: crossing"]),
+                           ("connected", ["LS2: living street", "LS2: crossing"])]}),
+ dict(id="LS3", title="Crossing end 0.4 m beyond a living street end",
+      setup="A bare DS2 crossing end lies 0.4 m beyond the end of a DS1 living street, in line with it.",
+      expected="A connector joins the crossing end to the living street's end node.",
+      asserts={"default": [("count", "LS3: living street", 1), ("count", "LS3: crossing", 1), ("connectors", 1),
+                           ("junction", (120, 510), 2, ["LS3: living street", "LS3: crossing"]),
+                           ("connected", ["LS3: living street", "LS3: crossing"])]}),
+ dict(id="LS4", title="Living street 0.4 m short of a crossing end",
+      setup="A DS2 living street ends 0.4 m short of a bare DS1 crossing end.",
+      expected="A connector joins the DS1 crossing end to the living street end; neither moves.",
+      asserts={"default": [("count", "LS4: living street", 1), ("count", "LS4: crossing", 1), ("connectors", 1),
+                           ("junction", (180, 510.4), 2, ["LS4: living street", "LS4: crossing"]),
+                           ("connected", ["LS4: living street", "LS4: crossing"])]}),
+ dict(id="LS5", title="Kerb 0.4 m short of a living street",
+      setup="DS2 crossing ends in a kerb 0.4 m short of the span of a DS1 living street.",
+      expected="The kerb never moves. The living street gets a node and is split; a connector joins the kerb.",
+      asserts={"default": [("count", "LS5: living street", 2), ("count", "LS5: crossing to kerb", 1), ("kerbs", 1),
+                           ("junction", (240, 495), 3, ["LS5: living street", "LS5: crossing to kerb"]),
+                           ("node_attr", (240.4, 495), {"barrier": "kerb"})]}),
+ dict(id="LS6", title="Junction near a living street corner",
+      setup="DS2 living street bends round a corner as one line. DS1 crossings meet at a junction 2.6 m "
+            "from the corner; one of them ends exactly on the corner.",
+      expected="The living street is split only at the corner. The junction stays 2.6 m away.",
+      asserts={"default": [("count", "LS6: living street", 2), ("count", "LS6: crossing to corner", 1),
+                           ("junction", (25, 570), 3, ["LS6: living street", "LS6: crossing to corner"]),
+                           ("junction", (24, 567.6), 3, ["LS6: crossing to corner", "LS6: crossing west", "LS6: crossing south"]),
+                           ("connected", ["LS6: living street", "LS6: crossing to corner", "LS6: crossing west", "LS6: crossing south"])]}),
+ dict(id="LS7", title="Same, datasets swapped",
+      setup="DS1 living street bends round a corner as one line. DS2 crossings meet at a junction 2.6 m "
+            "from the corner; one of them ends exactly on the corner.",
+      expected="The living street is split at the corner and the crossing joins it there; the junction keeps "
+               "its position.",
+      asserts={"default": [("count", "LS7: living street", 2), ("count", "LS7: crossing to corner", 1),
+                           ("junction", (125, 570), 3, ["LS7: living street", "LS7: crossing to corner"]),
+                           ("junction", (124, 567.6), 3, ["LS7: crossing to corner", "LS7: crossing west", "LS7: crossing south"]),
+                           ("connected", ["LS7: living street", "LS7: crossing to corner", "LS7: crossing west", "LS7: crossing south"])]}),
+ dict(id="LS8", title="Sidewalks meeting a living street",
+      setup="One DS2 sidewalk ends on the span of a DS1 living street; another ends 0.4 m beyond its end.",
+      expected="Not joined: no default rule joins a sidewalk and a living street.",
+      asserts={"default": [("count", "LS8: living street", 1), ("count", "LS8: sidewalk to span", 1),
+                           ("count", "LS8: sidewalk beyond end", 1),
+                           ("apart", "LS8: living street", "LS8: sidewalk to span"),
+                           ("apart", "LS8: living street", "LS8: sidewalk beyond end")]}),
+
+ # ── custom_snap: per-type snap distances ────────────────────────────────────
+ dict(id="SN1", title="Sidewalk ends 2.5 m apart",
+      setup="A DS2 sidewalk starts 2.5 m beyond a DS1 sidewalk's end.",
+      expected="custom_snap: the 3 m sidewalk rule snaps them. Default: apart at 1 m, snapped at 3 m.",
+      asserts={"custom_snap": [("junction", (20, 640), 2, ["SN1: ds1 sidewalk", "SN1: ds2 sidewalk"])],
+               "default_1m": [("apart", "SN1: ds1 sidewalk", "SN1: ds2 sidewalk")],
+               "default_3m": [("junction", (20, 640), 2, ["SN1: ds1 sidewalk", "SN1: ds2 sidewalk"])]}),
+ dict(id="SN2", title="Crossing ends 2 m apart",
+      setup="A DS2 crossing starts 2 m beyond a DS1 crossing's end.",
+      expected="custom_snap: beyond the 1.5 m crossing rule, so apart. Default: apart at 1 m, snapped at 3 m.",
+      asserts={"custom_snap": [("apart", "SN2: ds1 crossing", "SN2: ds2 crossing")],
+               "default_1m": [("apart", "SN2: ds1 crossing", "SN2: ds2 crossing")],
+               "default_3m": [("junction", (80, 640), 2, ["SN2: ds1 crossing", "SN2: ds2 crossing"])]}),
+ dict(id="SN3", title="Corners 2 m apart: first rule decides",
+      setup="Two corners 2 m apart, each where a sidewalk and a crossing meet (DS1 and DS2).",
+      expected="custom_snap: both corners match the crossing rule (listed first, 1.5 m) and the sidewalk rule "
+               "(3 m). The first rule both match governs, so they stay apart.",
+      asserts={"custom_snap": [("apart", "SN3: ds1 sidewalk", "SN3: ds2 sidewalk"),
+                               ("node_attr", (142, 640), {}), ("node_attr", (140, 640), {})],
+               "default_1m": [("apart", "SN3: ds1 sidewalk", "SN3: ds2 sidewalk")]}),
+ dict(id="SN4", title="Plain footway ends 0.4 m apart",
+      setup="A DS2 plain footway starts 0.4 m beyond a DS1 plain footway's end.",
+      expected="custom_snap: no rule lists footways, so 'others' (0.5 m) applies: snapped.",
+      asserts={"custom_snap": [("junction", (220, 640), 2, ["SN4: ds1 footway", "SN4: ds2 footway"])],
+               "default": [("junction", (220, 640), 2, ["SN4: ds1 footway", "SN4: ds2 footway"])]}),
+ dict(id="SN5", title="Plain footway ends 0.7 m apart",
+      setup="A DS2 plain footway starts 0.7 m beyond a DS1 plain footway's end.",
+      expected="custom_snap: beyond 'others' (0.5 m), so apart. Default (1 m, 3 m): snapped.",
+      asserts={"custom_snap": [("apart", "SN5: ds1 footway", "SN5: ds2 footway")],
+               "default": [("junction", (280, 640), 2, ["SN5: ds1 footway", "SN5: ds2 footway"])]}),
+ dict(id="SN6", title="Footway and crossing ends at one coordinate",
+      setup="A DS1 plain footway ends exactly where a DS2 crossing starts.",
+      expected="Joined by 'coincident', whatever their types. With snap off they stay two nodes.",
+      asserts={"custom_snap": [("junction", (340, 640), 2, ["SN6: ds1 footway", "SN6: ds2 crossing"])],
+               "default": [("junction", (340, 640), 2, ["SN6: ds1 footway", "SN6: ds2 crossing"])],
+               "off": [("apart", "SN6: ds1 footway", "SN6: ds2 crossing")],
+               "connect_only": [("apart", "SN6: ds1 footway", "SN6: ds2 crossing")]}),
+
+ # ── custom_anchor: DS2 as the anchor; anchor_only ──────────────────────────
+ dict(id="AN1", title="DS2 anchor: the DS1 end moves",
+      setup="Sidewalk ends 0.4 m apart; DS1's end node tactile_paving=no, DS2's tactile_paving=yes.",
+      expected="custom_anchor (sidewalks anchored on DS2): the DS1 end moves onto the DS2 node, which keeps its "
+               "position and tactile_paving=yes; DS1's 'no' is audited. No node is left at the DS1 position.",
+      asserts={"custom_anchor": [("junction", (20.4, 680), 2, ["AN1: ds1 sidewalk", "AN1: ds2 sidewalk"]),
+                                 ("node_absent", (20, 680)),
+                                 ("node_attr", (20.4, 680), {"tactile_paving": "yes",
+                                                             "ext:union_audit_tactile_paving": None})],
+               "default": [("node_attr", (20, 680), {"tactile_paving": "no"}), ("node_absent", (20.4, 680))]}),
+ dict(id="AN2", title="anchor_only: DS2 values audited, not added",
+      setup="Crossing ends 0.3 m apart; DS1's end has ext:note, DS2's has ext:lit.",
+      expected="custom_anchor (crossings, attributes anchor_only): the DS2 end snaps onto DS1's; the node keeps "
+               "ext:note, does not gain ext:lit, and audits it.",
+      asserts={"custom_anchor": [("junction", (80, 680), 2, ["AN2: ds1 crossing", "AN2: ds2 crossing"]),
+                                 ("node_attr", (80, 680), {"ext:note": "ds1", "ext:lit": ABSENT,
+                                                           "ext:union_audit_lit": None})],
+               "default": [("node_attr", (80, 680), {"ext:note": "ds1", "ext:lit": "yes"})]}),
+ dict(id="AN3", title="DS2 anchor: the DS1 duplicate goes",
+      setup="The same sidewalk in both datasets, 0.3 m apart.",
+      expected="custom_anchor: DS1's ends move onto DS2's, then dedup (anchored on DS2) removes the DS1 copy.",
+      asserts={"custom_anchor": [("count", "AN3: ds1 copy", 0), ("count", "AN3: ds2 copy", 1),
+                                 ("node_absent", (120, 680))],
+               "default": [("count", "AN3: ds1 copy", 1), ("count", "AN3: ds2 copy", 0)]}),
+
+ # ── custom_connect: ordered rules with tags ────────────────────────────────
+ dict(id="CC1", title="O1: two rules match the same spot",
+      setup="A DS2 crossing ends 0.5 m short of a DS1 sidewalk.",
+      expected="kerbed-crossing (listed first) takes it: a node on the sidewalk tagged barrier=kerb, kerb=lowered "
+               "and ext:survey_batch, and a connector carrying ext:barrier and ext:kerb (not edge keys). The "
+               "broader footway-sidewalk rule skips it.",
+      asserts={"custom_connect": [("count", "CC1: sidewalk", 2), ("count", "CC1: crossing", 1),
+                                  ("connectors", 1, "kerbed-crossing"),
+                                  ("junction", (20, 720), 3, ["CC1: sidewalk", "CC1: crossing"]),
+                                  ("node_attr", (20, 720), {"barrier": "kerb", "kerb": "lowered",
+                                                            "ext:survey_batch": "2026-10",
+                                                            "ext:union_rule": "kerbed-crossing"}),
+                                  ("edge_attr", "kerbed-crossing", {"highway": "footway", "footway": "crossing",
+                                                                    "ext:barrier": "kerb", "ext:kerb": "lowered",
+                                                                    "ext:survey_batch": "2026-10",
+                                                                    "barrier": ABSENT})]}),
+ dict(id="CC2", title="The broader rule catches a plain footway",
+      setup="A DS2 plain footway ends 0.5 m short of a DS1 sidewalk.",
+      expected="Only footway-sidewalk matches: its node carries ext:source=rule2.",
+      asserts={"custom_connect": [("junction", (80, 720), 3, ["CC2: sidewalk", "CC2: plain footway"]),
+                                  ("node_attr", (80, 720), {"ext:source": "rule2",
+                                                            "ext:union_rule": "footway-sidewalk"})]}),
+ dict(id="CC3", title="O2: a later rule meets an earlier node",
+      setup="kerbed-crossing makes node J on a sidewalk; a footway ends 0.78 m from J (0.6 m from the span).",
+      expected="footway-sidewalk reuses J rather than making a second node beside it. J lists both rules and "
+               "keeps kerbed-crossing's tags.",
+      asserts={"custom_connect": [("minted", 1),
+                                  ("junction", (140, 720), 4, ["CC3: sidewalk", "CC3: crossing", "CC3: plain footway"]),
+                                  ("node_attr", (140, 720), {"ext:union_rule": "kerbed-crossing,footway-sidewalk",
+                                                             "barrier": "kerb", "ext:source": "rule2"})]}),
+ dict(id="CC4", title="O3: a created connector is never cut",
+      setup="kerbed-crossing's 0.8 m connector crosses a DS1 road lying 0.4 m off the sidewalk.",
+      expected="The later road-crossing rule does not split the connector, and the crossing itself stops 0.4 m "
+               "short of the road (beyond road-crossing's 0.3 m): the road stays whole.",
+      asserts={"custom_connect": [("count", "CC4: road", 1), ("count", "CC4: sidewalk", 2), ("minted", 1),
+                                  ("connectors", 1, "kerbed-crossing")]}),
+ dict(id="CC5", title="Point rule: a crossing and a near miss",
+      setup="One DS2 crossing crosses a DS1 road; another stops 0.2 m short of it.",
+      expected="road-crossing (point, 0.3 m) makes a node at each, tagged tactile_paving=yes; the near miss "
+               "gets a connector.",
+      asserts={"custom_connect": [("count", "CC5: road", 3), ("count", "CC5: crossing through", 2),
+                                  ("count", "CC5: crossing short", 1), ("minted", 2),
+                                  ("connectors", 1, "road-crossing"),
+                                  ("junction", (260, 750), 4, ["CC5: road", "CC5: crossing through"]),
+                                  ("junction", (260, 715), 3, ["CC5: road", "CC5: crossing short"]),
+                                  ("node_attr", (260, 750), {"tactile_paving": "yes", "ext:union_rule": "road-crossing"}),
+                                  ("node_attr", (260, 715), {"tactile_paving": "yes", "ext:union_rule": "road-crossing"})]}),
+ dict(id="CC6", title="G1: a crossing on a bridge",
+      setup="A DS2 crossing tagged bridge=yes, layer=1 passes over a DS1 road.",
+      expected="Never joined: lines whose layer or bridge differ do not meet, even where they cross on the map.",
+      asserts={"custom_connect": [("count", "CC6: road", 1), ("count", "CC6: bridge crossing", 1), ("minted", 0),
+                                  ("apart", "CC6: road", "CC6: bridge crossing")],
+               "default": [("count", "CC6: road", 1), ("apart", "CC6: road", "CC6: bridge crossing")]}),
+ dict(id="CC7", title="Sidewalk T onto a sidewalk",
+      setup="A DS2 sidewalk ends 0.6 m short of the span of a DS1 sidewalk.",
+      expected="sidewalk-sidewalk: the DS1 sidewalk gets a node and is split; a connector joins the DS2 end.",
+      asserts={"custom_connect": [("count", "CC7: ds1 sidewalk", 2), ("count", "CC7: ds2 sidewalk T", 1),
+                                  ("connectors", 1, "sidewalk-sidewalk"),
+                                  ("junction", (20, 800), 3, ["CC7: ds1 sidewalk", "CC7: ds2 sidewalk T"]),
+                                  ("node_attr", (20, 800), {"ext:union_rule": "sidewalk-sidewalk"})]}),
+ dict(id="CC8", title="W5: a near-parallel end is not a T",
+      setup="A DS2 sidewalk runs 0.6-0.9 m off a DS1 sidewalk, nearly parallel, both ends within 1 m of it.",
+      expected="No junction: an end running alongside B is not a T (angle under 30°). Overlap is dedup's job; "
+               "at 0.5 m buffer it does not count as a duplicate.",
+      asserts={"custom_connect": [("count", "CC8: ds1 sidewalk", 1), ("count", "CC8: ds2 near-parallel", 1),
+                                  ("connectors", 0), ("apart", "CC8: ds1 sidewalk", "CC8: ds2 near-parallel")]}),
+ dict(id="CC9", title="W2: nearest B only",
+      setup="A DS2 crossing end lies 0.4 m from one DS1 sidewalk and 0.9 m from another.",
+      expected="One junction, to the nearer sidewalk; never a fan of connectors.",
+      asserts={"custom_connect": [("count", "CC9: near sidewalk", 2), ("count", "CC9: far sidewalk", 1),
+                                  ("connectors", 1),
+                                  ("junction", (140, 800), 3, ["CC9: near sidewalk", "CC9: crossing"]),
+                                  ("apart", "CC9: far sidewalk", "CC9: crossing")]}),
+ dict(id="CC10", title="W3: two ends facing across a gap",
+      setup="A DS1 sidewalk end and a DS2 sidewalk end 0.57 m apart, each nearest the other's end.",
+      expected="Both ends qualify under sidewalk-sidewalk, but only one connector is made.",
+      asserts={"custom_connect": [("connectors", 1), ("count", "CC10: ds1 sidewalk", 1),
+                                  ("count", "CC10: ds2 sidewalk", 1),
+                                  ("connected", ["CC10: ds1 sidewalk", "CC10: ds2 sidewalk"])]}),
+ dict(id="CC11", title="W4: nearer end only",
+      setup="A 0.75 m DS2 sidewalk stub whose ends are 0.2 m and 0.95 m from a DS1 sidewalk span.",
+      expected="Only the nearer end joins, so the stub cannot fold onto the sidewalk.",
+      asserts={"custom_connect": [("count", "CC11: ds1 sidewalk", 2), ("count", "CC11: ds2 stub", 1),
+                                  ("connectors", 1), ("minted", 1),
+                                  ("junction", (260, 800), 3, ["CC11: ds1 sidewalk", "CC11: ds2 stub"])]}),
+ dict(id="CC12", title="G3: DS1 × DS1 left as authored",
+      setup="A DS1 crossing ends 0.5 m short of a DS1 sidewalk.",
+      expected="Untouched: connect rules act on DS1 × DS2 pairs only. Gaps inside a dataset are self-merge's job.",
+      asserts={"custom_connect": [("count", "CC12: ds1 sidewalk", 1),
+                                  ("apart", "CC12: ds1 sidewalk", "CC12: ds1 crossing")],
+               "default": [("count", "CC12: ds1 sidewalk", 1),
+                           ("apart", "CC12: ds1 sidewalk", "CC12: ds1 crossing")]}),
+ dict(id="CC13", title="W1: one rule, two matches on one sidewalk",
+      setup="Two DS2 crossings end 0.5 m and 0.4 m short of the same DS1 sidewalk.",
+      expected="Both junctions are made in one pass; the sidewalk is split twice.",
+      asserts={"custom_connect": [("count", "CC13: sidewalk", 3), ("minted", 2),
+                                  ("junction", (380, 790), 3, ["CC13: sidewalk", "CC13: crossing south"]),
+                                  ("junction", (380, 810), 3, ["CC13: sidewalk", "CC13: crossing north"])]}),
+
+ dict(id="CC14", title="An end that overshoots B",
+      setup="A DS2 crossing crosses a DS1 sidewalk and ends 0.4 m beyond it.",
+      expected="The crossing meets the sidewalk where it crosses it: one node there, the sidewalk and the crossing "
+               "both split (a 0.4 m crossing stub remains), no connector.",
+      asserts={"custom_connect": [("count", "CC14: sidewalk", 2), ("count", "CC14: crossing", 2), ("minted", 1),
+                                  ("connectors", 0),
+                                  ("junction", (440, 800), 4, ["CC14: sidewalk", "CC14: crossing"])],
+               "default": [("count", "CC14: sidewalk", 2), ("count", "CC14: crossing", 2), ("connectors", 0),
+                           ("junction", (440, 800), 4, ["CC14: sidewalk", "CC14: crossing"])]}),
+
+ # ── Dedup guards ────────────────────────────────────────────────────────────
+ dict(id="DG1", title="Stranding guard restores a duplicate",
+      setup="A DS2 sidewalk 0.5 m off a DS1 sidewalk, its ends 4 m beyond snap reach; a DS2 footway hangs off its west end.",
+      expected="Dedup removes the DS2 sidewalk, but nothing connects the footway to DS1, so after connect the stranding "
+               "guard restores it: the footway stays connected to it.",
+      asserts={"default": [("count", "DG1: ds1 sidewalk", 1), ("count", "DG1: ds2 sidewalk", 1), ("count", "DG1: ds2 spur", 1),
+                           ("connected", ["DG1: ds2 sidewalk", "DG1: ds2 spur"])]}),
+ dict(id="DG2", title="Duplicate drawn with different segmentation",
+      setup="DS1 draws a sidewalk as two edges (a node mid-way); DS2 draws it as one edge 0.3 m off.",
+      expected="DS2's ends snap onto DS1's ends. Both ends are then on the anchor network, and the two DS1 edges inside "
+               "its buffer already join them, so the DS2 copy is a duplicate and is removed (connectivity guard, "
+               "refined in the 5.0 build: it keeps only an edge that adds a connection).",
+      asserts={"default": [("count", "DG2: ds1 sidewalk", 2), ("count", "DG2: ds2 sidewalk", 0),
+                           ("junction", (120, 960), 2, ["DG2: ds1 sidewalk"])]}),
+
+ # ── Zones and extension features ('extensions': default keeps 4.3.2 merging) ─
+ dict(id="E1", title="Points: same type merges, other types do not",
+      setup="A bench in both datasets 0.3 m apart (ext:color green / red), and a DS2 pole 0.5 m away.",
+      expected="The benches merge at DS1's position, DS1's colour kept and DS2's audited; the pole stays.",
+      asserts={"default": [("features", "point", 2),
+                           ("feature_attr", "point", (0, 900), {"amenity": "bench", "ext:color": "green",
+                                                                  "ext:union_audit_color": None})],
+               "off": [("features", "point", 3)]}),
+ dict(id="E2", title="Lines: the same fence",
+      setup="The same fence line in both datasets 0.3 m apart; DS2 adds ext:height.",
+      expected="One line: DS1's geometry, gaining ext:height.",
+      asserts={"default": [("features", "line", 1), ("feature_attr", "line", None, {"ext:height": "1.2"})],
+               "off": [("features", "line", 2)]}),
+ dict(id="E3", title="Polygons: the same building, plus a kiosk",
+      setup="The same building in both datasets (0.5 m shift; DS2 adds ext:levels) and a DS2-only kiosk.",
+      expected="Two polygons: the building (DS1 geometry, gaining ext:levels) and the kiosk.",
+      asserts={"default": [("features", "polygon", 2)],
+               "off": [("features", "polygon", 3)]}),
+ dict(id="E4", title="Zones: the same pedestrian zone",
+      setup="The same pedestrian zone in both datasets, 0.2 m apart.",
+      expected="One zone (DS1's); its _w_id lists output nodes.",
+      asserts={"default": [("features", "zone", 1)],
+               "off": [("features", "zone", 2)]}),
+]
+
+def value_for(v, proximity):
+    """Resolve a per-proximity dict to a value."""
+    if isinstance(v, dict) and v and all(isinstance(k, (int, float)) for k in v):
+        key = min(v, key=lambda k: abs(k - proximity))
+        return v[key]
+    return v
+
+def asserts_for(case, profile):
+    """The assertions of a case that apply under a profile name."""
+    out = list(case["asserts"].get(profile, []))
+    if profile.startswith("default_"):
+        out = list(case["asserts"].get("default", [])) + out
+    return out

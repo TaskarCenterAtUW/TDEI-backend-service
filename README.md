@@ -58,6 +58,27 @@ Follow the steps to install the node packages required for testing the applicati
 
 Service request signatures are defined under [Service signatures](./src/services.json)
 
+### Dataset union (`union_dataset`, union 5.0)
+
+Parameters: `tdei_dataset_id_one`, `tdei_dataset_id_two` (required, different datasets) and
+an optional `config` object with up to four sections — `snap`, `dedup`, `connect`,
+`extensions` — each with `"mode": "off" | "default" | "custom"`. No config returns the two
+datasets combined, unchanged. The 4.x parameters `proximity` and `entity_filters` are
+rejected.
+
+```json
+{ "tdei_dataset_id_one": "<id>", "tdei_dataset_id_two": "<id>",
+  "config": { "snap": { "mode": "default", "proximity": 1 }, "dedup": { "mode": "default", "proximity": 1 },
+              "connect": { "mode": "default", "proximity": 1 }, "extensions": { "mode": "default" } } }
+```
+
+The service checks the envelope (JSON object, known sections, at most 64 KB); the rules are
+validated by the database function `content.tdei_union_dataset`, whose message (naming the
+stage, rule and field) is returned as the job's error. The output zip holds the six
+`osw.*.geojson` files and `union_report.json`, the union's run report. Requires union 5.0
+(`test/union-5.0-harness/union/union_5_0.sql`) in the database. Full guide:
+[docs/union-FAQs.md](./docs/union-FAQs.md).
+
 ## Subscription 
 Subscriptions to listening topics are configured in the `/src/subscription.json` file. This file defines the topics that the system listens to for incoming messages.
 

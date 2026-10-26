@@ -1,0 +1,22 @@
+{
+ "$schema": "https://sidewalks.washington.edu/opensidewalks/0.3/schema.json",
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.1,
+     44.6381
+    ]
+   },
+   "properties": {
+    "_id": "1800001",
+    "amenity": "bench",
+    "ext:case": "E1",
+    "ext:color": "green"
+   }
+  }
+ ]
+}

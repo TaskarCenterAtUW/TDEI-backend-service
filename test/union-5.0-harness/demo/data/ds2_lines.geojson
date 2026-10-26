@@ -1,0 +1,3 @@
+{"type": "FeatureCollection", "$schema": "https://sidewalks.washington.edu/opensidewalks/0.3/schema.json", "features": [
+{"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[-123.0889612, 44.6335104], [-123.0882529, 44.6335113]]}, "properties": {"_id": "4850001", "barrier": "fence", "material": "wood"}}
+]}

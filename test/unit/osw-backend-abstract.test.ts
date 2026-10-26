@@ -19,7 +19,8 @@ jest.mock('pg', () => {
         query: jest.fn(),
         end: jest.fn(),
     };
-    return { Pool: jest.fn(() => mPool) };
+    class DatabaseError extends Error { code?: string; }
+    return { Pool: jest.fn(() => mPool), DatabaseError };
 });
 
 class DummyService extends AbstractOSWBackendRequest { }
@@ -111,5 +112,74 @@ describe('AbstractOSWBackendRequest', () => {
         expect(serviceHandleStreamSpy).toHaveBeenCalled();
         // expect(dbClient.releaseDbClient).toHaveBeenCalledWith(releasedbClientSpy);
         expect(service.zipAndUpload).toHaveBeenCalledWith(mockUploadContext, mockMessage);
+    }, 10000);
+    it('should write a JSON output cursor (the union report) as a file, not as GeoJSON features', async () => {
+        const pool = new Pool();
+        const mockClient: any = await pool.connect();
+        jest.spyOn(dbClient, 'getDbClient').mockResolvedValueOnce(mockClient as PoolClient);
+        jest.spyOn(dbClient, 'releaseDbClient').mockResolvedValueOnce();
+        const report = { union_version: '5.0', warnings: [], rules: [] };
+        const querySpy = jest.spyOn(mockClient, 'query')
+            .mockReturnValueOnce({} as any)                                                        // BEGIN
+            .mockReturnValueOnce({ rows: [{ edge: 'edgeData', node: 'nodeData' }] } as any)        // dataset
+            .mockReturnValueOnce({ rows: [] } as any)                                              // extension files
+            .mockReturnValueOnce({ rows: [{ file_name: 'report', cursor_ref: 'report_cursor' }] } as any) // union
+            .mockReturnValueOnce({ rows: [{ report }] } as any)                                    // FETCH ALL
+            .mockReturnValueOnce({} as any)                                                        // CLOSE
+            .mockReturnValueOnce({} as any);                                                       // COMMIT
+        const uploadJsonSpy = jest.spyOn(service, 'uploadStreamToAzureBlob').mockResolvedValue(undefined);
+        const handleStreamSpy = jest.spyOn(service, 'handleStreamDataEvent');
+        service.zipAndUpload = jest.fn().mockResolvedValue(undefined);
+
+        await service.process_upload_dataset('tdei_dataset_id', mockUploadContext, mockMessage, mockQueryConfig,
+            { jsonOutputs: { report: 'union_report.json' } });
+
+        expect(querySpy).toHaveBeenCalledWith('FETCH ALL FROM "report_cursor"');
+        expect(querySpy).toHaveBeenCalledWith('CLOSE "report_cursor"');
+        expect(uploadJsonSpy).toHaveBeenCalledWith(expect.any(Readable), mockUploadContext, 'union_report.json');
+        const written = (uploadJsonSpy.mock.calls[0][0] as Readable).read().toString();
+        expect(JSON.parse(written)).toEqual(report);
+        expect(handleStreamSpy).not.toHaveBeenCalled();
+        expect(service.zipAndUpload).toHaveBeenCalledWith(mockUploadContext, mockMessage);
+    }, 10000);
+
+    it('should skip an output it has no OSW file for', async () => {
+        const pool = new Pool();
+        const mockClient: any = await pool.connect();
+        jest.spyOn(dbClient, 'getDbClient').mockResolvedValueOnce(mockClient as PoolClient);
+        jest.spyOn(dbClient, 'releaseDbClient').mockResolvedValueOnce();
+        const querySpy = jest.spyOn(mockClient, 'query')
+            .mockReturnValueOnce({} as any)
+            .mockReturnValueOnce({ rows: [{ edge: 'edgeData' }] } as any)
+            .mockReturnValueOnce({ rows: [] } as any)
+            .mockReturnValueOnce({ rows: [{ file_name: 'report', cursor_ref: 'report_cursor' }] } as any)
+            .mockReturnValueOnce({} as any)
+            .mockReturnValueOnce({} as any);
+        const handleStreamSpy = jest.spyOn(service, 'handleStreamDataEvent');
+        service.zipAndUpload = jest.fn().mockResolvedValue(undefined);
+
+        await service.process_upload_dataset('tdei_dataset_id', mockUploadContext, mockMessage, mockQueryConfig);
+
+        expect(querySpy).toHaveBeenCalledWith('CLOSE "report_cursor"');
+        expect(handleStreamSpy).not.toHaveBeenCalled();
+    }, 10000);
+
+    it('should roll back the transaction when the query fails', async () => {
+        const pool = new Pool();
+        const mockClient: any = await pool.connect();
+        jest.spyOn(dbClient, 'getDbClient').mockResolvedValueOnce(mockClient as PoolClient);
+        jest.spyOn(dbClient, 'releaseDbClient').mockResolvedValueOnce();
+        const dbError: any = new Error('config.snap.mode: is required — one of off, default, custom');
+        dbError.code = '22023';
+        const querySpy = jest.spyOn(mockClient, 'query')
+            .mockReturnValueOnce({} as any)
+            .mockReturnValueOnce({ rows: [{ edge: 'edgeData' }] } as any)
+            .mockReturnValueOnce({ rows: [] } as any)
+            .mockRejectedValueOnce(dbError)
+            .mockReturnValueOnce({} as any);
+
+        await expect(service.process_upload_dataset('tdei_dataset_id', mockUploadContext, mockMessage, mockQueryConfig))
+            .rejects.toMatchObject({ code: '22023' });
+        expect(querySpy).toHaveBeenCalledWith('ROLLBACK');
     }, 10000);
 });

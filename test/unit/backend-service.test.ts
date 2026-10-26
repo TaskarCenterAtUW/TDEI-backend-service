@@ -249,291 +249,123 @@ describe('BackendService', () => {
   });
 
   describe('Union Dataset', () => {
-    it('should execute the query and handle the data and end events', async () => {
-      // Mock the necessary dependencies
-      const message: any = {
-        data: {
-          parameters: {
-            tdei_dataset_id_one: 'your-tdei-dataset-id',
-            tdei_dataset_id_two: 'your-tdei-dataset-id',
-            proximity: 0.5
-          }
-        },
-        messageId: 'your-message-id'
-      };
+    const unionMessage = (parameters: any): any => ({
+      data: { parameters: { tdei_dataset_id_one: 'dataset-one', tdei_dataset_id_two: 'dataset-two', ...parameters } },
+      messageId: 'your-message-id'
+    });
+    const unionSql = 'SELECT * FROM content.tdei_union_dataset($1,$2,$3::jsonb)';
 
-      const handleStreamDataEventMock = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset').mockResolvedValueOnce(true);
+    it('should run the union with an empty config when none is given', async () => {
+      const message = unionMessage({});
+      const processSpy = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset').mockResolvedValueOnce(true);
 
-      // Call the method under test
       await backendService.unionQueryService.executeUnionQuery(message);
-      await Utility.sleep(1);
 
-      // Assertions
-      expect(handleStreamDataEventMock).toHaveBeenCalled();
-    }, 1000);
+      expect(processSpy).toHaveBeenCalledWith(
+        'dataset-one',
+        expect.any(Object),
+        message,
+        expect.objectContaining({ text: unionSql, values: ['dataset-one', 'dataset-two', '{}'] }),
+        { jsonOutputs: { report: 'union_report.json' } }
+      );
+    });
 
-    it('should execute the query when proximity is undefined', async () => {
-      // Mock the necessary dependencies
-      const message: any = {
-        data: {
-          parameters: {
-            tdei_dataset_id_one: 'your-tdei-dataset-id',
-            tdei_dataset_id_two: 'your-tdei-dataset-id',
-            proximity: undefined
-          }
+    it('should pass the config object to tdei_union_dataset', async () => {
+      const config = {
+        snap: { mode: 'default', proximity: 1 },
+        dedup: { mode: 'default', proximity: 1 },
+        connect: {
+          mode: 'custom',
+          rules: [{ name: 'kerbed-crossing', from: 'crossing', to: 'sidewalk', operation: 'geometry',
+                    proximity: 1, tags: { barrier: 'kerb' } }]
         },
-        messageId: 'your-message-id'
+        extensions: { mode: 'default' }
       };
+      const message = unionMessage({ config });
+      const processSpy = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset').mockResolvedValueOnce(true);
 
-      const handleStreamDataEventMock = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset').mockResolvedValueOnce(true);
-
-      // Call the method under test
       await backendService.unionQueryService.executeUnionQuery(message);
-      await Utility.sleep(1);
 
-      // Assertions
-      expect(handleStreamDataEventMock).toHaveBeenCalled();
-    }, 1000);
+      expect(processSpy).toHaveBeenCalledWith(
+        'dataset-one', expect.any(Object), message,
+        expect.objectContaining({ text: unionSql, values: ['dataset-one', 'dataset-two', JSON.stringify(config)] }),
+        { jsonOutputs: { report: 'union_report.json' } }
+      );
+    });
+
+    it('should accept the config as a JSON string', async () => {
+      const config = { connect: { mode: 'default', proximity: 2 } };
+      const message = unionMessage({ config: JSON.stringify(config) });
+      const processSpy = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset').mockResolvedValueOnce(true);
+
+      await backendService.unionQueryService.executeUnionQuery(message);
+
+      expect(processSpy).toHaveBeenCalledWith(
+        'dataset-one', expect.any(Object), message,
+        expect.objectContaining({ values: ['dataset-one', 'dataset-two', JSON.stringify(config)] }),
+        expect.any(Object)
+      );
+    });
+
+    it.each([
+      ['proximity', { proximity: 0.5 }],
+      ['entity_filters', { entity_filters: { edge: { filters: [{ highway: 'footway' }] } } }],
+    ])('should reject the removed 4.x parameter %s', async (name, parameters) => {
+      const message = unionMessage(parameters);
+      const publishMessageSpy = jest.spyOn(Utility, 'publishMessage').mockResolvedValue(undefined);
+      const processSpy = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset');
+
+      await expect(backendService.unionQueryService.executeUnionQuery(message)).rejects.toContain(`'${name}' is no longer supported`);
+
+      expect(processSpy).not.toHaveBeenCalled();
+      expect(publishMessageSpy).toHaveBeenCalledWith(message, false, expect.stringContaining(`'${name}' is no longer supported`));
+    });
+
+    it('should reject a config with an unknown section before running the union', async () => {
+      const message = unionMessage({ config: { snapping: { mode: 'default' } } });
+      const publishMessageSpy = jest.spyOn(Utility, 'publishMessage').mockResolvedValue(undefined);
+      const processSpy = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset');
+
+      await expect(backendService.unionQueryService.executeUnionQuery(message)).rejects.toContain("unknown section 'snapping'");
+
+      expect(processSpy).not.toHaveBeenCalled();
+      expect(publishMessageSpy).toHaveBeenCalledWith(message, false, expect.stringContaining("unknown section 'snapping'"));
+    });
+
+    it('should reject the same dataset twice', async () => {
+      const message = unionMessage({ tdei_dataset_id_two: 'dataset-one' });
+      const publishMessageSpy = jest.spyOn(Utility, 'publishMessage').mockResolvedValue(undefined);
+      const processSpy = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset');
+
+      await expect(backendService.unionQueryService.executeUnionQuery(message)).rejects.toContain('must be different datasets');
+
+      expect(processSpy).not.toHaveBeenCalled();
+      expect(publishMessageSpy).toHaveBeenCalledWith(message, false, expect.stringContaining('must be different datasets'));
+    });
+
+    it("should publish the union's own message when it rejects the config", async () => {
+      const message = unionMessage({ config: { connect: { mode: 'custom', rules: [{ name: 'x', from: 'crossing', to: 'road' }] } } });
+      const publishMessageSpy = jest.spyOn(Utility, 'publishMessage').mockResolvedValue(undefined);
+      const dbError: any = new Error('config.connect.rules[1].operation: is required — one of point, geometry');
+      dbError.code = '22023';
+      jest.spyOn(backendService.unionQueryService, 'process_upload_dataset').mockRejectedValueOnce(dbError);
+
+      await expect(backendService.unionQueryService.executeUnionQuery(message)).rejects.toContain('config.connect.rules[1].operation');
+
+      expect(publishMessageSpy).toHaveBeenCalledWith(message, false, 'config.connect.rules[1].operation: is required — one of point, geometry');
+    });
 
     it('should handle error during query execution and publish error message', async () => {
-      // Mock the necessary dependencies
-      const message: any = {
-        data: {
-          parameters: {
-            tdei_dataset_id_one: 'your-tdei-dataset-id',
-            tdei_dataset_id_two: 'your-tdei-dataset-id'
-          }
-        },
-        messageId: 'your-message-id'
-      };
-      const publishMessageMock = jest.fn().mockResolvedValueOnce(undefined);
-      const publishMessageSpy = jest.spyOn(Utility, 'publishMessage').mockImplementation(publishMessageMock);
-
-      const handleStreamDataEventMock = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset').mockImplementationOnce(() => {
+      const message = unionMessage({});
+      const publishMessageSpy = jest.spyOn(Utility, 'publishMessage').mockResolvedValue(undefined);
+      const processSpy = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset').mockImplementationOnce(() => {
         throw new Error('Error executing query');
       });
-      // Call the method under test
+
       await expect(backendService.unionQueryService.executeUnionQuery(message)).rejects.toContain('Error executing query');
 
-      // Assertions
-      expect(handleStreamDataEventMock).toHaveBeenCalled();
+      expect(processSpy).toHaveBeenCalled();
       expect(publishMessageSpy).toHaveBeenCalledWith(message, false, 'Error executing query');
-    });
-
-    it('should handle error when proximity parameter is of type string', async () => {
-      // Mock the necessary dependencies
-      const message: any = {
-        data: {
-          parameters: {
-            tdei_dataset_id_one: 'your-tdei-dataset-id',
-            tdei_dataset_id_two: 'your-tdei-dataset-id',
-            proximity: 'your-proximity'
-          }
-        },
-        messageId: 'your-message-id'
-      };
-      const publishMessageMock = jest.fn().mockResolvedValueOnce(undefined);
-      const publishMessageSpy = jest.spyOn(Utility, 'publishMessage').mockImplementation(publishMessageMock);
-
-      // Call the method under test
-      await expect(backendService.unionQueryService.executeUnionQuery(message)).rejects.toContain('Invalid proximity parameter');
-
-      // Assertions
-      expect(publishMessageSpy).toHaveBeenCalledWith(message, false, 'Invalid proximity parameter');
-    });
-
-    it('should pass validated entity_filters to tdei_union_dataset', async () => {
-      const entity_filters = {
-        edge: {
-          filters: [{ highway: 'footway', footway: 'sidewalk' }],
-        },
-      };
-      const message: any = {
-        data: {
-          parameters: {
-            tdei_dataset_id_one: 'your-tdei-dataset-id',
-            tdei_dataset_id_two: 'your-tdei-dataset-id',
-            proximity: 1.0,
-            entity_filters,
-          },
-        },
-        messageId: 'your-message-id',
-      };
-
-      const handleStreamDataEventMock = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset').mockResolvedValueOnce(true);
-
-      await backendService.unionQueryService.executeUnionQuery(message);
-
-      expect(handleStreamDataEventMock).toHaveBeenCalledWith(
-        'your-tdei-dataset-id',
-        expect.any(Object),
-        message,
-        expect.objectContaining({
-          text: 'SELECT * FROM content.tdei_union_dataset($1,$2,$3,$4)',
-          values: ['your-tdei-dataset-id', 'your-tdei-dataset-id', 1.0, JSON.stringify(entity_filters)],
-        })
-      );
-    });
-
-    it('should pass the full multi-dimension entity_filters sample to tdei_union_dataset', async () => {
-      const entity_filters = {
-        edge: {
-          filters: [
-            { highway: 'footway', footway: 'sidewalk' },
-            { highway: 'footway', footway: 'crossing' },
-          ],
-          duplicate_buffer_width: 2,
-          duplicate_overlap_percentage: 75,
-        },
-        node: {
-          filters: [
-            { barrier: 'kerb' },
-          ],
-        },
-        line: {
-          filters: [
-            { barrier: 'fence' },
-          ],
-          duplicate_buffer_width: 1.5,
-          duplicate_overlap_percentage: 65,
-        },
-        polygon: {
-          filters: [
-            { building: 'yes' },
-          ],
-          duplicate_overlap_percentage: 80,
-        },
-        zone: {
-          duplicate_overlap_percentage: 75,
-        },
-        point: {
-          filters: [
-            { amenity: 'bench' },
-            { highway: 'street_lamp' },
-          ],
-        },
-      };
-      const message: any = {
-        data: {
-          parameters: {
-            tdei_dataset_id_one: 'your-tdei-dataset-id',
-            tdei_dataset_id_two: 'your-tdei-dataset-id',
-            proximity: 1.0,
-            entity_filters,
-          },
-        },
-        messageId: 'your-message-id',
-      };
-
-      const handleStreamDataEventMock = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset').mockResolvedValueOnce(true);
-
-      await backendService.unionQueryService.executeUnionQuery(message);
-
-      expect(handleStreamDataEventMock).toHaveBeenCalledWith(
-        'your-tdei-dataset-id',
-        expect.any(Object),
-        message,
-        expect.objectContaining({
-          text: 'SELECT * FROM content.tdei_union_dataset($1,$2,$3,$4)',
-          values: ['your-tdei-dataset-id', 'your-tdei-dataset-id', 1.0, JSON.stringify(entity_filters)],
-        })
-      );
-    });
-
-    it('should reject invalid entity_filters attributes', async () => {
-      const message: any = {
-        data: {
-          parameters: {
-            tdei_dataset_id_one: 'your-tdei-dataset-id',
-            tdei_dataset_id_two: 'your-tdei-dataset-id',
-            entity_filters: {
-              edge: {
-                filters: [{ not_an_osw_attribute: 'x' }],
-              },
-            },
-          },
-        },
-        messageId: 'your-message-id',
-      };
-      const publishMessageMock = jest.fn().mockResolvedValueOnce(undefined);
-      const publishMessageSpy = jest.spyOn(Utility, 'publishMessage').mockImplementation(publishMessageMock);
-      const handleStreamDataEventMock = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset');
-
-      await expect(backendService.unionQueryService.executeUnionQuery(message)).rejects.toContain(
-        "not a valid OpenSidewalks attribute for 'edge'"
-      );
-
-      expect(handleStreamDataEventMock).not.toHaveBeenCalled();
-      expect(publishMessageSpy).toHaveBeenCalledWith(
-        message,
-        false,
-        expect.stringContaining("not a valid OpenSidewalks attribute for 'edge'")
-      );
-    });
-
-    it('should reject duplicate_buffer_width on unsupported entity_filters dimensions', async () => {
-      const message: any = {
-        data: {
-          parameters: {
-            tdei_dataset_id_one: 'your-tdei-dataset-id',
-            tdei_dataset_id_two: 'your-tdei-dataset-id',
-            entity_filters: {
-              polygon: {
-                filters: [{ building: 'yes' }],
-                duplicate_buffer_width: 2,
-                duplicate_overlap_percentage: 80,
-              },
-            },
-          },
-        },
-        messageId: 'your-message-id',
-      };
-      const publishMessageMock = jest.fn().mockResolvedValueOnce(undefined);
-      const publishMessageSpy = jest.spyOn(Utility, 'publishMessage').mockImplementation(publishMessageMock);
-      const handleStreamDataEventMock = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset');
-
-      await expect(backendService.unionQueryService.executeUnionQuery(message)).rejects.toContain(
-        "'duplicate_buffer_width' is not supported for 'polygon'"
-      );
-
-      expect(handleStreamDataEventMock).not.toHaveBeenCalled();
-      expect(publishMessageSpy).toHaveBeenCalledWith(
-        message,
-        false,
-        expect.stringContaining("'duplicate_buffer_width' is not supported for 'polygon'")
-      );
-    });
-
-    it('should reject duplicate_overlap_percentage on unsupported entity_filters dimensions', async () => {
-      const message: any = {
-        data: {
-          parameters: {
-            tdei_dataset_id_one: 'your-tdei-dataset-id',
-            tdei_dataset_id_two: 'your-tdei-dataset-id',
-            entity_filters: {
-              point: {
-                filters: [{ amenity: 'bench' }],
-                duplicate_overlap_percentage: 80,
-              },
-            },
-          },
-        },
-        messageId: 'your-message-id',
-      };
-      const publishMessageMock = jest.fn().mockResolvedValueOnce(undefined);
-      const publishMessageSpy = jest.spyOn(Utility, 'publishMessage').mockImplementation(publishMessageMock);
-      const handleStreamDataEventMock = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset');
-
-      await expect(backendService.unionQueryService.executeUnionQuery(message)).rejects.toContain(
-        "'duplicate_overlap_percentage' is not supported for 'point'"
-      );
-
-      expect(handleStreamDataEventMock).not.toHaveBeenCalled();
-      expect(publishMessageSpy).toHaveBeenCalledWith(
-        message,
-        false,
-        expect.stringContaining("'duplicate_overlap_percentage' is not supported for 'point'")
-      );
     });
   });
 

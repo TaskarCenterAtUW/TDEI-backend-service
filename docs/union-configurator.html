@@ -1,0 +1,864 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Union 5.0 Configurator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&family=Montserrat:wght@600;700&display=swap">
+<style>
+/* Layout: TDEI portal look — purple top bar, lavender page, one white card per question; before → after examples drive every choice. Light-only by design, matching the portal. */
+:root{
+  --brand:#32006e; --brand-2:#4b2e83; --ink:#162848; --text:#212529; --muted:#5f647a;
+  --ds1:#586ab5; --ds2:#479fa1; --made:#7a2bd6; --gone:#a7abba;
+  --page:#f4f0fb; --soft:#ebe4f6; --line:#ddd2ee; --white:#fff; --ok:#1d7a55; --off:#8a8fa3;
+  --f-body:"Open Sans",sans-serif;          /* portal --primary-font-family */
+  --f-head:"Open Sans",sans-serif;          /* the portal sets headings in Open Sans too */
+  --f-alt:"Montserrat",sans-serif;          /* portal --secondary-font-family */
+  --f-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{background:var(--page)}
+body{color:var(--text);font:15px/1.55 var(--f-body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--brand)}
+.bar{background:var(--brand);color:var(--white);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px}
+.bar-in{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.mark{font:700 15px var(--f-alt);letter-spacing:.06em;background:var(--white);color:var(--brand);border-radius:4px;padding:4px 8px}
+.bar h1{font:700 17px var(--f-head);margin:0}
+.bar small{opacity:.8;font-size:13px}
+.page{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h2,h3{font-family:var(--f-head);color:var(--ink);margin:0;text-wrap:balance}
+h2{font-size:clamp(21px,2.6vw,27px);font-weight:700;line-height:1.25}
+h3{font-size:15px;font-weight:700}
+p{margin:0}
+
+.card{background:var(--white);border:1px solid var(--line);border-radius:6px;padding:clamp(18px,3vw,28px);display:flex;flex-direction:column;gap:20px}
+.eyebrow{font:700 12px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--brand-2)}
+.lead{font-size:16px;color:var(--muted);max-width:66ch}
+
+/* examples */
+.ex-head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:16px;height:4px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.examples{display:flex;flex-direction:column;gap:10px}
+.ex{display:grid;grid-template-columns:120px minmax(0,1fr) 22px minmax(0,1fr) 150px;gap:10px;align-items:center;border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.ex .lbl{font:600 13.5px var(--f-body);color:var(--ink)}
+.ex .lbl small{display:block;font-weight:400;color:var(--muted)}
+.ex svg{width:100%;height:auto;display:block;background:#fbfaff;border-radius:4px}
+.ex .arr{color:var(--muted);text-align:center;font-size:18px}
+.cap{font:600 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.res{font:600 13.5px var(--f-body);display:flex;gap:6px;align-items:flex-start}
+.res.y{color:var(--ok)}.res.n{color:var(--off)}
+.res i{font-style:normal}
+@media (max-width:760px){.ex{grid-template-columns:minmax(0,1fr) 22px minmax(0,1fr)}.ex .lbl,.ex .res{grid-column:1/-1}}
+
+.cfg{display:flex;flex-direction:column;gap:6px}
+pre{margin:0;font:12.5px/1.55 var(--f-mono);background:#f7f5fb;border:1px solid var(--line);border-radius:5px;padding:12px 14px;overflow:auto;color:var(--ink);white-space:pre;max-height:420px}
+.nothing{font-size:13.5px;color:var(--muted);font-style:italic}
+.note{font-size:13px;color:var(--muted);max-width:70ch}
+
+/* buttons */
+.ctl-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{font:600 14px var(--f-body);border-radius:4px;padding:10px 18px;cursor:pointer;border:1px solid var(--brand);background:var(--brand);color:var(--white)}
+.btn:hover{background:var(--brand-2);border-color:var(--brand-2)}
+.btn.ghost{background:var(--white);color:var(--brand)}
+.btn.ghost:hover{background:var(--soft)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.kerbopt{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--ink);cursor:pointer}
+.kerbopt input{accent-color:var(--brand);width:15px;height:15px}
+.kerbopt input:disabled+span{color:var(--off)}
+.head{display:flex;flex-direction:column;gap:14px}
+.head .top{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-between;align-items:flex-start}
+.head .l{display:flex;flex-direction:column;gap:6px;min-width:0}
+.head .lead{font-size:15px}
+.status{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between;align-items:center}
+.stats{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.stat{display:inline-flex;align-items:center;gap:7px}
+.stat b{color:var(--ink);font-weight:700}
+.stat i{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+.qa{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--muted)}
+.qa button{border:0;background:none;color:var(--brand-2);font:600 13px var(--f-body);padding:4px 6px;border-radius:4px;cursor:pointer}
+.qa button:hover{background:var(--soft);color:var(--brand)}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding-block:10px;margin-top:-6px}
+.toolbar .legend{font-size:12px}
+.tright{display:flex;gap:6px 14px;align-items:center;flex-wrap:wrap}
+.tright .qa button{font-size:12.5px}
+/* review */
+.rgroup{display:flex;flex-direction:column;gap:8px}
+.ghead{display:flex;align-items:center;gap:10px;width:100%;border:0;background:var(--soft);border-radius:5px;padding:9px 12px;cursor:pointer;text-align:left;font:inherit;color:inherit}
+.ghead:hover{background:var(--line)}
+.ghead .chev{width:10px;height:10px;border-right:2px solid var(--brand);border-bottom:2px solid var(--brand);transform:rotate(45deg);margin:0 4px 4px 2px;flex:none}
+.ghead[aria-expanded="false"] .chev{transform:rotate(-45deg);margin:0 4px 0 0}
+@media (prefers-reduced-motion:no-preference){.ghead .chev{transition:transform .15s}}
+.ghead h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-2)}
+.ghead .gsum{margin-left:auto;font-size:12.5px;color:var(--muted);text-align:right}
+.gbody{display:flex;flex-direction:column;gap:8px}
+.datasets{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.dsf{display:flex;flex-direction:column;gap:6px;min-width:0}
+.dsf .lbl{display:flex;align-items:center;gap:8px;font:600 13px var(--f-body);color:var(--ink)}
+.dsf .lbl i{width:16px;height:4px;border-radius:2px;display:inline-block}
+.dsf .anc{font:600 10.5px var(--f-body);letter-spacing:.05em;text-transform:uppercase;color:var(--brand);background:var(--soft);border-radius:3px;padding:2px 6px}
+.search{position:relative}
+.search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;pointer-events:none}
+.search input{font:14px var(--f-body);color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:9px 10px 9px 34px;background:var(--white);min-width:0;width:100%}
+.search input:focus{border-color:var(--brand)}
+.search input.bad{border-color:#c0392b}
+.dsf .ak{font-size:12px;color:var(--muted)}
+.dsf .ak.err{color:#a1251b}
+.btn:disabled,.btn:disabled:hover{opacity:.45;cursor:not-allowed;background:var(--brand);border-color:var(--brand)}
+.mini button{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.linkbtn{border:0;background:none;color:var(--brand);font:600 12.5px var(--f-body);cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:4px}
+.loadp{border:1px solid var(--brand);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;background:#fcfbfe}
+.loadp textarea{font:12.5px/1.5 var(--f-mono);border:1px solid var(--line);border-radius:4px;padding:10px;width:100%;resize:vertical;color:var(--ink);background:var(--white)}
+.lerr{color:#a1251b;font-size:13.5px}
+.lwarn{background:#fff6e5;border:1px solid #f0d49b;border-radius:5px;padding:10px 12px;font-size:13px;color:#5c4100}
+.lwarn ul{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+.runbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--white);border-top:1px solid var(--line);box-shadow:0 -4px 14px rgba(50,0,110,.08);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px calc(12px + env(safe-area-inset-bottom,0px))}
+.runbar-in{max-width:1080px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.runbar .sum{font-size:13.5px;color:var(--ink);display:flex;flex-direction:column;min-width:0}
+.runbar .sum small{color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.runbar .acts{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.item{border:1px solid var(--line);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:10px}
+.item .row1{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,2fr) 160px 84px;grid-template-areas:"n t v s";gap:12px;align-items:center}
+.item .row1>.nmrow{grid-area:n}.item .row1>[id^="th-"]{grid-area:t;min-width:0}.item .row1>.chip{grid-area:v}.item .row1>[id^="sw-"]{grid-area:s}
+.nmrow{display:flex;gap:6px;align-items:flex-start}
+.item.detail{padding:14px 16px;gap:12px}
+.item.detail .row1{grid-template-columns:minmax(0,1fr) 160px 84px;grid-template-areas:"n v s"}
+.item.detail .nm{font-size:15px}
+.item .examples{gap:8px}
+@media (prefers-reduced-motion:no-preference){
+  .item.detail .ex .aft svg{animation:reveal .5s ease-out both}
+  .item.detail .ex:nth-child(2) .aft svg{animation-delay:.08s}.item.detail .ex:nth-child(3) .aft svg{animation-delay:.16s}
+  .item.detail .ex .aft .nm,.item.detail .ex .aft .lm,.item.detail .ex .aft .ring{animation:pop .6s .25s ease-out both;transform-box:fill-box;transform-origin:center}
+}
+@keyframes reveal{from{opacity:.25}to{opacity:1}}
+@keyframes pop{0%{opacity:0;transform:scale(.6)}70%{opacity:1;transform:scale(1.12)}100%{transform:scale(1)}}
+.info{flex:none;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--brand);background:var(--white);color:var(--brand);font:700 12px/1 var(--f-alt);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;margin-top:1px}
+.info[aria-expanded="true"]{background:var(--brand);color:var(--white)}
+.infobox{background:var(--soft);border-radius:5px;padding:10px 12px;font-size:13.5px;color:var(--ink);display:flex;flex-direction:column;gap:4px}
+.infobox b{font-weight:600}
+.fnote{font-size:12.5px;color:#5c4100;background:#fff6e5;border:1px solid #f0d49b;border-radius:4px;padding:6px 10px;margin:0}
+.oswref{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--ink);border-left:3px solid var(--brand-2);padding:2px 0 2px 10px}
+.osw-tag{flex:none;font:700 10.5px var(--f-body);letter-spacing:.05em;color:var(--white);background:var(--brand-2);border-radius:3px;padding:2px 6px;margin-top:1px}
+.num{display:flex;align-items:center;gap:6px}
+.num input{width:72px;font:600 15px var(--f-alt);color:var(--brand);border:1px solid var(--line);border-radius:4px;padding:5px 7px;background:var(--white);font-variant-numeric:tabular-nums}
+.num input:disabled{color:var(--off);background:#f6f5f9}
+.num span{font-size:13px;color:var(--muted)}
+.icfg{border:1px solid var(--line);border-radius:5px}
+.icfg summary{cursor:pointer;font:600 13px var(--f-body);color:var(--brand);padding:7px 10px;list-style-position:inside}
+.icfg[open] summary{border-bottom:1px solid var(--line)}
+.icfg .body{padding:8px 10px;display:flex;flex-direction:column;gap:8px}
+.icfg pre{max-height:240px}
+.btn.sm{padding:6px 12px;font-size:12.5px}
+.item.isoff{background:#faf9fc}
+.item .nm{font:600 14px var(--f-body);color:var(--ink)}
+.item .nm small{display:block;font-weight:400;font-size:12.5px;color:var(--muted)}
+.thumbs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.thumbs.one{grid-template-columns:minmax(0,1fr)}
+.thumb{display:flex;flex-direction:column;gap:2px;min-width:0}
+.thumb svg{width:100%;height:auto;display:block;background:#fbfaff;border-radius:4px;border:1px solid var(--line)}
+.thumb span{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.thumb span.y{color:var(--ok);font-weight:600}
+.chip{display:inline-flex;flex-direction:column;gap:4px;align-items:flex-start}
+.chip b{font:700 15px var(--f-alt);color:var(--brand);font-variant-numeric:tabular-nums}
+.chip b.offv{color:var(--off)}
+.pref{font:600 10.5px var(--f-body);letter-spacing:.05em;text-transform:uppercase;border-radius:3px;padding:2px 6px}
+.pref.rec{background:#e3f2ec;color:var(--ok)}
+.pref.own{background:var(--soft);color:var(--brand-2)}
+/* ── responsive ── */
+[hidden]{display:none!important}
+code{overflow-wrap:anywhere}
+@media (max-width:860px){
+  .item .row1{grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"n v s" "t t t"}
+  .item.detail .row1{grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"n v s"}
+}
+@media (max-width:560px){
+  .page{padding-block:12px calc(120px + env(safe-area-inset-bottom,0px))}
+  .card{padding:16px 14px;gap:16px}
+  .bar small{display:none}
+  h2{font-size:22px}
+  .head .top{flex-direction:column;align-items:stretch}
+  .head .top .btn{align-self:flex-start}
+  .status{flex-direction:column;align-items:flex-start;gap:8px}
+  .qa{flex-wrap:wrap;margin-left:-6px}
+  .toolbar{flex-direction:column;align-items:flex-start}
+  .tright{width:100%;justify-content:space-between}
+  .ghead{flex-wrap:wrap;row-gap:2px;padding:9px 10px}
+  .ghead .gsum{margin-left:24px;width:100%;text-align:left}
+  .item{padding:10px}
+  .item .row1,.item.detail .row1{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"n n" "t t" "v s";gap:10px}
+  .item.detail .row1{grid-template-areas:"n n" "v s"}
+  .chip{flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 8px}
+  .thumbs{gap:4px}
+  .ex{grid-template-columns:minmax(0,1fr);gap:6px;padding:10px}
+  .ex .arr{transform:rotate(90deg);line-height:1}
+  .oswref{flex-direction:column;gap:4px}
+  .runbar{padding-block:10px calc(10px + env(safe-area-inset-bottom,0px))}
+  .runbar-in{gap:8px}
+  .runbar .sum{width:100%;font-size:13px}
+  .runbar .acts{width:100%}
+  .runbar .acts .btn{flex:1;padding:10px 8px}
+  .runbar .acts .toast{order:3;width:100%}
+}
+.sw{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font:600 13px var(--f-body);color:var(--ink);border:0;background:none;padding:4px 0}
+.sw .tr{width:38px;height:22px;border-radius:11px;background:#cfd2dd;position:relative;flex:none}
+.sw .tr::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--white);box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.sw[aria-checked="true"] .tr{background:var(--brand)}
+.sw[aria-checked="true"] .tr::after{left:19px}
+@media (prefers-reduced-motion:no-preference){.sw .tr,.sw .tr::after{transition:background .15s,left .15s}}
+.mini{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.mini button{border:0;background:var(--white);color:var(--brand);font:600 12.5px var(--f-body);padding:5px 10px;cursor:pointer}
+.mini button[aria-pressed="true"]{background:var(--brand);color:var(--white)}
+.dep{font-size:11.5px;color:var(--muted)}
+.toast{font-size:13px;color:var(--ok);min-height:1.2em}
+
+/* svg */
+.l1{stroke:var(--ds1);stroke-width:4;fill:none;stroke-linecap:round}
+.l2{stroke:var(--ds2);stroke-width:4;fill:none;stroke-linecap:round}
+.lm{stroke:var(--made);stroke-width:4;fill:none;stroke-linecap:round}
+.lg{stroke:var(--gone);stroke-width:3;fill:none;stroke-dasharray:4 5;stroke-linecap:round}
+.stepsm{stroke:var(--white);stroke-width:4;stroke-dasharray:1.5 5;fill:none}
+.zebra{stroke:var(--white);stroke-width:4;stroke-dasharray:3 4;fill:none}
+.road{stroke-width:11;opacity:.55}
+.ls{stroke-width:7;opacity:.75}
+.n1{fill:var(--ds1)}.n2{fill:var(--ds2)}.nm{fill:var(--made)}
+.ring{fill:none;stroke:var(--made);stroke-width:2.5}
+.ghost{fill:none;stroke:var(--gone);stroke-width:1.5;stroke-dasharray:2 2}
+.mv{stroke:var(--made);stroke-width:1.5;fill:none}
+.dim{stroke:var(--muted);stroke-width:1}
+.dt{fill:var(--muted);font:11px var(--f-body)}
+.tick{stroke:var(--ink);stroke-width:2}
+.p1{fill:var(--ds1);fill-opacity:.2;stroke:var(--ds1);stroke-width:2}
+.p2{fill:var(--ds2);fill-opacity:.2;stroke:var(--ds2);stroke-width:2}
+.pg{fill:none;stroke:var(--gone);stroke-width:2;stroke-dasharray:4 4}
+.pm{fill:var(--made);fill-opacity:.15;stroke:var(--made);stroke-width:2.5}
+@media (prefers-reduced-motion:no-preference){.ex svg .anim{transition:opacity .25s}}
+</style>
+
+<div class="bar"><div class="bar-in"><span class="mark">TDEI</span><h1>Dataset Union</h1><small>Union 5.0 configuration</small></div></div>
+<div class="page"><div class="wrap">
+  <main class="card" id="app"></main>
+</div></div>
+<div class="runbar" role="region" aria-label="Run the union"><div class="runbar-in">
+  <div class="sum" id="barsum"></div>
+  <div class="acts"><span class="toast" id="toast"></span><button class="btn ghost" id="copy">Copy configuration</button><button class="btn" id="run">Run union</button></div>
+</div></div>
+
+<script>
+/* ═════════════ steps ═════════════ */
+const GROUPS=[['start','Anchor dataset'],['join','Snap Nodes'],['dup','Remove duplicate Edges'],['link','Connect Edges'],['other','Adjacent entities & Zones']];
+const R=0.5; // published default proximity
+// Wording follows the OpenSidewalks Schema 0.3 (github.com/OpenSidewalks/OpenSidewalks-Schema, branch OSW0.3).
+// `osw` is the schema rule or definition each case relates to; it is shown in the case's info panel.
+const STEPS=[
+ {id:'trust',g:'start',kind:'choice',name:'Anchor dataset',sub:'DS1 or DS2',
+  title:'When both datasets describe the same entity, which dataset is the anchor?',
+  lead:'Two OSW datasets often contain the same Nodes and Edges. Entities from the anchor dataset keep their geometry, _id and field values; the other dataset’s Nodes are snapped onto them and its duplicate Edges are removed.',
+  osw:'Curb Nodes (barrier=kerb) are never moved, whichever dataset is the anchor: OSW maps a curb at the Edge endpoint where it physically is.'},
+ {id:'s_sidewalk',g:'join',kind:'dist',draw:'ends',a:'sidewalk',fam:'sidewalk',name:'Sidewalk Nodes',sub:'highway=footway + footway=sidewalk',
+  title:'Two Sidewalk Edges end close to each other. Snap their end Nodes into one Node?',
+  lead:'Each dataset mapped the same Sidewalk centerline, but the end Nodes landed a little apart. Snapping makes them one Node, so the two Edges meet end-to-end and the network can be routed across both datasets.',
+  osw:'Edges only connect end-to-end, through a shared Node referenced by _u_id / _v_id. Edges that merely come close are not connected.',
+  q:'Snap Sidewalk Nodes that are up to',ex:[0.3,1,2.5],rec:R},
+ {id:'s_crossing',g:'join',kind:'dist',draw:'ends',a:'crossing',name:'Crossing Nodes',sub:'highway=footway + footway=crossing or traffic_island',
+  title:'Two Crossing Edges end close to each other. Snap their end Nodes?',
+  lead:'A Crossing runs curb to curb on the street surface and is usually split at the street centerline. Its end Nodes are often Curb Nodes, which are mapped accurately, so a small proximity is usually enough. Traffic Island Edges count as Crossings here.',
+  osw:'A Crossing exists only on the road surface, from curb to curb, and should be at least two Edges: curb to street centerline, and street centerline to curb.',
+  q:'Snap Crossing Nodes that are up to',ex:[0.3,1,2],rec:R},
+ {id:'s_footway',g:'join',kind:'dist',draw:'ends',a:'footway',fam:'footway',name:'Footway Nodes',sub:'highway=footway (no footway=* subtag)',
+  title:'Two Footway Edges end close to each other. Snap their end Nodes?',
+  lead:'A plain Footway is a dedicated pedestrian path that is not a Sidewalk, Crossing or Traffic Island, such as the short link between a Sidewalk and a Crossing, or a path through a park.',
+  osw:'Footway (plain) is highway=footway with no footway=* subtag. Sidewalk, Crossing and Traffic Island are its subtypes.',
+  q:'Snap Footway Nodes that are up to',ex:[0.3,0.7,2],rec:R},
+ {id:'s_pedroad',g:'join',kind:'dist',draw:'ends',a:'pedroad',fam:'pedroad',name:'Pedestrian Road Nodes',sub:'highway=pedestrian',
+  title:'Two Pedestrian Road Edges end close to each other. Snap their end Nodes?',
+  lead:'A Pedestrian Road is a road or area mainly or only for pedestrians, where some vehicles may be allowed, such as a pedestrian mall.',
+  osw:'Pedestrian Road is a core Edge: highway=pedestrian. The same tag on a Polygon is a Pedestrian Zone.',
+  q:'Snap Pedestrian Road Nodes that are up to',ex:[0.3,1,2.5],rec:R},
+ {id:'s_steps',g:'join',kind:'dist',draw:'ends',a:'steps',fam:'steps',name:'Steps Nodes',sub:'highway=steps',
+  title:'Two Steps Edges end close to each other. Snap their end Nodes?',
+  lead:'Steps are the centerline of a flight of steps. Their ends usually sit at the top and bottom landings.',
+  osw:'Steps is a core Edge: highway=steps, with optional step_count and climb fields.',
+  q:'Snap Steps Nodes that are up to',ex:[0.3,0.7,2],rec:R},
+ {id:'s_living',g:'join',kind:'dist',draw:'ends',a:'living',name:'Living Street Nodes',sub:'highway=living_street',
+  title:'Two Living Street Edges end close to each other. Snap their end Nodes?',
+  lead:'A Living Street is designed around pedestrians and cyclists. Its Nodes only snap to other Living Street Nodes.',
+  osw:'Living Street is a core Edge: highway=living_street.',
+  q:'Snap Living Street Nodes that are up to',ex:[0.3,1,2.5],rec:R},
+ {id:'s_road',g:'join',kind:'dist',draw:'ends',a:'road',name:'Motor Vehicle Road Nodes',sub:'Primary, Secondary, Tertiary & Residential Street, Service Road, Unclassified & Trunk Road',
+  title:'Two motor vehicle road Edges end close to each other. Snap their end Nodes?',
+  lead:'Primary, Secondary, Tertiary and Residential Streets, Service Roads (including Driveways, Alleys and Parking Aisles), Unclassified and Trunk Roads. Sidewalks and Crossings are described in relation to them, so snap them only if both datasets carry the same streets.',
+  osw:'OSW includes Motor Vehicle Roads as core Edges because pedestrians use them where there is no sidewalk, and Sidewalks and Crossings are referenced to them. The foot field says whether one is safe to walk.',
+  q:'Snap motor vehicle road Nodes that are up to',ex:[0.3,1,2.5],rec:R},
+ {id:'s_same',g:'join',kind:'yesno',draw:'same',name:'Coincident Nodes',sub:'same coordinate, any Edge type',
+  title:'Two Nodes sit at exactly the same coordinate. Make them one Node?',
+  lead:'Here a plain Footway ends exactly where a Crossing starts, at the curb, but each dataset has its own Node, so the two Edges are not connected. Merging coincident Nodes connects them, whatever their Edge types.',
+  osw:'Every place two Edges meet needs one Node whose _id both Edges reference. Where no other Node type applies it is a Bare Node.',
+  q:'Merge Nodes at the same coordinate into one Node',rec:true},
+ {id:'d_sidewalk',g:'dup',kind:'dist',draw:'dup',a:'sidewalk',fam:'sidewalk',name:'Duplicate Sidewalk Edges',sub:'highway=footway + footway=sidewalk',
+  title:'The same Sidewalk Edge is mapped in both datasets. Remove the duplicate?',
+  lead:'Two Edges running side by side are usually one real Sidewalk mapped twice. Too large a proximity can remove a real second Sidewalk, such as Sidewalks on both sides of a narrow street.',
+  osw:'Each OSW Edge is one centerline. Two centerlines for the same Sidewalk describe two separate, unconnected paths.',
+  q:'Treat Sidewalk Edges as duplicates when they are up to',ex:[0.3,1,2.5],rec:R},
+ {id:'d_footway',g:'dup',kind:'dist',draw:'dup',a:'footway',fam:'footway',name:'Duplicate Footway Edges',sub:'highway=footway (no footway=* subtag)',
+  title:'The same Footway Edge is mapped twice. Remove the duplicate?',
+  lead:'Footways through parks and plazas are often traced from different imagery, so copies can sit further apart than Sidewalk copies.',
+  osw:'Only Edges of the same type count as duplicates: a Footway is never removed as a duplicate of a Sidewalk.',
+  q:'Treat Footway Edges as duplicates when they are up to',ex:[0.3,1,2.5],rec:R},
+ {id:'d_pedroad',g:'dup',kind:'dist',draw:'dup',a:'pedroad',fam:'pedroad',name:'Duplicate Pedestrian Road Edges',sub:'highway=pedestrian',
+  title:'The same Pedestrian Road Edge is mapped twice. Remove the duplicate?',
+  lead:'Pedestrian Roads are wide, so two datasets may draw their centerline a little apart.',
+  osw:'Pedestrian Road is a core Edge: highway=pedestrian.',
+  q:'Treat Pedestrian Road Edges as duplicates when they are up to',ex:[0.5,1.5,3],rec:R},
+ {id:'d_steps',g:'dup',kind:'dist',draw:'dup',a:'steps',fam:'steps',name:'Duplicate Steps Edges',sub:'highway=steps',
+  title:'The same flight of Steps is mapped twice. Remove the duplicate?',
+  lead:'Steps are short, so even a small offset between the two copies is visible.',
+  osw:'Steps is a core Edge: highway=steps.',
+  q:'Treat Steps Edges as duplicates when they are up to',ex:[0.3,1,2],rec:R},
+ {id:'d_overlap',g:'dup',kind:'pct',draw:'overlap',name:'Required overlap',sub:'share of the Edge inside the buffer',
+  title:'A duplicate Edge only partly runs alongside. How much overlap removes it?',
+  lead:'An Edge is removed whole or kept whole; it is never cut. A lower share removes more partial duplicates.',
+  osw:'Removing an Edge never disconnects the network: if removing one would leave another Edge hanging, the union restores it.',
+  q:'Remove a duplicate Edge when at least this much of it runs alongside',ex:[1,0.85,0.5],rec:0.8},
+ {id:'d_crossing',g:'dup',kind:'dist',draw:'dup',a:'crossing',name:'Duplicate Crossing Edges',sub:'footway=crossing or traffic_island',
+  title:'The same Crossing Edge is mapped twice. Remove the duplicate?',
+  lead:'Crossing Edges are short, curb to curb, so even a small offset is visible.',
+  osw:'Only Edges of the same type count as duplicates: a Crossing is never removed as a duplicate of a Sidewalk.',
+  q:'Treat Crossing Edges as duplicates when they are up to',ex:[0.3,1,2],rec:R},
+ {id:'d_road',g:'dup',kind:'dist',draw:'dup',a:'road',name:'Duplicate motor vehicle road Edges',sub:'Primary … Trunk Road, Service Road',
+  title:'The same motor vehicle road Edge is mapped twice. Remove the duplicate?',
+  lead:'Only Edges of the same type count: a Sidewalk beside a Residential Street is never removed as its duplicate.',
+  osw:'Motor Vehicle Roads are core Edges, so a duplicate road splits the network just as a duplicate Sidewalk does.',
+  q:'Treat motor vehicle road Edges as duplicates when they are up to',ex:[0.5,1.5,3],rec:R},
+ {id:'c_sidewalk',g:'link',kind:'dist',draw:'tee',a:'crossing',b:'sidewalk',kerb:true,name:'Crossing → Sidewalk',sub:'new Node on the Sidewalk + connector Edge',
+  title:'A Crossing Edge ends just short of a Sidewalk Edge. Connect them?',
+  lead:'No Node moves. A new Node is added on the Sidewalk (the Sidewalk Edge is split there) and a short connector Edge closes the gap, so a route can turn from the Crossing onto the Sidewalk. The connector copies the Crossing’s highway and footway tags.',
+  osw:'OSW says a Crossing should not connect directly to a Sidewalk centerline: there is always space between them, joined by a short plain Footway, and the curb sits at the Crossing’s end. Use this case when a dataset leaves that link out.',
+  q:'Connect a Crossing to a Sidewalk when the gap is up to',ex:[0,0.4,1.2],rec:R},
+ {id:'c_road',g:'link',kind:'dist',draw:'road',name:'Crossing × motor vehicle road',sub:'new Node where the Edges cross',
+  title:'A Crossing Edge passes over a street with no shared Node. Add a Node where they cross?',
+  lead:'A new Node is added where the Crossing meets the street centerline, and both Edges are split there. A Crossing that stops just short of the street can be connected too.',
+  osw:'A road and a Crossing that intersects it should share a Node: both are split so their endpoints meet. Edges that cross without a shared Node are not connected.',
+  q:'Add crossing Nodes, and connect Crossings that stop up to',ex:['x',0.2,1],rec:R},
+ {id:'c_t_sidewalk',g:'link',kind:'dist',draw:'tee',a:'sidewalk',b:'sidewalk',fam:'sidewalk',name:'Sidewalk T-junction',sub:'Sidewalk end onto a Sidewalk, Footway, Pedestrian Road or Steps',
+  title:'A Sidewalk Edge ends just short of another Sidewalk Edge. Connect them?',
+  lead:'For example a Sidewalk meeting another Sidewalk in a T. The other Edge is split at a new Node and a connector Edge closes the gap. An Edge running alongside another is never connected this way.',
+  osw:'Edges only connect end-to-end, so a T-junction needs the through Edge split at a Node that both Edges reference.',
+  q:'Connect a Sidewalk end when the gap is up to',ex:[0.2,0.6,1.5],rec:R},
+ {id:'c_t_footway',g:'link',kind:'dist',draw:'tee',a:'footway',b:'sidewalk',fam:'footway',name:'Footway T-junction',sub:'Footway end onto a Sidewalk, Footway, Pedestrian Road or Steps',
+  title:'A Footway Edge ends just short of a Sidewalk. Connect them?',
+  lead:'For example a park path or building access Footway that stops just before the Sidewalk it should join.',
+  osw:'Edges only connect end-to-end, so a T-junction needs the through Edge split at a Node that both Edges reference.',
+  q:'Connect a Footway end when the gap is up to',ex:[0.2,0.6,1.5],rec:R},
+ {id:'c_t_pedroad',g:'link',kind:'dist',draw:'tee',a:'pedroad',b:'sidewalk',fam:'pedroad',name:'Pedestrian Road T-junction',sub:'Pedestrian Road end onto a Sidewalk, Footway, Pedestrian Road or Steps',
+  title:'A Pedestrian Road ends just short of a Sidewalk. Connect them?',
+  lead:'For example a pedestrian mall whose centerline stops just before the Sidewalk around it.',
+  osw:'Pedestrian Road is a core Edge, so it must share a Node with the Edges it meets.',
+  q:'Connect a Pedestrian Road end when the gap is up to',ex:[0.2,0.6,1.5],rec:R},
+ {id:'c_t_steps',g:'link',kind:'dist',draw:'tee',a:'steps',b:'sidewalk',fam:'steps',name:'Steps T-junction',sub:'Steps end onto a Sidewalk, Footway, Pedestrian Road or Steps',
+  title:'A flight of Steps ends just short of a Sidewalk. Connect them?',
+  lead:'For example Steps down from a building entrance that stop just before the Sidewalk.',
+  osw:'Steps is a core Edge, so its top and bottom Nodes must be shared with the Edges it meets.',
+  q:'Connect a Steps end when the gap is up to',ex:[0.2,0.6,1.5],rec:R},
+ {id:'c_living',g:'link',kind:'dist',draw:'tee',a:'crossing',b:'living',name:'Crossing → Living Street',sub:'new Node on the Living Street + connector Edge',
+  title:'A Crossing Edge ends just short of a Living Street Edge. Connect them?',
+  lead:'Works like Crossings meeting Sidewalks, for Living Streets.',
+  osw:'Living Streets are shared with pedestrians, so a Crossing can end on one.',
+  q:'Connect a Crossing to a Living Street when the gap is up to',ex:[0,0.4,1.2],rec:R},
+ {id:'x_points',g:'other',kind:'dist',draw:'points',name:'Points & Lines',sub:'Bench, Bollard, Fire Hydrant, Power Pole, Street Lamp… · Fence, Tree Row',
+  title:'The same Bench is mapped in both datasets. Keep only one?',
+  lead:'Points and Lines are adjacent entities: things beside the pedestrian network, such as Benches, Bollards, Fire Hydrants, Fences and Tree Rows. Only the same entity type merges: a Bench never merges with a Power Pole.',
+  osw:'Adjacent entities (Points, Lines, Polygons) are not part of the network graph; they relate to it only spatially, so merging them never changes routing.',
+  q:'Treat Points and Lines as the same when they are up to',ex:[0.3,1,2.5],rec:R},
+ {id:'x_build',g:'other',kind:'pct',draw:'build',name:'Polygons & Zones',sub:'Building, Wood · Pedestrian Zone',
+  title:'The same Building is mapped in both datasets. When is it the same Building?',
+  lead:'When two Polygons overlap enough, the anchor dataset’s Polygon is kept. When they overlap less, the two are merged into one. Zones, such as a Pedestrian Zone, use the same share; a merged Zone keeps referencing the final Nodes in _w_id.',
+  osw:'A Zone is a core entity: a Polygon whose boundary Nodes (_w_id) are all connected to each other. Building and Wood are adjacent Polygons.',
+  q:'Keep one Polygon when the overlap is at least',ex:[0.97,0.75,0.5],rec:0.7,needs:'x_points'}
+];
+
+/* ═════════════ answers ═════════════ */
+const recAnswers=()=>{const a={trust:'ds1',kerb:false}; STEPS.forEach(s=>{ if('rec' in s) a[s.id]=s.rec; }); return a;};
+let A=recAnswers(), view='compact', collapsed={}, ds={one:'',two:''}; const names={ds1:'',ds2:''};
+try{const v=JSON.parse(localStorage.getItem('u5wiz')||'null'); if(v){ const o=v.A||{}; [['s_path',['s_footway','s_pedroad','s_steps']],['d_path',['d_sidewalk','d_footway','d_pedroad','d_steps']],['c_tee',['c_t_sidewalk','c_t_footway','c_t_pedroad','c_t_steps']]].forEach(([k,ks])=>{ if(o[k]!=null){ ks.forEach(x=>{ if(o[x]==null) o[x]=o[k]; }); delete o[k]; } }); A=Object.assign(recAnswers(),o); if(v.view) view=v.view; if(v.collapsed) collapsed=v.collapsed; if(v.ds) ds=v.ds;}}catch(e){}
+const save=()=>{try{localStorage.setItem('u5wiz',JSON.stringify({A,view,collapsed,ds}));}catch(e){}};
+
+/* ═════════════ config (keys and ranges as content.union5_validate_config) ═════════════ */
+// Rule names say what the rule does; they label the rule in the run report and in ext:union_rule tags.
+const RULE={s_crossing:'snap_node_crossing',s_living:'snap_node_living_street',s_road:'snap_node_road',
+  d_crossing:'dedup_edge_crossing',d_road:'dedup_edge_road',
+  c_road:'connect_crossing_road',c_sidewalk:'connect_crossing_sidewalk',c_living:'connect_crossing_living_street'};
+/* The Footway family (OSW 0.3): Sidewalk, Footway (plain), Pedestrian Road, Steps.
+   Each has its own case on screen. In the configuration, types set to the same value share one rule.
+   Sidewalk, Pedestrian Road and Steps have exact matches; plain Footway does not (union 5.0 has no
+   "highway=footway with no footway=* subtag" match), so the rule that includes Footway uses the union's
+   built-in type `pedestrian` (Footway, Sidewalk, Pedestrian Road, Steps; never Crossings) and is listed last.
+   Earlier rules take their own types first. A type that is off is kept out of that last rule by a "keep" rule
+   (snap and dedup only; connect has no such rule, see famNote). */
+const FAM=['sidewalk','footway','pedroad','steps'];
+const FAMTOK={sidewalk:'sidewalk',footway:'footway',pedroad:'pedestrian_road',steps:'steps'};
+const FAMLBL={sidewalk:'Sidewalk',footway:'Footway',pedroad:'Pedestrian Road',steps:'Steps'};
+const FAMSPEC={sidewalk:'sidewalk',pedroad:{highway:'pedestrian'},steps:{highway:'steps'}};
+const FAMID={snap:t=>'s_'+t, dedup:t=>'d_'+t, connect:t=>'c_t_'+t};
+const NEVER={highway:'none'};               // matches no OSW Edge: a dedup rule with this "to" never removes anything
+let OWNER={};                               // case id -> {rule, keep} for the last configuration built
+function famRules(stage,a){
+  const v=t=>+a[FAMID[stage](t)]||0, pre={snap:'snap_node_',dedup:'dedup_edge_',connect:'connect_tjunction_'}[stage];
+  const groups=[]; FAM.forEach(t=>{ if(v(t)>0){ const g=groups.find(x=>x.val===v(t)); g? g.types.push(t) : groups.push({val:v(t),types:[t]}); } });
+  const out=[], fwg=groups.find(g=>g.types.includes('footway'));
+  const mk=(types,spec,val)=>{ const name=pre+types.map(t=>FAMTOK[t]).join('_');
+    const r= stage==='snap'?{name,type:spec,proximity:val}: stage==='dedup'?{name,from:spec,to:spec,proximity:val}:{name,from:spec,to:'pedestrian',operation:'geometry',proximity:val};
+    types.forEach(t=>OWNER[FAMID[stage](t)]={rule:r}); return r; };
+  const exact=types=> types.length===1? FAMSPEC[types[0]] : types.map(t=>FAMSPEC[t]);
+  groups.filter(g=>g!==fwg).forEach(g=>out.push(mk(g.types,exact(g.types),g.val)));
+  if(fwg){
+    if(stage!=='connect') FAM.filter(t=>t!=='footway'&&!(v(t)>0)).forEach(t=>{
+      const r= stage==='snap'? {name:'keep_node_'+FAMTOK[t],type:FAMSPEC[t],proximity:0} : {name:'keep_edge_'+FAMTOK[t],from:FAMSPEC[t],to:NEVER,proximity:0.1};
+      OWNER[FAMID[stage](t)]={rule:r,keep:true}; out.push(r); });
+    out.push(mk(fwg.types,'pedestrian',fwg.val));
+  }
+  return out;
+}
+// Connect has no "keep" rule: a Footway T-junction rule also reaches Sidewalk, Pedestrian Road and Steps ends
+// whose own T-junction value is smaller (or off). Shown on the Footway T-junction line.
+function famNote(id){
+  if(id!=='c_t_footway' || !(A.c_t_footway>0)) return '';
+  const extra=FAM.filter(t=>t!=='footway' && !((+A['c_t_'+t]||0)>=A.c_t_footway)).map(t=>FAMLBL[t]);
+  return extra.length? `Union 5.0 has no Footway-only match for connections, so this also connects ${extra.join(', ')} ends up to ${(+A.c_t_footway).toFixed(1)} m.` : '';
+}
+function buildConfig(a=A){
+  OWNER={};
+  const c={}, anch= a.trust==='ds2'?{anchor:'ds2'}:{};
+  const sr=[];
+  if(a.s_crossing>0) sr.push((OWNER.s_crossing={rule:{name:RULE.s_crossing,type:'crossing',proximity:a.s_crossing}}).rule);
+  sr.push(...famRules('snap',a));
+  if(a.s_living>0) sr.push((OWNER.s_living={rule:{name:RULE.s_living,type:'living_street',proximity:a.s_living}}).rule);
+  if(a.s_road>0) sr.push((OWNER.s_road={rule:{name:RULE.s_road,type:'road',proximity:a.s_road}}).rule);
+  if(sr.some(r=>!r.name.startsWith('keep_'))||a.s_same){ c.snap=Object.assign({mode:'custom'},anch); if(a.s_same) c.snap.coincident=true; c.snap.rules=sr; }
+  const dr=[];
+  if(a.d_crossing>0) dr.push((OWNER.d_crossing={rule:{name:RULE.d_crossing,from:'crossing',to:'crossing',proximity:a.d_crossing}}).rule);
+  dr.push(...famRules('dedup',a));
+  if(a.d_road>0) dr.push((OWNER.d_road={rule:{name:RULE.d_road,from:'road',to:'road',proximity:a.d_road}}).rule);
+  if(dr.some(r=>!r.name.startsWith('keep_'))){ c.dedup=Object.assign({mode:'custom'},a.d_overlap!==0.8?{min_overlap:a.d_overlap}:{},anch,{rules:dr}); }
+  const cr=[];
+  if(a.c_road>0) cr.push((OWNER.c_road={rule:{name:RULE.c_road,from:'crossing',to:'road',operation:'point',proximity:a.c_road}}).rule);
+  if(a.c_sidewalk>0){ const r={name:RULE.c_sidewalk,from:'crossing',to:'sidewalk',operation:'geometry',proximity:a.c_sidewalk}; if(a.kerb) r.tags={barrier:'kerb',kerb:'lowered'}; OWNER.c_sidewalk={rule:r}; cr.push(r); }
+  if(a.c_living>0) cr.push((OWNER.c_living={rule:{name:RULE.c_living,from:'crossing',to:'living_street',operation:'geometry',proximity:a.c_living}}).rule);
+  cr.push(...famRules('connect',a));
+  if(cr.length) c.connect={mode:'custom',rules:cr};
+  if(a.x_points>0){ c.extensions={mode:'default',proximity:a.x_points}; if(a.x_build!==0.7){c.extensions.polygon_overlap=a.x_build;c.extensions.zone_overlap=a.x_build;} }
+  return c;
+}
+function stepConfig(s){
+  const c=buildConfig();
+  const stage={s:'snap',d:'dedup',c:'connect'}[s.id[0]];
+  const o=OWNER[s.id]; if(o && c[stage]) return {[stage]:{rules:['…',o.rule]}};
+  switch(s.id){
+    case 'trust': return {snap:{anchor:A.trust},dedup:{anchor:A.trust}};
+    case 's_same': return A.s_same?{snap:{coincident:true}}:null;
+    case 'd_overlap': return c.dedup?{dedup:{min_overlap:A.d_overlap}}:null;
+    case 'x_points': return c.extensions?{extensions:{mode:'default',proximity:A.x_points}}:null;
+    case 'x_build': return c.extensions?{extensions:{polygon_overlap:A.x_build,zone_overlap:A.x_build}}:null;
+  }
+  return null;
+}
+
+/* ═════════════ drawings (W×H = 280×70) ═════════════ */
+const dsName=n=>(names['ds'+n]||'').trim(), dsLabel=n=>dsName(n)||`DS${n}`, dsFull=n=>dsName(n)?`${dsName(n)} (DS${n})`:`DS${n}`;
+const W=280,H=70,trusted=()=>A.trust==='ds2'?2:1;
+const svg=(inner,label)=>`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}">${inner}</svg>`;
+const lineCls=(ds,kind)=>`l${ds}${kind==='road'?' road':kind==='living'||kind==='pedroad'?' ls':''}`;
+function seg(x1,y1,x2,y2,ds,kind,extra=''){
+  let s=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="${ds==='m'?'lm':ds==='g'?'lg':lineCls(ds,kind)}" ${extra}/>`;
+  if(kind==='crossing' && ds!=='g') s+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="zebra"/>`;
+  if(kind==='steps' && ds!=='g') s+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="stepsm"/>`;
+  return s;
+}
+const dot=(x,y,ds,kerb)=> kerb?`<rect x="${x-5}" y="${y-5}" width="10" height="10" class="n${ds}"/>`:`<circle cx="${x}" cy="${y}" r="5.5" class="n${ds}"/>`;
+const madeNode=(x,y)=>`<rect x="${x-6}" y="${y-6}" width="12" height="12" transform="rotate(45 ${x} ${y})" class="nm"/>`;
+const gapLabel=(x1,x2,y,t)=>`<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" class="dim"/><line x1="${x1}" y1="${y-4}" x2="${x1}" y2="${y+4}" class="dim"/><line x1="${x2}" y1="${y-4}" x2="${x2}" y2="${y+4}" class="dim"/><text x="${(x1+x2)/2}" y="${y+14}" text-anchor="middle" class="dt">${t}</text>`;
+const m=v=>`${+(+v).toFixed(2)} m`;
+
+function drawEnds(s,d,after,yes){
+  const k=s.a, sc=40, y=30, xa=140-d*sc/2, xb=140+d*sc/2, t=trusted();
+  if(!after||!yes) return seg(16,y,xa,y,1,k)+seg(xb,y,264,y,2,k)+dot(xa,y,1)+dot(xb,y,2)+(d>0?gapLabel(xa,xb,y+16,m(d)):'');
+  const ax=t===1?xa:xb, mx=t===1?xb:xa;
+  return (t===1? seg(16,y,xa,y,1,k)+seg(xa,y,264,y,2,k) : seg(16,y,xb,y,1,k)+seg(xb,y,264,y,2,k))
+    +`<circle cx="${mx}" cy="${y}" r="5.5" class="ghost"/>`+`<circle cx="${ax}" cy="${y}" r="10" class="ring"/>`+dot(ax,y,t)
+    +`<text x="${ax}" y="${y+28}" text-anchor="middle" class="dt">one node</text>`;
+}
+function drawSame(s,after,yes){
+  const y=34;
+  let g=seg(16,y,140,y,1,'footway')+seg(140,y,264,y+10,2,'crossing');
+  if(after&&yes) return g+`<circle cx="140" cy="${y}" r="10" class="ring"/>`+dot(140,y,trusted())+`<text x="140" y="${y+28}" text-anchor="middle" class="dt">one node, connected</text>`;
+  return g+dot(137,y,1)+dot(143,y,2)+`<text x="140" y="${y+28}" text-anchor="middle" class="dt">two nodes, not connected</text>`;
+}
+function drawDup(s,d,after,yes){
+  const k=s.a, ys=k==='road'?9:13, y1=50, y2=50-d*ys, t=trusted();
+  const gone=after&&yes;
+  const l1= gone&&t===2? seg(20,y1,260,y1,'g',k) : seg(20,y1,260,y1,1,k);
+  const l2= gone&&t===1? seg(20,y2,260,y2,'g',k) : seg(20,y2,260,y2,2,k);
+  return l1+l2+`<line x1="268" y1="${y2}" x2="268" y2="${y1}" class="dim"/><text x="264" y="${Math.min(y1,y2)-6>8?Math.min(y1,y2)-6:12}" text-anchor="end" class="dt">${m(d)} apart</text>`;
+}
+function drawOverlap(s,share,after,yes){
+  const L=170, x0=20, y1=46, y2=36, x2=x0+(1-share)*L, t=trusted(), gone=after&&yes;
+  return (gone&&t===2?seg(x0,y1,x0+L,y1,'g','sidewalk'):seg(x0,y1,x0+L,y1,1,'sidewalk'))
+    +(gone&&t===1?seg(x2,y2,x2+L,y2,'g','sidewalk'):seg(x2,y2,x2+L,y2,2,'sidewalk'))
+    +`<text x="${Math.min(x2+L,262)}" y="${y2-8}" text-anchor="end" class="dt">${Math.round(share*100)} % alongside</text>`;
+}
+function drawTee(s,d,after,yes){
+  const bx=180, y=34, sc=40, ax=bx-d*sc, kerb=s.a==='crossing'&&s.b==='sidewalk';
+  let g=seg(bx,6,bx,64,1,s.b)+seg(16,y,ax,y,2,s.a);
+  if(after&&yes){
+    if(d>0) g+=seg(ax,y,bx,y,'m');
+    g+=`<line x1="${bx-10}" y1="${y-14}" x2="${bx+10}" y2="${y-14}" class="tick"/><line x1="${bx-10}" y1="${y+14}" x2="${bx+10}" y2="${y+14}" class="tick"/>`;
+    g+=(d>0?dot(ax,y,2,kerb):'')+madeNode(bx,y)+`<text x="${bx+14}" y="${y+4}" class="dt">${d>0?'new node + connector':'edge split at node'}</text>`;
+    return g;
+  }
+  g+=dot(ax,y,2,kerb);
+  return g+(d>0?gapLabel(ax,bx,y+16,m(d)):`<text x="${bx+12}" y="${y+4}" class="dt">ends on it, not connected</text>`);
+}
+function drawRoad(s,d,after,yes){
+  const bx=170,y=34,sc=40, through=d==='x', ax= through?264: bx-d*sc;
+  let g=seg(bx,4,bx,66,1,'road')+seg(16,y,ax,y,2,'crossing');
+  if(after&&yes){
+    if(!through) g+=seg(ax,y,bx,y,'m')+dot(ax,y,2);
+    g+=madeNode(bx,y)+`<text x="${bx+12}" y="${y-12}" class="dt">new node</text>`;
+    return g;
+  }
+  if(!through) g+=dot(ax,y,2)+gapLabel(ax,bx,y+16,m(d));
+  else g+=`<text x="${bx+12}" y="${y-12}" class="dt">no shared node</text>`;
+  return g;
+}
+function drawPoints(s,d,after,yes){
+  const sc=40,y=34,xa=140-d*sc/2,xb=140+d*sc/2,t=trusted();
+  const bench=(x,cls)=>`<rect x="${x-9}" y="${y-5}" width="18" height="10" rx="2" class="${cls}"/>`;
+  if(after&&yes){ const ax=t===1?xa:xb, mx=t===1?xb:xa; return `<rect x="${mx-9}" y="${y-5}" width="18" height="10" rx="2" class="pg"/>`+bench(ax,t===1?'p1':'p2')+`<circle cx="${ax}" cy="${y}" r="15" class="ring"/><text x="${ax}" y="${y+30}" text-anchor="middle" class="dt">one Bench</text>`; }
+  return bench(xa,'p1')+bench(xb,'p2')+gapLabel(xa,xb,y+18,m(d));
+}
+function drawBuild(s,share,after,yes,thr){
+  const w=44,x=110,y=12,dx=(1-share)*w,t=trusted();
+  if(!after) return `<rect x="${x}" y="${y}" width="${w}" height="${w}" class="p1"/><rect x="${x+dx}" y="${y+2}" width="${w}" height="${w}" class="p2"/><text x="${x+w+dx+8}" y="${y+26}" class="dt">${Math.round(share*100)} % overlap</text>`;
+  if(share>=thr){ const keepX=t===1?x:x+dx, goX=t===1?x+dx:x; return `<rect x="${goX}" y="${y+2}" width="${w}" height="${w}" class="pg"/><rect x="${keepX}" y="${y}" width="${w}" height="${w}" class="${t===1?'p1':'p2'}"/><text x="${x+w+dx+8}" y="${y+26}" class="dt">one Building</text>`; }
+  return `<path d="M${x},${y} h${w} v2 h${dx} v${w} h-${w} v-2 h-${dx} z" class="pm"/><text x="${x+w+dx+8}" y="${y+26}" class="dt">polygons merged</text>`;
+}
+
+/* example outcome for the current answer */
+function outcome(s,e){
+  const v=A[s.id];
+  if(s.kind==='pct'){
+    if(s.id==='d_overlap'){ const any=dedupOn(); if(!any) return {yes:false,text:'Not used: no duplicate Edges are removed',na:true}; const y=e>=v-1e-9; return {yes:y,text:y?'Duplicate edge removed':'Both edges kept'}; }
+    if(!(A.x_points>0)) return {yes:false,text:'Not used: extension features are kept as they are',na:true};
+    const y=e>=v-1e-9; return {yes:true,keep:y,text:y?'One Building polygon kept':'Merged into one polygon'};
+  }
+  if(s.kind==='yesno') return {yes:!!v,text:v?'Merged into one node':'Left as two nodes'};
+  if(!(v>0)) return {yes:false,text:'Left as mapped'};
+  if(s.draw==='road' && e==='x') return {yes:true,text:'New node added'};
+  const y=e<=v+1e-9;
+  const words={ends:['Snapped into one node','Left as two nodes'],dup:['Duplicate edge removed','Both edges kept'],tee:['Connected','Not connected'],road:['Connected to the Street','Not connected'],points:['One Bench kept','Both kept']}[s.draw];
+  return {yes:y,text:y?words[0]:words[1]};
+}
+function draw(s,e,after){
+  const o=outcome(s,e), yes=o.yes;
+  switch(s.draw){
+    case 'ends': return drawEnds(s,e,after,yes);
+    case 'same': return drawSame(s,after,yes);
+    case 'dup': return drawDup(s,e,after,yes);
+    case 'overlap': return drawOverlap(s,e,after,yes&&!o.na);
+    case 'tee': return drawTee(s,e,after,yes);
+    case 'road': return drawRoad(s,e,after,yes);
+    case 'points': return drawPoints(s,e,after,yes);
+    case 'build': return drawBuild(s,e,after&&!o.na,true,A[s.id]);
+  }
+}
+function exLabel(s,e){
+  if(s.draw==='same') return ['Same coordinate','Footway meets Crossing at the curb'];
+  if(s.draw==='overlap') return [`${Math.round(e*100)} % alongside`, e===1?'a full duplicate':e>0.8?'mostly a duplicate':'half a duplicate'];
+  if(s.draw==='build') return [`${Math.round(e*100)} % overlap`, e>0.9?'nearly identical':e>0.6?'roughly the same':'only half overlaps'];
+  if(s.draw==='road' && e==='x') return ['Crosses the Street','no shared node'];
+  if(s.draw==='tee' && e===0) return ['Ends on the edge','touching, no shared node'];
+  const n={ends:'apart',dup:'apart',tee:'gap',road:'gap',points:'apart'}[s.draw];
+  return [m(e)+' '+n, s.draw==='road'?'stops short of the Street':s.draw==='tee'?'end node short of the edge':''];
+}
+
+/* ═════════════ rendering ═════════════ */
+const $=id=>document.getElementById(id);
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function exRows(s){
+  const exs= s.draw==='same'?[null]: s.ex;
+  return `<div class="examples">${exs.map(e=>{const [l,sub]=exLabel(s,e), o=outcome(s,e);
+    return `<div class="ex"><div class="lbl">${l}${sub?`<small>${sub}</small>`:''}</div>
+      <div><div class="cap">Before</div>${svg(draw(s,e,false),'Before: '+l)}</div><div class="arr" aria-hidden="true">→</div>
+      <div class="aft"><div class="cap">After</div>${svg(draw(s,e,true),'After: '+o.text)}</div>
+      <div class="res ${o.yes&&!o.na?'y':'n'}"><i>${o.yes&&!o.na?'✓':'–'}</i>${o.text}</div></div>`;}).join('')}</div>`;
+}
+
+const dedupOn=()=>['d_crossing','d_road',...FAM.map(t=>'d_'+t)].some(k=>A[k]>0);
+function chosen(s){
+  const v=A[s.id];
+  if(s.kind==='choice') return {txt:dsLabel(A.trust==='ds2'?2:1),off:false,rec:A.trust==='ds1'};
+  if(s.kind==='yesno') return {txt:v?'Yes':'No',off:!v,rec:v===s.rec};
+  if(s.kind==='pct'){ const na=(s.id==='d_overlap'&&!dedupOn())||(s.id==='x_build'&&!(A.x_points>0)); return {txt:na?'Not used':`${Math.round(v*100)} %`,off:na,rec:Math.abs(v-s.rec)<1e-9}; }
+  return {txt:v>0?`${(+v).toFixed(1)} m`:'Off',off:!(v>0),rec:Math.abs(v-s.rec)<1e-9,};
+}
+function thumbsHTML(s){
+  if(view==='detail' && s.kind!=='choice') return exRows(s);
+  if(s.kind==='choice') return `<p class="note">${esc(dsFull(A.trust==='ds2'?2:1))} Nodes and Edges stay in place; the other dataset’s Nodes are snapped onto them and its duplicate Edges are removed.</p>`;
+  const exs=s.draw==='same'?[null]:s.ex;
+  return `<div class="thumbs ${exs.length===1?'one':''}">${exs.map(e=>{const o=outcome(s,e), ok=o.yes&&!o.na, l=exLabel(s,e)[0];
+    return `<div class="thumb">${svg(draw(s,e,true),l+': '+o.text)}<span class="${ok?'y':''}" title="${esc(l+' — '+o.text)}">${ok?'✓ ':''}${esc(l)}</span></div>`;}).join('')}</div>`;
+}
+function valueHTML(s){
+  const c=chosen(s), v=A[s.id];
+  let ctl;
+  if(s.kind==='dist') ctl=`<label class="num"><input type="number" id="n-${s.id}" data-num="${s.id}" min="0" max="5" step="0.1" value="${(+v).toFixed(1)}" aria-label="${esc(s.name)} proximity in metres"><span>m</span></label>`;
+  else if(s.kind==='pct') ctl=`<label class="num"><input type="number" id="n-${s.id}" data-num="${s.id}" min="30" max="100" step="5" value="${Math.round(v*100)}" ${c.off?'disabled':''} aria-label="${esc(s.name)} in percent"><span>%</span></label>`;
+  else ctl=`<b class="${c.off?'offv':''}" style="font:700 15px var(--f-alt);color:${c.off?'var(--off)':'var(--brand)'}">${esc(c.txt)}</b>`;
+  const kerb= s.kerb? `<label class="kerbopt"><input type="checkbox" data-kerb="1" ${A.kerb?'checked':''} ${v>0?'':'disabled'}><span>Tag as Curb Ramp (barrier=kerb, kerb=lowered)</span></label>`:'';
+  return ctl+`<span class="pref ${c.rec?'rec':'own'}" id="p-${s.id}">${c.rec?'Recommended':'Your value'}</span>${kerb}`;
+}
+function infoHTML(s){
+  const recTxt= s.kind==='choice'?esc(dsFull(1)): s.kind==='yesno'?(s.rec?'Yes':'No'): s.kind==='pct'?Math.round(s.rec*100)+' %': s.rec+' m';
+  const range= s.kind==='dist'?'0 to 5 m (0 turns it off)': s.kind==='pct'?'30 to 100 %':'';
+  return `<b>${esc(s.title)}</b><span>${s.lead}</span>${s.osw?`<span class="oswref"><span class="osw-tag">OSW 0.3</span>${esc(s.osw)}</span>`:''}<span class="note">Recommended: ${recTxt}${range?` · Allowed: ${range}`:''}${s.sub?` · Applies to: ${esc(s.sub)}`:''}${OWNER[s.id]&&!OWNER[s.id].keep?` · Rule name in the run report: <code>${OWNER[s.id].rule.name}</code>`:''}</span>`;
+}
+function itemCfgText(s){ const c=stepConfig(s); return c? JSON.stringify(c,null,2) : 'Nothing — these features are left exactly as mapped.'; }
+function itemHTML(s,i){
+  const c=chosen(s);
+  const det=view==='detail';
+  return `<div class="item ${det?'detail':''} ${c.off?'isoff':''}" id="it-${s.id}"><div class="row1">
+      <div class="nmrow"><div class="nm">${esc(s.name)}${s.sub?`<small>${esc(s.sub)}</small>`:''}</div>
+        <button class="info" data-info="${s.id}" aria-expanded="${det}" aria-controls="ib-${s.id}" aria-label="About ${esc(s.name)}">i</button></div>
+      ${det?'':`<div id="th-${s.id}">${thumbsHTML(s)}</div>`}
+      <div class="chip" id="v-${s.id}">${valueHTML(s)}</div>
+      <div id="sw-${s.id}">${switchHTML(s)}</div></div>
+    <p class="fnote" id="fn-${s.id}" ${famNote(s.id)?'':'hidden'}>${esc(famNote(s.id))}</p>
+    <div class="infobox" id="ib-${s.id}" ${det?'':'hidden'}>${infoHTML(s)}</div>
+    ${det?`<div id="th-${s.id}">${thumbsHTML(s)}</div>`:''}
+    <details class="icfg"><summary>Configuration for this case</summary><div class="body"><pre id="cf-${s.id}">${esc(itemCfgText(s))}</pre>
+      <div class="ctl-row"><button class="btn ghost sm" data-copyitem="${s.id}">Copy</button><span class="toast" id="t-${s.id}"></span></div></div></details></div>`;
+}
+function switchHTML(s){
+  if(s.kind==='choice') return `<div class="mini" role="group" aria-label="Anchor dataset"><button data-qtrust="ds1" aria-pressed="${A.trust==='ds1'}" title="${esc(dsFull(1))}">${esc(dsLabel(1))}</button><button data-qtrust="ds2" aria-pressed="${A.trust==='ds2'}" title="${esc(dsFull(2))}">${esc(dsLabel(2))}</button></div>`;
+  if(s.kind==='pct') return `<span class="dep">${chosen(s).off?'Turns on with the step above':'Follows the step above'}</span>`;
+  const on= s.kind==='yesno'? !!A[s.id] : A[s.id]>0;
+  return `<button class="sw" role="switch" aria-checked="${on}" data-sw="${s.id}" aria-label="${esc(s.name)}"><span class="tr"></span>${on?'On':'Off'}</button>`;
+}
+function totalsHTML(){
+  const items=STEPS;
+  const on=items.filter(s=>!chosen(s).off && s.kind!=='choice').length, off=items.filter(s=>chosen(s).off).length, own=items.filter(s=>!chosen(s).rec).length;
+  return `<span class="stat"><i style="background:var(--ok)"></i><b>${on}</b> on</span><span class="stat"><i style="background:var(--off)"></i><b>${off}</b> left as mapped</span><span class="stat"><i style="background:var(--made)"></i><b>${own}</b> changed from recommended</span>`;
+}
+/* refresh one review line (and everything that depends on it) without re-rendering the value box being typed in */
+function refreshReview(changedId){
+  STEPS.forEach(s=>{
+    const it=$('it-'+s.id); if(!it) return;
+    const c=chosen(s); it.classList.toggle('isoff',c.off);
+    const th=$('th-'+s.id), newTh=thumbsHTML(s); if(th.innerHTML!==newTh) th.innerHTML=newTh;
+    $('sw-'+s.id).innerHTML=switchHTML(s);
+    $('cf-'+s.id).textContent=itemCfgText(s);
+    if(s.id===changedId){ const p=$('p-'+s.id); if(p){p.className='pref '+(c.rec?'rec':'own'); p.textContent=c.rec?'Recommended':'Your value';} const k=$('v-'+s.id).querySelector('[data-kerb]'); if(k) k.disabled=!(A[s.id]>0); }
+    else $('v-'+s.id).innerHTML=valueHTML(s);
+  });
+  STEPS.forEach(s=>{ const ib=$('ib-'+s.id); if(ib) ib.innerHTML=infoHTML(s); const fn=$('fn-'+s.id); if(fn){ const t=famNote(s.id); fn.textContent=t; fn.hidden=!t; } });
+  GROUPS.forEach(([k])=>{ const g=$('gs-'+k); if(g) g.textContent=groupSum(k); });
+  $('totals').innerHTML=totalsHTML(); $('full').textContent=JSON.stringify(buildConfig(),null,2);
+  $('legend').innerHTML=legendHTML(); $('barsum').innerHTML=barSum(); refreshDatasets(); refreshLead(); save();
+}
+function groupSum(k){
+  const its=STEPS.filter(s=>s.g===k), on=its.filter(s=>!chosen(s).off&&s.kind!=='choice').length, own=its.filter(s=>!chosen(s).rec).length;
+  if(k==='start') return `${dsLabel(A.trust==='ds2'?2:1)} is the anchor${own?'':' · recommended'}`;
+  return `${its.length} case${its.length>1?'s':''} · ${on} on · ${own?own+' changed':'all recommended'}`;
+}
+function legendHTML(){ return `<span><i style="background:var(--ds1)"></i>${esc(dsFull(1))}</span><span><i style="background:var(--ds2)"></i>${esc(dsFull(2))}</span><span><i style="background:var(--made)"></i>Created by the union</span><span><i style="background:var(--gone)"></i>Removed</span>`; }
+const SEARCH_ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>';
+function dsProblem(){ const a=ds.one.trim(), b=ds.two.trim(); return a&&b&&a===b ? 'DS1 and DS2 must be different datasets.' : ''; }
+function datasetsHTML(){
+  const one=(n,key,hint)=>`<div class="dsf"><span class="lbl"><i style="background:var(--ds${n})"></i>Dataset ${n} (DS${n})<span class="anc" id="anc${n}" ${A.trust===('ds'+n)?'':'hidden'}>Anchor</span></span>
+    <div class="search">${SEARCH_ICON}<input type="search" id="ds-${key}" data-ds="${key}" value="${esc(ds[key])}" placeholder="Search name or paste TDEI dataset ID" autocomplete="off" spellcheck="false" aria-describedby="dsh-${key}"></div>
+    <span class="ak" id="dsh-${key}">${hint}</span></div>`;
+  return one(1,'one','The base dataset.')+one(2,'two','The dataset merged into the base.');
+}
+function refreshDatasets(){
+  const prob=dsProblem(); ['one','two'].forEach((k,i)=>{ const inp=$('ds-'+k), h=$('dsh-'+k); if(inp) inp.classList.toggle('bad',!!prob); if(h){ h.textContent= prob&&k==='two'?prob:(k==='one'?'The base dataset.':'The dataset merged into the base.'); h.classList.toggle('err',!!prob&&k==='two'); } });
+  [1,2].forEach(n=>{ const b=$('anc'+n); if(b) b.hidden= A.trust!==('ds'+n); });
+  const run=$('run'), ready=ds.one.trim()&&ds.two.trim()&&!prob; if(run){ run.disabled=!ready; run.title= ready?'':'Choose DS1 and DS2 first'; }
+}
+function barSum(){
+  const its=STEPS.filter(s=>s.kind!=='choice'), on=its.filter(s=>!chosen(s).off).length;
+  const pick=k=>ds[k].trim()?esc(ds[k].trim()):'not chosen';
+  return `<b>${on} of ${its.length} operations on</b><small>DS1: ${pick('one')} · DS2: ${pick('two')} · anchor ${A.trust==='ds2'?'DS2':'DS1'}</small>`;
+}
+function viewHTML(){
+  const c=buildConfig(), empty=!Object.keys(c).length;
+  const groups=GROUPS.map(([k,t])=>{ const open=!collapsed[k];
+    return `<section class="rgroup"><button class="ghead" data-grp="${k}" aria-expanded="${open}" aria-controls="gb-${k}"><span class="chev" aria-hidden="true"></span><h3>${t}</h3><span class="gsum" id="gs-${k}">${groupSum(k)}</span></button>
+    <div class="gbody" id="gb-${k}" ${open?'':'hidden'}>${STEPS.map((s,i)=>[s,i]).filter(([s])=>s.g===k).map(([s,i])=>itemHTML(s,i)).join('')}</div></section>`; }).join('');
+  return `<header class="head">
+      <div class="top"><div class="l"><span class="eyebrow">Union 5.0</span><h2>Union configuration</h2>
+        <p class="lead" id="lead">${leadText(empty)}</p></div>
+        <button class="btn ghost sm" id="loadopen">Load configuration</button></div>
+      <div class="datasets" id="datasets">${datasetsHTML()}</div>
+      <div class="status"><div class="stats" id="totals">${totalsHTML()}</div>
+        <div class="qa"><button id="reset">Reset to recommended</button><span aria-hidden="true">·</span><button id="alloff">Turn everything off</button></div></div>
+    </header>
+    ${loadPanelHTML()}
+    <div class="toolbar"><div class="legend" id="legend">${legendHTML()}</div>
+      <div class="tright"><div class="qa"><button id="expall">Expand all</button><span aria-hidden="true">·</span><button id="colall">Collapse all</button></div>
+      <div class="mini" role="group" aria-label="View"><button data-view="compact" aria-pressed="${view==='compact'}">Compact</button><button data-view="detail" aria-pressed="${view==='detail'}">Detailed</button></div></div></div>
+    ${groups}
+    <div class="cfg"><h3>Union configuration</h3><pre id="full">${esc(JSON.stringify(c,null,2))}</pre>
+    <p class="note">Paste this into the union job’s configuration. Any node, edge or feature type not listed is left exactly as mapped.</p></div>`;
+}
+function leadText(empty){ return empty?`Everything is off, so the union returns ${dsFull(1)} and ${dsFull(2)} together, unchanged.`
+  :'Set a value or switch each case on or off. The pictures show what the union produces.'; }
+/* ═════════════ load an existing configuration back into the cases ═════════════ */
+// Reads a union 5.0 config (or a whole union request body with a "config" key) and maps it onto the
+// cases on this page. Anything the page has no case for is listed so nothing is dropped silently.
+function readConfig(text){
+  let j; try{ j=JSON.parse(text); }catch(e){ return {error:'This is not valid JSON. Paste the configuration exactly as it was copied.'}; }
+  if(j && typeof j==='object' && !Array.isArray(j) && j.config && typeof j.config==='object') j=j.config;
+  if(!j || typeof j!=='object' || Array.isArray(j)) return {error:'Expected a configuration object such as {"snap": {...}, "connect": {...}}.'};
+  const known=['snap','dedup','connect','extensions'], extra=Object.keys(j).filter(k=>!known.includes(k));
+  if(extra.length) return {error:`Unknown section${extra.length>1?'s':''} ${extra.map(k=>`“${k}”`).join(', ')}. A union 5.0 configuration only has snap, dedup, connect and extensions.`};
+  const a=offState(), notes=[], dist=(v,where)=>{ const n=+v; if(!(n>=0)){ notes.push(`${where}: proximity “${v}” is not a number; turned off.`); return 0; } if(n>5){ notes.push(`${where}: ${n} m is above the 5 m limit; set to 5 m.`); return 5; } return Math.round(n*10)/10; };
+  const stagePx=(st)=> st.proximity!=null? +st.proximity : 0.5;
+  const isType=(t,name)=> t===name;
+  const typeTxt=t=> typeof t==='string'? t : JSON.stringify(t);
+  // Footway family: which OSW types a rule's type covers ('ALL' = the built-in pedestrian type: every type not taken by an earlier rule)
+  const famOf=t=>{ if(t==='pedestrian') return 'ALL'; if(t==='sidewalk') return ['sidewalk'];
+    if(t&&typeof t==='object'&&!Array.isArray(t)){ const k=Object.keys(t); if(k.length===1&&k[0]==='highway'){ const h=[].concat(t.highway); const m=h.map(x=>x==='pedestrian'?'pedroad':x==='steps'?'steps':x==='footway'?'footway':null); return m.includes(null)?null:m; } return null; }
+    if(Array.isArray(t)){ let o=[]; for(const x of t){ const f=famOf(x); if(!f||f==='ALL') return null; o=o.concat(f); } return o; } return null; };
+  const famSet=(claimed,f)=> f==='ALL'? FAM.filter(x=>!claimed.has(x)) : f.filter(x=>!claimed.has(x));
+  const isNever=t=> JSON.stringify(t)===JSON.stringify(NEVER);
+  let anchor=null; const setAnchor=(st,where)=>{ if(st.anchor){ if(anchor && anchor!==st.anchor) notes.push(`${where} uses anchor ${st.anchor} but another stage uses ${anchor}; this page uses one anchor for both, so ${anchor} is kept.`); else anchor=st.anchor; } };
+
+  // snap
+  const sn=j.snap;
+  if(sn && sn.mode && sn.mode!=='off'){
+    setAnchor(sn,'snap');
+    if(sn.attributes==='anchor_only') notes.push('snap.attributes “anchor_only” is not offered here; attributes will be merged.');
+    if(sn.mode==='default'){ const p=dist(stagePx(sn),'snap'); Object.assign(a,{s_crossing:p,s_living:p,s_road:p}); FAM.forEach(t=>a['s_'+t]=p); a.s_same= sn.coincident!==false;
+      notes.push('snap default also snaps “other” edge types (Edges that are not Sidewalk, Footway, Pedestrian Road, Steps, Crossing, Living Street or motor vehicle road Edges); this page has no case for them, so they will no longer snap.'); }
+    else {
+      a.s_same= sn.coincident===true;
+      if(sn.others!=null) notes.push(`snap.others (${sn.others} m) has no case here and will be dropped.`);
+      const claimed=new Set();
+      (sn.rules||[]).forEach((r,i)=>{ const w=`snap rule ${i+1}${r.name?` “${r.name}”`:''}`;
+        if(r.anchor && r.anchor!==sn.anchor) notes.push(`${w}: its own anchor (${r.anchor}) is not offered here; the page anchor is used.`);
+        const p= dist(r.proximity!=null?r.proximity:stagePx(sn), w);
+        const f=famOf(r.type);
+        if(f){ famSet(claimed,f).forEach(t=>{ a['s_'+t]=p; claimed.add(t); }); }
+        else if(isType(r.type,'crossing')) a.s_crossing=p;
+        else if(isType(r.type,'living_street')) a.s_living=p; else if(isType(r.type,'road')) a.s_road=p;
+        else notes.push(`${w}: type ${typeTxt(r.type)} has no case here and will be dropped.`); });
+    }
+  }
+  // dedup
+  const dd=j.dedup;
+  if(dd && dd.mode && dd.mode!=='off'){
+    setAnchor(dd,'dedup');
+    if(dd.min_overlap!=null) a.d_overlap=Math.min(1,Math.max(0.3,+dd.min_overlap));
+    if(dd.mode==='default'){ const p=dist(stagePx(dd),'dedup'); Object.assign(a,{d_crossing:p,d_road:p}); FAM.forEach(t=>a['d_'+t]=p);
+      notes.push('dedup default also removes duplicate Living Street and “other” Edges; this page has no case for those, so they will be kept.'); }
+    else { const claimed=new Set(); (dd.rules||[]).forEach((r,i)=>{ const w=`dedup rule ${i+1}${r.name?` “${r.name}”`:''}`;
+      const f=famOf(r.from);
+      if(f && isNever(r.to)){ famSet(claimed,f).forEach(t=>{ a['d_'+t]=0; claimed.add(t); }); return; }
+      if(r.min_overlap!=null && +r.min_overlap!==+a.d_overlap) notes.push(`${w}: its own overlap (${Math.round(r.min_overlap*100)} %) is replaced by the page’s single overlap setting.`);
+      const p= dist(r.proximity!=null?r.proximity:stagePx(dd), w);
+      const pair=`${typeTxt(r.from)}→${typeTxt(r.to)}`;
+      if(f && famOf(r.to)){ famSet(claimed,f).forEach(t=>{ a['d_'+t]=p; claimed.add(t); }); }
+      else if(pair==='crossing→crossing') a.d_crossing=p; else if(pair==='road→road') a.d_road=p;
+      else notes.push(`${w}: ${typeTxt(r.from)} → ${typeTxt(r.to)} has no case here and will be dropped.`); }); }
+  }
+  // connect
+  const cn=j.connect;
+  if(cn && cn.mode && cn.mode!=='off'){
+    if(cn.mode==='default'){ const p=dist(stagePx(cn),'connect'); Object.assign(a,{c_road:p,c_sidewalk:p,c_living:p}); FAM.forEach(t=>a['c_t_'+t]=p);
+      notes.push('connect default also connects Living Street to Living Street and Crossing to Crossing; this page has no case for those, so they will not be connected.'); }
+    else { const claimed=new Set(); (cn.rules||[]).forEach((r,i)=>{ const w=`connect rule ${i+1}${r.name?` “${r.name}”`:''}`;
+      const p= dist(r.proximity!=null?r.proximity:stagePx(cn), w), key=`${typeTxt(r.from)}→${typeTxt(r.to)}:${r.operation}`;
+      const tags=r.tags||{}, tagKeys=Object.keys(tags);
+      if(key==='crossing→road:point') a.c_road=p;
+      else if(key==='crossing→sidewalk:geometry'){ a.c_sidewalk=p; a.kerb= tags.barrier==='kerb'; }
+      else if(key==='crossing→living_street:geometry') a.c_living=p;
+      else if(r.operation==='geometry' && famOf(r.from) && famOf(r.to)) famSet(claimed,famOf(r.from)).forEach(t=>{ a['c_t_'+t]=p; claimed.add(t); });
+      else { notes.push(`${w}: ${typeTxt(r.from)} → ${typeTxt(r.to)} (${r.operation}) has no case here and will be dropped.`); return; }
+      const other=tagKeys.filter(k=>!(key.startsWith('crossing→sidewalk') && (k==='barrier'||k==='kerb')));
+      if(other.length) notes.push(`${w}: tag${other.length>1?'s':''} ${other.join(', ')} ${other.length>1?'are':'is'} not offered here and will be dropped.`); }); }
+  }
+  // extensions
+  const ex=j.extensions;
+  if(ex && ex.mode==='default'){
+    a.x_points= dist(ex.proximity!=null?ex.proximity:0.5,'extensions') || 0.1;
+    if(ex.polygon_overlap!=null) a.x_build=Math.min(1,Math.max(0.3,+ex.polygon_overlap));
+    if(ex.line_overlap!=null && +ex.line_overlap!==0.7) notes.push(`extensions.line_overlap (${Math.round(ex.line_overlap*100)} %) is not offered here; the union default (70 %) will be used.`);
+    if(ex.zone_overlap!=null && ex.polygon_overlap!=null && +ex.zone_overlap!==+ex.polygon_overlap) notes.push('extensions.zone_overlap differs from polygon_overlap; this page uses one value for both (the polygon one).');
+  }
+  a.trust= anchor||'ds1';
+  return {answers:a,notes};
+}
+function offState(){ const a=recAnswers(); STEPS.forEach(s=>{ if(s.kind==='dist') a[s.id]=0; if(s.kind==='yesno') a[s.id]=false; }); a.kerb=false; return a; }
+function loadPanelHTML(){
+  return `<div class="loadp" id="loadp" hidden><h3>Load an existing configuration</h3>
+    <p class="note">Paste a union configuration, or a whole union request that contains one. Every case below is set from it.</p>
+    <textarea id="loadtxt" rows="7" spellcheck="false" placeholder='{"snap": {"mode": "default", "proximity": 1}}' aria-label="Configuration to load"></textarea>
+    <div id="loadmsg"></div>
+    <div class="ctl-row"><button class="btn" id="loadgo">Load</button><button class="btn ghost" id="loadcancel">Cancel</button></div></div>`;
+}
+let pendingLoad=null;
+function tryLoad(){
+  const r=readConfig($('loadtxt').value), m=$('loadmsg');
+  if(r.error){ pendingLoad=null; m.innerHTML=`<p class="lerr">${esc(r.error)}</p>`; return; }
+  if(r.notes.length && !pendingLoad){ pendingLoad=r;
+    m.innerHTML=`<div class="lwarn"><b>Some settings have no case on this page.</b> If you load it, they are left out of the configuration this page produces:<ul>${r.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul></div>`;
+    $('loadgo').textContent='Load anyway'; return; }
+  A=Object.assign(r.answers,{_last:{}}); pendingLoad=null; render(); save(); flash('Configuration loaded');
+}
+function render(){ $('app').innerHTML=viewHTML(); $('barsum').innerHTML=barSum(); refreshDatasets(); }
+const refreshLead=()=>{ const l=$('lead'); if(l) l.textContent=leadText(!Object.keys(buildConfig()).length); };
+
+document.addEventListener('input',e=>{
+  const d=e.target.dataset||{};
+  if(d.num){ const st=STEPS.find(x=>x.id===d.num); let v=parseFloat(e.target.value); if(isNaN(v)) return;
+    v= st.kind==='pct'? Math.min(100,Math.max(30,v))/100 : Math.min(5,Math.max(0,Math.round(v*10)/10));
+    A[d.num]=v; refreshReview(d.num); refreshLead(); return; }
+  if(d.kerb){ A.kerb=e.target.checked; refreshReview(); }
+  if(d.ds){ ds[d.ds]=e.target.value; $('barsum').innerHTML=barSum(); refreshDatasets(); save();
+    document.dispatchEvent(new CustomEvent('tdei-dataset-search',{detail:{dataset:d.ds==='one'?'DS1':'DS2',query:e.target.value}})); }
+});
+document.addEventListener('input',e=>{ if(e.target.id==='loadtxt' && pendingLoad){ pendingLoad=null; $('loadmsg').innerHTML=''; $('loadgo').textContent='Load'; } });
+document.addEventListener('change',e=>{ const nid=e.target.dataset&&e.target.dataset.num; if(nid){ const st=STEPS.find(x=>x.id===nid); e.target.value= st.kind==='pct'?Math.round(A[nid]*100):(+A[nid]).toFixed(1); } });
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  if(b.id==='reset'){ A=Object.assign(recAnswers(),{trust:A.trust}); render(); save(); return flash('Recommended values restored'); }
+  if(b.id==='alloff'){ A._last={}; STEPS.forEach(s=>{ if(s.kind==='dist'){ if(A[s.id]>0) A._last[s.id]=A[s.id]; A[s.id]=0; } if(s.kind==='yesno') A[s.id]=false; }); render(); save(); return flash('Everything turned off'); }
+  if(b.id==='loadopen'){ const lp=$('loadp'); lp.hidden=!lp.hidden; if(!lp.hidden) $('loadtxt').focus(); return; }
+  if(b.id==='loadcancel'){ $('loadp').hidden=true; $('loadtxt').value=''; $('loadmsg').innerHTML=''; pendingLoad=null; $('loadgo').textContent='Load'; return; }
+  if(b.id==='loadgo') return tryLoad();
+  if(b.dataset.grp){ const k=b.dataset.grp, open=b.getAttribute('aria-expanded')!=='true'; collapsed[k]=!open; b.setAttribute('aria-expanded',String(open)); $('gb-'+k).hidden=!open; save(); return; }
+  if(b.id==='expall'||b.id==='colall'){ const c=b.id==='colall'; GROUPS.forEach(([k])=>collapsed[k]=c); render(); save(); return; }
+  if(b.id==='run'){ if(b.disabled) return; document.dispatchEvent(new CustomEvent('tdei-union-run',{detail:{tdei_dataset_id_one:ds.one.trim(),tdei_dataset_id_two:ds.two.trim(),config:buildConfig()}})); return flash('Run is not connected yet'); }
+  if(b.dataset.view){ view=b.dataset.view; render(); save(); return; }
+  if(b.dataset.info){ const box=$('ib-'+b.dataset.info), open=box.hidden; box.hidden=!open; b.setAttribute('aria-expanded',String(open)); return; }
+  if(b.dataset.copyitem){ const id=b.dataset.copyitem; return copy($('cf-'+id),'t-'+id); }
+  if(b.dataset.qtrust){ A.trust=b.dataset.qtrust; refreshReview(); return; }
+  if(b.dataset.sw){ const st=STEPS.find(x=>x.id===b.dataset.sw); A._last=A._last||{};
+    if(st.kind==='yesno') A[st.id]=!A[st.id];
+    else if(A[st.id]>0){ A._last[st.id]=A[st.id]; A[st.id]=0; }
+    else A[st.id]=A._last[st.id]||st.rec;
+    refreshReview(); refreshLead();
+    const el=document.querySelector(`[data-sw="${st.id}"]`); if(el) el.focus({preventScroll:true}); return; }
+  if(b.id==='copy') return copy($('full'));
+});
+function copy(el,tid){
+  const done=()=>flash('Copied',tid), fallback=()=>{const r=document.createRange();r.selectNodeContents(el);const sl=getSelection();sl.removeAllRanges();sl.addRange(r);flash('Selected — press Ctrl+C or Cmd+C',tid);};
+  try{ navigator.clipboard.writeText(el.textContent).then(done,fallback); }catch(err){ fallback(); }
+}
+function flash(t,tid){ const el=$(tid||'toast'); if(!el) return; el.textContent=t; clearTimeout(flash.t); flash.t=setTimeout(()=>el.textContent='',2400); }
+
+render();
+</script>
+
+</body></html>

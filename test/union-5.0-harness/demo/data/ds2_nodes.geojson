@@ -1,0 +1,17 @@
+{"type": "FeatureCollection", "$schema": "https://sidewalks.washington.edu/opensidewalks/0.3/schema.json", "features": [
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0881277, 44.6340927]}, "properties": {"_id": "4000001", "barrier": "kerb", "kerb": "lowered", "tactile_paving": "yes"}},
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0881277, 44.6339073]}, "properties": {"_id": "4000002", "barrier": "kerb", "kerb": "lowered", "tactile_paving": "yes"}},
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0878672, 44.6340864]}, "properties": {"_id": "4000003", "barrier": "kerb", "kerb": "lowered", "tactile_paving": "yes"}},
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0878672, 44.63391]}, "properties": {"_id": "4000004", "barrier": "kerb", "kerb": "lowered", "tactile_paving": "yes"}},
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0881075, 44.6338875]}, "properties": {"_id": "4000005"}},
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0878988, 44.6338875]}, "properties": {"_id": "4000006", "barrier": "kerb", "kerb": "lowered", "tactile_paving": "yes", "ext:surveyed": "2026-09"}},
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0865455, 44.63391]}, "properties": {"_id": "4000007", "barrier": "kerb", "kerb": "lowered", "tactile_paving": "yes"}},
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0865455, 44.634072]}, "properties": {"_id": "4000008", "barrier": "kerb", "kerb": "lowered", "tactile_paving": "yes"}},
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0887588, 44.6339073]}, "properties": {"_id": "4000009"}},
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0881062, 44.6339064]}, "properties": {"_id": "4000010"}},
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0879962, 44.6340023]}, "properties": {"_id": "4000011"}},
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0871122, 44.6339973]}, "properties": {"_id": "4000012"}},
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0862888, 44.6340018]}, "properties": {"_id": "4000013"}},
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0874941, 44.633838]}, "properties": {"_id": "4000014"}},
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0874941, 44.6339046]}, "properties": {"_id": "4000015"}}
+]}
