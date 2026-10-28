@@ -165,10 +165,6 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 .infobox b{font-weight:600}
 .does{margin:0;font-size:13.5px;color:var(--ink);padding-left:12px;border-left:3px solid var(--ok)}
 .does.off{color:var(--muted);border-left-color:var(--line)}
-.always{border:1px solid var(--line);border-radius:6px;padding:10px 14px;background:#fcfbfe}
-.always summary{cursor:pointer;font:600 13.5px var(--f-body);color:var(--brand)}
-.always ul{margin:10px 0 2px;padding-left:18px;display:flex;flex-direction:column;gap:5px;font-size:13.5px;color:var(--ink);max-width:90ch}
-.fnote{font-size:12.5px;color:#5c4100;background:#fff6e5;border:1px solid #f0d49b;border-radius:4px;padding:6px 10px;margin:0}
 .oswref{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--ink);border-left:3px solid var(--brand-2);padding:2px 0 2px 10px}
 .osw-tag{flex:none;font:700 10.5px var(--f-body);letter-spacing:.05em;color:var(--white);background:var(--brand-2);border-radius:3px;padding:2px 6px;margin-top:1px}
 .num{display:flex;align-items:center;gap:6px}
@@ -464,7 +460,7 @@ const RULE={s_crossing:'snap_node_crossing',s_living:'snap_node_living_street',s
    "highway=footway with no footway=* subtag" match), so the rule that includes Footway uses the union's
    built-in type `pedestrian` (Footway, Sidewalk, Pedestrian Road, Steps; never Crossings) and is listed last.
    Earlier rules take their own types first. A type that is off is kept out of that last rule by a "keep" rule
-   (snap and dedup only; connect has no such rule, see famNote). */
+   (snap and dedup only; connect has no such rule). */
 const FAM=['sidewalk','footway','pedroad','steps'];
 const FAMTOK={sidewalk:'sidewalk',footway:'footway',pedroad:'pedestrian_road',steps:'steps'};
 const FAMLBL={sidewalk:'Sidewalk',footway:'Footway',pedroad:'Pedestrian Road',steps:'Steps'};
@@ -568,15 +564,6 @@ function famRules(stage,a){
     out.push(mk(fwg.types,'pedestrian',fwg.val,fwg.ov));
   }
   return out;
-}
-// Connect has no "keep" rule: a Footway T-junction rule also reaches Sidewalk, Pedestrian Road and Steps ends
-// whose own T-junction value is smaller (or off). Shown on the Footway T-junction line.
-function famNote(id){
-  if(id==='s_footway' && A.s_footway>0) return `Union 5.0 has no Footway-only type, so this rule also snaps a Footway Node onto a Sidewalk, Pedestrian Road or Steps Node of the other dataset up to ${(+A.s_footway).toFixed(1)} m away.`;
-  if(id==='d_footway' && A.d_footway>0) return `Union 5.0 has no Footway-only type, so a ${A.trust==='ds2'?'DS1':'DS2'} Footway Edge can also be removed as a duplicate of a ${A.trust==='ds2'?'DS2':'DS1'} Sidewalk, Pedestrian Road or Steps Edge within ${(+A.d_footway).toFixed(1)} m.`;
-  if(id!=='c_t_footway' || !(A.c_t_footway>0)) return '';
-  const extra=FAM.filter(t=>t!=='footway' && !((+A['c_t_'+t]||0)>=A.c_t_footway)).map(t=>FAMLBL[t]);
-  return extra.length? `Union 5.0 has no Footway-only match for connections, so this also connects ${extra.join(', ')} ends up to ${(+A.c_t_footway).toFixed(1)} m.` : '';
 }
 function buildConfig(a=A){
   OWNER={};
@@ -879,7 +866,6 @@ function itemHTML(s,i){
       <div class="chip" id="v-${s.id}">${valueHTML(s)}</div>
       <div id="sw-${s.id}">${switchHTML(s)}</div></div>
     <p class="does ${c.off?'off':''}" id="do-${s.id}">${esc(doesText(s))}</p>
-    <p class="fnote" id="fn-${s.id}" ${famNote(s.id)?'':'hidden'}>${esc(famNote(s.id))}</p>
     ${s.g==='link'?`<div class="tagbox" id="tg-${s.id}" ${A[s.id]>0?'':'hidden'}>${tagsInner(s)}</div>`:''}
     <div class="infobox" id="ib-${s.id}" ${det?'':'hidden'}>${infoHTML(s)}</div>
     ${det?`<div id="th-${s.id}">${thumbsHTML(s)}</div>`:''}
@@ -909,7 +895,7 @@ function refreshReview(changedId){
     if(s.id===changedId){ const p=$('p-'+s.id); if(p){p.className='pref '+(c.rec?'rec':'own'); p.textContent=c.rec?'Recommended':'Your value';} const oi=$('v-'+s.id).querySelector('[data-ov]'); if(oi) oi.disabled=!(A[s.id]>0); }
     else $('v-'+s.id).innerHTML=valueHTML(s);
   });
-  STEPS.forEach(s=>{ const tg=$('tg-'+s.id); if(tg) tg.hidden=!(A[s.id]>0); const dz=$('do-'+s.id); if(dz){ dz.textContent=doesText(s); dz.classList.toggle('off',chosen(s).off); } const ib=$('ib-'+s.id); if(ib) ib.innerHTML=infoHTML(s); const fn=$('fn-'+s.id); if(fn){ const t=famNote(s.id); fn.textContent=t; fn.hidden=!t; } });
+  STEPS.forEach(s=>{ const tg=$('tg-'+s.id); if(tg) tg.hidden=!(A[s.id]>0); const dz=$('do-'+s.id); if(dz){ dz.textContent=doesText(s); dz.classList.toggle('off',chosen(s).off); } const ib=$('ib-'+s.id); if(ib) ib.innerHTML=infoHTML(s); });
   GROUPS.forEach(([k])=>{ const g=$('gs-'+k); if(g) g.textContent=groupSum(k); });
   $('totals').innerHTML=totalsHTML(); $('full').textContent=JSON.stringify(buildConfig(),null,2);
   $('legend').innerHTML=legendHTML(); $('barsum').innerHTML=barSum(); refreshDatasets(); refreshLead(); save();
@@ -956,19 +942,6 @@ function viewHTML(){
     <div class="toolbar"><div class="legend" id="legend">${legendHTML()}</div>
       <div class="tright"><div class="qa"><button id="expall">Expand all</button><span aria-hidden="true">·</span><button id="colall">Collapse all</button></div>
       <div class="mini" role="group" aria-label="View"><button data-view="compact" aria-pressed="${view==='compact'}">Compact</button><button data-view="detail" aria-pressed="${view==='detail'}">Detailed</button></div></div></div>
-    <details class="always"><summary>What the union always does (not configurable)</summary><ul>
-      <li>Only DS1 × DS2 pairs are joined. Gaps inside one dataset are left for self-merge.</li>
-      <li>Edge ends are matched to Nodes by exact coordinate, and every output Edge end equals the Node it references.</li>
-      <li>Snap: the nearest Node wins (tie: lowest original _id). Anchor Nodes never move, a Node that moved is never a target, and an Edge is never collapsed onto one Node.</li>
-      <li>Curb Nodes (barrier=kerb) never move, and two Curb Nodes join only at exactly the same coordinate.</li>
-      <li>Snap: a pair of Nodes that matches several cases, such as two corners on both a Sidewalk and a Crossing, follows the Crossing case first, then the Sidewalk, Footway, Pedestrian Road and Steps cases, then Living Street, motor vehicle road and other.</li>
-      <li>Remove duplicates: an Edge must run within 30° of the anchor Edge; a short stub meeting it at a right angle is kept. An Edge that adds a connection the anchor network lacks is kept. After connecting, a removed Edge is restored if its removal left another Edge hanging.</li>
-      <li>Connect: rules run in the order listed; the first rule that reaches a place takes it, and a later rule landing within reach of an earlier new Node reuses it. Each end joins only the nearest Edge, a T-junction needs an angle of 30° or more, only the nearer end of a short Edge joins, and two ends facing across one gap make one junction.</li>
-      <li>Connect: Edges on a different layer, level, bridge or tunnel never join, even where they cross on the map. New Nodes and connector Edges are never split or moved by a later rule.</li>
-      <li>Connector Edges copy the approaching Edge’s highway and footway tags. New Nodes and connectors carry ext:union_rule (the rule name) and ext:union_confidence.</li>
-      <li>Snapped Nodes record ext:union_absorbed (original _ids) and ext:union_confidence; differing values are kept as ext:union_audit_&lt;key&gt;.</li>
-      <li>Nodes the union leaves unused are dropped; Nodes that were unused in the input are kept.</li>
-    </ul></details>
     ${groups}
     <div class="cfg"><h3>Union configuration</h3><pre id="full">${esc(JSON.stringify(c,null,2))}</pre>
     <p class="note">Paste this into the union job’s configuration. Any node, edge or feature type not listed is left exactly as mapped.</p></div>`;
