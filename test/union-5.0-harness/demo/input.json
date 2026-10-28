@@ -1,9 +1,17 @@
 {
   "about": "Union 5.0 demo input. Paste the configurator's config below (or replace this whole file with the configurator's output or a job request), then run ./run_demo.sh local. The picture goes to runs/demo_input/demo.png.",
   "config": {
-    "snap":       {"mode": "default", "proximity": 1},
-    "dedup":      {"mode": "default", "proximity": 1},
-    "connect":    {"mode": "default", "proximity": 1},
-    "extensions": {"mode": "default", "proximity": 1}
+    "connect": {
+      "mode": "custom",
+      "rules": [
+        {
+          "name": "connect_crossing_road",
+          "from": "crossing",
+          "to": "road",
+          "operation": "point",
+          "proximity": 1
+        }
+      ]
+    }
   }
 }

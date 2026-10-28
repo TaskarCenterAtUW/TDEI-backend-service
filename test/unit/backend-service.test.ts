@@ -277,7 +277,7 @@ describe('BackendService', () => {
         connect: {
           mode: 'custom',
           rules: [{ name: 'kerbed-crossing', from: 'crossing', to: 'sidewalk', operation: 'geometry',
-                    proximity: 1, tags: { barrier: 'kerb' } }]
+                    proximity: 1, node_tags: { barrier: 'kerb' }, edge_tags: { 'crossing:markings': 'zebra' } }]
         },
         extensions: { mode: 'default' }
       };

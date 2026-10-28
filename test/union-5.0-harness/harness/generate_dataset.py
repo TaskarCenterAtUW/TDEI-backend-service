@@ -437,7 +437,7 @@ ds2.node(C(80.3,680), **{"ext:lit": "yes"})
 ds1.edge([C(120,680),   C(180,680)],   name="AN3: ds1 copy", **SIDEWALK)
 ds2.edge([C(120,680.3), C(180,680.3)], name="AN3: ds2 copy", **SIDEWALK)
 
-# ── custom_connect: ordered connect rules with tags ──────────────────────────
+# ── custom_connect: ordered connect rules with node_tags / edge_tags ──────────────────────────
 # CC1 — O1: a crossing end 0.5 m short of a sidewalk. Rule kerbed-crossing takes
 #       it; the broader footway-sidewalk rule (highway=footway) skips it.
 ds1.edge([C(20,700), C(20,740)],   name="CC1: sidewalk", **SIDEWALK)

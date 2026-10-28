@@ -103,17 +103,17 @@ Checked under `custom_anchor` (DS2 anchored for sidewalks).
 | **AN2** anchor_only: DS2 values audited, not added | Crossing ends 0.3 m apart; DS1's end has ext:note, DS2's has ext:lit. | custom_anchor (crossings, attributes anchor_only): the DS2 end snaps onto DS1's; the node keeps ext:note, does not gain ext:lit, and audits it. | `custom_anchor`, default (1 m, 3 m) |
 | **AN3** DS2 anchor: the DS1 duplicate goes | The same sidewalk in both datasets, 0.3 m apart. | custom_anchor: DS1's ends move onto DS2's, then dedup (anchored on DS2) removes the DS1 copy. | `custom_anchor`, default (1 m, 3 m) |
 
-## Ordered connect rules with tags (CC)
+## Ordered connect rules with node_tags / edge_tags (CC)
 
 Checked under `custom_connect`. The ids in titles (O1–O3, W1–W5, G1, G3) are the decided edge cases of the requirement spec; see [union-expectations.md](union-expectations.md).
 
 | Case | Setup | Expected | Checked under |
 |---|---|---|---|
-| **CC1** O1: two rules match the same spot | A DS2 crossing ends 0.5 m short of a DS1 sidewalk. | kerbed-crossing (listed first) takes it: a node on the sidewalk tagged barrier=kerb, kerb=lowered and ext:survey_batch, and a connector carrying ext:barrier and ext:kerb (not edge keys). The broader footway-sidewalk rule skips it. | `custom_connect` |
-| **CC2** The broader rule catches a plain footway | A DS2 plain footway ends 0.5 m short of a DS1 sidewalk. | Only footway-sidewalk matches: its node carries ext:source=rule2. | `custom_connect` |
-| **CC3** O2: a later rule meets an earlier node | kerbed-crossing makes node J on a sidewalk; a footway ends 0.78 m from J (0.6 m from the span). | footway-sidewalk reuses J rather than making a second node beside it. J lists both rules and keeps kerbed-crossing's tags. | `custom_connect` |
+| **CC1** O1: two rules match the same spot | A DS2 crossing ends 0.5 m short of a DS1 sidewalk. | kerbed-crossing (listed first) takes it: a node on the sidewalk with its node_tags (barrier=kerb, kerb=lowered, ext:survey_batch) and a connector with its edge_tags (crossing:markings=zebra, surface=asphalt, ext:verified). Neither set reaches the other. The broader footway-sidewalk rule skips it. | `custom_connect` |
+| **CC2** The broader rule catches a plain footway | A DS2 plain footway ends 0.5 m short of a DS1 sidewalk. | Only footway-sidewalk matches: its node carries ext:source=rule2 (node_tags); the rule has no edge_tags, so its connector carries only A's highway/footway and the union tags. | `custom_connect` |
+| **CC3** O2: a later rule meets an earlier node | kerbed-crossing makes node J on a sidewalk; a footway ends 0.78 m from J (0.6 m from the span). | footway-sidewalk reuses J rather than making a second node beside it. J lists both rules, keeps kerbed-crossing's node_tags and gains footway-sidewalk's. | `custom_connect` |
 | **CC4** O3: a created connector is never cut | kerbed-crossing's 0.8 m connector crosses a DS1 road lying 0.4 m off the sidewalk. | The later road-crossing rule does not split the connector, and the crossing itself stops 0.4 m short of the road (beyond road-crossing's 0.3 m): the road stays whole. | `custom_connect` |
-| **CC5** Point rule: a crossing and a near miss | One DS2 crossing crosses a DS1 road; another stops 0.2 m short of it. | road-crossing (point, 0.3 m) makes a node at each, tagged tactile_paving=yes; the near miss gets a connector. | `custom_connect` |
+| **CC5** Point rule: a crossing and a near miss | One DS2 crossing crosses a DS1 road; another stops 0.2 m short of it. | road-crossing (point, 0.3 m) makes a node at each, tagged tactile_paving=yes (node_tags); the near miss gets a connector tagged crossing:markings=lines (edge_tags). Neither set reaches the other. | `custom_connect` |
 | **CC6** G1: a crossing on a bridge | A DS2 crossing tagged bridge=yes, layer=1 passes over a DS1 road. | Never joined: lines whose layer or bridge differ do not meet, even where they cross on the map. | `custom_connect`, default (1 m, 3 m) |
 | **CC7** Sidewalk T onto a sidewalk | A DS2 sidewalk ends 0.6 m short of the span of a DS1 sidewalk. | sidewalk-sidewalk: the DS1 sidewalk gets a node and is split; a connector joins the DS2 end. | `custom_connect` |
 | **CC8** W5: a near-parallel end is not a T | A DS2 sidewalk runs 0.6-0.9 m off a DS1 sidewalk, nearly parallel, both ends within 1 m of it. | No junction: an end running alongside B is not a T (angle under 30°). Overlap is dedup's job; at 0.5 m buffer it does not count as a duplicate. | `custom_connect` |

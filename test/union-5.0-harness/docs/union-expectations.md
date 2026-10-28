@@ -78,7 +78,7 @@ connector edge joins A's end to it.
 | C14 | **O3:** connectors and created nodes are never A or B; a later rule never splits them | CC4 |
 | C15 | **G1:** lines whose `layer`, `level`, `bridge` or `tunnel` differ never join | CC6 |
 | C16 | **G3:** act on DS1 × DS2 pairs only | CC12 |
-| C17 | **Tags:** created nodes and connectors get the rule's tags — valid OSW keys as-is, others as `ext:<key>` — plus `ext:union_rule` (comma list, in rule order, on a node several rules used) and `ext:union_confidence`. Connectors copy A's `highway` / `footway`; pieces of a split edge gain nothing | CC1, CC2, CC3, CC5 |
+| C17 | **Tags:** a junction node gets the rule's `node_tags` and a connector its `edge_tags`, never the other set — valid OSW keys for that kind as-is, others as `ext:<key>`; an existing node keeps its own value and audits a differing one — plus `ext:union_rule` (comma list, in rule order, on a node several rules used) and `ext:union_confidence`. Connectors copy A's `highway` / `footway`; pieces of a split edge gain nothing | CC1, CC2, CC3, CC5 |
 | C18 | Join nothing no rule asks for (no default rule joins a road and a sidewalk, a sidewalk and a living street, a crossing and a plain footway) | E, F, X8, LS8 |
 
 ## Zones and extensions

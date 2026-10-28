@@ -64,9 +64,29 @@ pre{margin:0;font:12.5px/1.55 var(--f-mono);background:#f7f5fb;border:1px solid 
 .btn.ghost{background:var(--white);color:var(--brand)}
 .btn.ghost:hover{background:var(--soft)}
 button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
-.kerbopt{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--ink);cursor:pointer}
-.kerbopt input{accent-color:var(--brand);width:15px;height:15px}
-.kerbopt input:disabled+span{color:var(--off)}
+.tagbox{border:1px dashed var(--line);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;background:#fdfcff}
+.thead{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;justify-content:space-between}
+.tlabel{font:600 13px var(--f-body);color:var(--ink)}
+.tadd{display:flex;flex-wrap:wrap;gap:6px}
+.tchip{border:1px solid var(--line);background:var(--white);color:var(--brand);font:600 12px var(--f-body);border-radius:999px;padding:4px 10px;cursor:pointer}
+.tchip:hover{background:var(--soft);border-color:var(--brand-2)}
+.tchip[data-tadd]{border-color:var(--brand)}
+.trows{display:flex;flex-direction:column;gap:6px}
+.trow{display:grid;grid-template-columns:minmax(0,200px) 14px minmax(0,220px) 28px minmax(0,1fr);gap:6px;align-items:center}
+.trow input{font:13px var(--f-mono);color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:6px 8px;background:var(--white);min-width:0;width:100%}
+.trow input:focus{border-color:var(--brand)}
+.trow input.bad{border-color:#c0392b}
+.teq{color:var(--muted);text-align:center;font-weight:600}
+.tdel{width:28px;height:28px;border:1px solid var(--line);background:var(--white);color:var(--muted);border-radius:4px;cursor:pointer;font-size:12px}
+.tdel:hover{color:#a1251b;border-color:#e8b4ae}
+.terr{font-size:12px;color:#a1251b}
+.terr.adv{color:#8a5a00}
+.tctx{font-size:12.5px;color:var(--muted);margin:0}
+.tnone{font-size:12.5px;color:var(--muted);margin:0}
+.tprev{font-size:12.5px;color:var(--ink);margin:0;overflow-wrap:anywhere;display:flex;flex-direction:column;gap:2px}
+.tprev b{font-weight:600}
+.tprev .hint{color:var(--muted);margin-top:2px}
+@media (max-width:560px){.trow{grid-template-columns:minmax(0,1fr) 12px minmax(0,1fr) 28px}.terr{grid-column:1/-1}.thead{flex-direction:column;align-items:flex-start}}
 .head{display:flex;flex-direction:column;gap:14px}
 .head .top{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-between;align-items:flex-start}
 .head .l{display:flex;flex-direction:column;gap:6px;min-width:0}
@@ -119,11 +139,11 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 .runbar .sum small{color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .runbar .acts{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .item{border:1px solid var(--line);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:10px}
-.item .row1{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,2fr) 160px 84px;grid-template-areas:"n t v s";gap:12px;align-items:center}
+.item .row1{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,2fr) 180px 150px;grid-template-areas:"n t v s";gap:12px;align-items:center}
 .item .row1>.nmrow{grid-area:n}.item .row1>[id^="th-"]{grid-area:t;min-width:0}.item .row1>.chip{grid-area:v}.item .row1>[id^="sw-"]{grid-area:s}
 .nmrow{display:flex;gap:6px;align-items:flex-start}
 .item.detail{padding:14px 16px;gap:12px}
-.item.detail .row1{grid-template-columns:minmax(0,1fr) 160px 84px;grid-template-areas:"n v s"}
+.item.detail .row1{grid-template-columns:minmax(0,1fr) 180px 150px;grid-template-areas:"n v s"}
 .item.detail .nm{font-size:15px}
 .item .examples{gap:8px}
 @media (prefers-reduced-motion:no-preference){
@@ -137,13 +157,19 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 .info[aria-expanded="true"]{background:var(--brand);color:var(--white)}
 .infobox{background:var(--soft);border-radius:5px;padding:10px 12px;font-size:13.5px;color:var(--ink);display:flex;flex-direction:column;gap:4px}
 .infobox b{font-weight:600}
+.does{margin:0;font-size:13.5px;color:var(--ink);padding-left:12px;border-left:3px solid var(--ok)}
+.does.off{color:var(--muted);border-left-color:var(--line)}
+.always{border:1px solid var(--line);border-radius:6px;padding:10px 14px;background:#fcfbfe}
+.always summary{cursor:pointer;font:600 13.5px var(--f-body);color:var(--brand)}
+.always ul{margin:10px 0 2px;padding-left:18px;display:flex;flex-direction:column;gap:5px;font-size:13.5px;color:var(--ink);max-width:90ch}
 .fnote{font-size:12.5px;color:#5c4100;background:#fff6e5;border:1px solid #f0d49b;border-radius:4px;padding:6px 10px;margin:0}
 .oswref{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--ink);border-left:3px solid var(--brand-2);padding:2px 0 2px 10px}
 .osw-tag{flex:none;font:700 10.5px var(--f-body);letter-spacing:.05em;color:var(--white);background:var(--brand-2);border-radius:3px;padding:2px 6px;margin-top:1px}
 .num{display:flex;align-items:center;gap:6px}
 .num input{width:72px;font:600 15px var(--f-alt);color:var(--brand);border:1px solid var(--line);border-radius:4px;padding:5px 7px;background:var(--white);font-variant-numeric:tabular-nums}
 .num input:disabled{color:var(--off);background:#f6f5f9}
-.num span{font-size:13px;color:var(--muted)}
+.num span{font-size:13px;color:var(--muted);white-space:nowrap}
+.chip .num+.num{margin-top:-2px}
 .icfg{border:1px solid var(--line);border-radius:5px}
 .icfg summary{cursor:pointer;font:600 13px var(--f-body);color:var(--brand);padding:7px 10px;list-style-position:inside}
 .icfg[open] summary{border-bottom:1px solid var(--line)}
@@ -154,7 +180,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 .item .nm{font:600 14px var(--f-body);color:var(--ink)}
 .item .nm small{display:block;font-weight:400;font-size:12.5px;color:var(--muted)}
 .thumbs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
-.thumbs.one{grid-template-columns:minmax(0,1fr)}
+.thumbs.one{grid-template-columns:minmax(0,1fr)!important;max-width:240px}
 .thumb{display:flex;flex-direction:column;gap:2px;min-width:0}
 .thumb svg{width:100%;height:auto;display:block;background:#fbfaff;border-radius:4px;border:1px solid var(--line)}
 .thumb span{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -209,7 +235,7 @@ code{overflow-wrap:anywhere}
 .mini{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
 .mini button{border:0;background:var(--white);color:var(--brand);font:600 12.5px var(--f-body);padding:5px 10px;cursor:pointer}
 .mini button[aria-pressed="true"]{background:var(--brand);color:var(--white)}
-.dep{font-size:11.5px;color:var(--muted)}
+.dep{font-size:11.5px;line-height:1.35;color:var(--muted);display:block;max-width:120px}
 .toast{font-size:13px;color:var(--ok);min-height:1.2em}
 
 /* svg */
@@ -253,83 +279,98 @@ const R=0.5; // published default proximity
 const STEPS=[
  {id:'trust',g:'start',kind:'choice',name:'Anchor dataset',sub:'DS1 or DS2',
   title:'When both datasets describe the same entity, which dataset is the anchor?',
-  lead:'Two OSW datasets often contain the same Nodes and Edges. Entities from the anchor dataset keep their geometry, _id and field values; the other dataset’s Nodes are snapped onto them and its duplicate Edges are removed.',
+  lead:'Two OSW datasets often contain the same Nodes and Edges. Nodes and Edges from the anchor dataset keep their geometry, _id and field values; the other dataset’s Nodes are snapped onto them and its duplicate Edges are removed. Points, Lines, Polygons and Zones are not affected by the anchor: their DS1 copy is always kept.',
   osw:'Curb Nodes (barrier=kerb) are never moved, whichever dataset is the anchor: OSW maps a curb at the Edge endpoint where it physically is.'},
- {id:'s_sidewalk',g:'join',kind:'dist',draw:'ends',a:'sidewalk',fam:'sidewalk',name:'Sidewalk Nodes',sub:'highway=footway + footway=sidewalk',
+ {id:'s_sidewalk',noun:'Sidewalk',g:'join',kind:'dist',draw:'ends',a:'sidewalk',fam:'sidewalk',name:'Sidewalk Nodes',sub:'highway=footway + footway=sidewalk',
   title:'Two Sidewalk Edges end close to each other. Snap their end Nodes into one Node?',
   lead:'Each dataset mapped the same Sidewalk centerline, but the end Nodes landed a little apart. Snapping makes them one Node, so the two Edges meet end-to-end and the network can be routed across both datasets.',
   osw:'Edges only connect end-to-end, through a shared Node referenced by _u_id / _v_id. Edges that merely come close are not connected.',
   q:'Snap Sidewalk Nodes that are up to',ex:[0.3,1,2.5],rec:R},
- {id:'s_crossing',g:'join',kind:'dist',draw:'ends',a:'crossing',name:'Crossing Nodes',sub:'highway=footway + footway=crossing or traffic_island',
+ {id:'s_crossing',noun:'Crossing',g:'join',kind:'dist',draw:'ends',a:'crossing',name:'Crossing Nodes',sub:'highway=footway + footway=crossing or traffic_island',
   title:'Two Crossing Edges end close to each other. Snap their end Nodes?',
   lead:'A Crossing runs curb to curb on the street surface and is usually split at the street centerline. Its end Nodes are often Curb Nodes, which are mapped accurately, so a small proximity is usually enough. Traffic Island Edges count as Crossings here.',
   osw:'A Crossing exists only on the road surface, from curb to curb, and should be at least two Edges: curb to street centerline, and street centerline to curb.',
   q:'Snap Crossing Nodes that are up to',ex:[0.3,1,2],rec:R},
- {id:'s_footway',g:'join',kind:'dist',draw:'ends',a:'footway',fam:'footway',name:'Footway Nodes',sub:'highway=footway (no footway=* subtag)',
+ {id:'s_footway',noun:'Footway',g:'join',kind:'dist',draw:'ends',a:'footway',fam:'footway',name:'Footway Nodes',sub:'highway=footway (no footway=* subtag)',
   title:'Two Footway Edges end close to each other. Snap their end Nodes?',
   lead:'A plain Footway is a dedicated pedestrian path that is not a Sidewalk, Crossing or Traffic Island, such as the short link between a Sidewalk and a Crossing, or a path through a park.',
   osw:'Footway (plain) is highway=footway with no footway=* subtag. Sidewalk, Crossing and Traffic Island are its subtypes.',
   q:'Snap Footway Nodes that are up to',ex:[0.3,0.7,2],rec:R},
- {id:'s_pedroad',g:'join',kind:'dist',draw:'ends',a:'pedroad',fam:'pedroad',name:'Pedestrian Road Nodes',sub:'highway=pedestrian',
+ {id:'s_pedroad',noun:'Pedestrian Road',g:'join',kind:'dist',draw:'ends',a:'pedroad',fam:'pedroad',name:'Pedestrian Road Nodes',sub:'highway=pedestrian',
   title:'Two Pedestrian Road Edges end close to each other. Snap their end Nodes?',
   lead:'A Pedestrian Road is a road or area mainly or only for pedestrians, where some vehicles may be allowed, such as a pedestrian mall.',
   osw:'Pedestrian Road is a core Edge: highway=pedestrian. The same tag on a Polygon is a Pedestrian Zone.',
   q:'Snap Pedestrian Road Nodes that are up to',ex:[0.3,1,2.5],rec:R},
- {id:'s_steps',g:'join',kind:'dist',draw:'ends',a:'steps',fam:'steps',name:'Steps Nodes',sub:'highway=steps',
+ {id:'s_steps',noun:'Steps',g:'join',kind:'dist',draw:'ends',a:'steps',fam:'steps',name:'Steps Nodes',sub:'highway=steps',
   title:'Two Steps Edges end close to each other. Snap their end Nodes?',
   lead:'Steps are the centerline of a flight of steps. Their ends usually sit at the top and bottom landings.',
   osw:'Steps is a core Edge: highway=steps, with optional step_count and climb fields.',
   q:'Snap Steps Nodes that are up to',ex:[0.3,0.7,2],rec:R},
- {id:'s_living',g:'join',kind:'dist',draw:'ends',a:'living',name:'Living Street Nodes',sub:'highway=living_street',
+ {id:'s_living',noun:'Living Street',g:'join',kind:'dist',draw:'ends',a:'living',name:'Living Street Nodes',sub:'highway=living_street',
   title:'Two Living Street Edges end close to each other. Snap their end Nodes?',
   lead:'A Living Street is designed around pedestrians and cyclists. Its Nodes only snap to other Living Street Nodes.',
   osw:'Living Street is a core Edge: highway=living_street.',
   q:'Snap Living Street Nodes that are up to',ex:[0.3,1,2.5],rec:R},
- {id:'s_road',g:'join',kind:'dist',draw:'ends',a:'road',name:'Motor Vehicle Road Nodes',sub:'Primary, Secondary, Tertiary & Residential Street, Service Road, Unclassified & Trunk Road',
+ {id:'s_road',noun:'motor vehicle road',g:'join',kind:'dist',draw:'ends',a:'road',name:'Motor Vehicle Road Nodes',sub:'Primary, Secondary, Tertiary & Residential Street, Service Road, Unclassified & Trunk Road',
   title:'Two motor vehicle road Edges end close to each other. Snap their end Nodes?',
   lead:'Primary, Secondary, Tertiary and Residential Streets, Service Roads (including Driveways, Alleys and Parking Aisles), Unclassified and Trunk Roads. Sidewalks and Crossings are described in relation to them, so snap them only if both datasets carry the same streets.',
   osw:'OSW includes Motor Vehicle Roads as core Edges because pedestrians use them where there is no sidewalk, and Sidewalks and Crossings are referenced to them. The foot field says whether one is safe to walk.',
   q:'Snap motor vehicle road Nodes that are up to',ex:[0.3,1,2.5],rec:R},
+ {id:'s_other',noun:'other-type Edge',g:'join',kind:'dist',draw:'ends',a:'other',name:'Other Edge Nodes',sub:'Edges of a type OSW 0.3 does not define',
+  title:'Two Edges of a type OSW 0.3 doesn’t define end close to each other. Snap their end Nodes?',
+  lead:'For example highway=cycleway, highway=path, or a custom Edge a dataset carries. Their Nodes only snap to Nodes on other such Edges.',
+  osw:'OSW 0.3 allows custom entities beyond its defined types. The union groups every Edge that is none of the defined types as “other”.',
+  q:'Snap other-type Edge Nodes that are up to',ex:[0.3,1,2.5],rec:R},
  {id:'s_same',g:'join',kind:'yesno',draw:'same',name:'Coincident Nodes',sub:'same coordinate, any Edge type',
   title:'Two Nodes sit at exactly the same coordinate. Make them one Node?',
   lead:'Here a plain Footway ends exactly where a Crossing starts, at the curb, but each dataset has its own Node, so the two Edges are not connected. Merging coincident Nodes connects them, whatever their Edge types.',
   osw:'Every place two Edges meet needs one Node whose _id both Edges reference. Where no other Node type applies it is a Bare Node.',
   q:'Merge Nodes at the same coordinate into one Node',rec:true},
- {id:'d_sidewalk',g:'dup',kind:'dist',draw:'dup',a:'sidewalk',fam:'sidewalk',name:'Duplicate Sidewalk Edges',sub:'highway=footway + footway=sidewalk',
+ {id:'s_attrs',g:'join',kind:'attrs',name:'Fields of snapped Nodes',sub:'merge or anchor only',
+  title:'When two Nodes become one, what happens to the snapped Node’s fields?',
+  lead:'The kept Node always keeps its own position, _id and field values. Choose whether it also gains fields that only the snapped Node had. Either way, every value that differs is recorded on the kept Node as ext:union_audit_<key>, together with the snapped Node’s original _id.',
+  osw:'Fields OSW 0.3 doesn’t define must be prefixed ext:, so the union records its audit values as ext: fields.',
+  rec:'merge'},
+ {id:'d_sidewalk',noun:'Sidewalk',g:'dup',kind:'dist',draw:'dup',a:'sidewalk',fam:'sidewalk',name:'Duplicate Sidewalk Edges',sub:'highway=footway + footway=sidewalk',
   title:'The same Sidewalk Edge is mapped in both datasets. Remove the duplicate?',
-  lead:'Two Edges running side by side are usually one real Sidewalk mapped twice. Too large a proximity can remove a real second Sidewalk, such as Sidewalks on both sides of a narrow street.',
+  lead:'Two Edges running side by side are usually one real Sidewalk mapped twice. Too large a proximity can remove a real second Sidewalk, such as Sidewalks on both sides of a narrow street. An Edge counts as a duplicate only when both conditions hold: it lies within the distance, and at least the overlap share of its length runs alongside. It is removed whole or kept whole, never cut.',
   osw:'Each OSW Edge is one centerline. Two centerlines for the same Sidewalk describe two separate, unconnected paths.',
-  q:'Treat Sidewalk Edges as duplicates when they are up to',ex:[0.3,1,2.5],rec:R},
- {id:'d_footway',g:'dup',kind:'dist',draw:'dup',a:'footway',fam:'footway',name:'Duplicate Footway Edges',sub:'highway=footway (no footway=* subtag)',
+  q:'Remove a duplicate Sidewalk Edge when it is within',ex:[0.3,1,2.5,{d:0.3,share:0.6}],rec:R,ov:0.8},
+ {id:'d_footway',noun:'Footway',g:'dup',kind:'dist',draw:'dup',a:'footway',fam:'footway',name:'Duplicate Footway Edges',sub:'highway=footway (no footway=* subtag)',
   title:'The same Footway Edge is mapped twice. Remove the duplicate?',
-  lead:'Footways through parks and plazas are often traced from different imagery, so copies can sit further apart than Sidewalk copies.',
-  osw:'Only Edges of the same type count as duplicates: a Footway is never removed as a duplicate of a Sidewalk.',
-  q:'Treat Footway Edges as duplicates when they are up to',ex:[0.3,1,2.5],rec:R},
- {id:'d_pedroad',g:'dup',kind:'dist',draw:'dup',a:'pedroad',fam:'pedroad',name:'Duplicate Pedestrian Road Edges',sub:'highway=pedestrian',
+  lead:'Footways through parks and plazas are often traced from different imagery, so copies can sit further apart than Sidewalk copies. An Edge counts as a duplicate only when both conditions hold: it lies within the distance, and at least the overlap share of its length runs alongside. It is removed whole or kept whole, never cut.',
+  osw:'Only Edges of the same type should count as duplicates. For Footway this needs a Footway-only type in union 5.0; see the note on this line.',
+  q:'Remove a duplicate Footway Edge when it is within',ex:[0.3,1,2.5,{d:0.3,share:0.6}],rec:R,ov:0.8},
+ {id:'d_pedroad',noun:'Pedestrian Road',g:'dup',kind:'dist',draw:'dup',a:'pedroad',fam:'pedroad',name:'Duplicate Pedestrian Road Edges',sub:'highway=pedestrian',
   title:'The same Pedestrian Road Edge is mapped twice. Remove the duplicate?',
-  lead:'Pedestrian Roads are wide, so two datasets may draw their centerline a little apart.',
+  lead:'Pedestrian Roads are wide, so two datasets may draw their centerline a little apart. An Edge counts as a duplicate only when both conditions hold: it lies within the distance, and at least the overlap share of its length runs alongside. It is removed whole or kept whole, never cut.',
   osw:'Pedestrian Road is a core Edge: highway=pedestrian.',
-  q:'Treat Pedestrian Road Edges as duplicates when they are up to',ex:[0.5,1.5,3],rec:R},
- {id:'d_steps',g:'dup',kind:'dist',draw:'dup',a:'steps',fam:'steps',name:'Duplicate Steps Edges',sub:'highway=steps',
+  q:'Remove a duplicate Pedestrian Road Edge when it is within',ex:[0.5,1.5,3,{d:0.5,share:0.6}],rec:R,ov:0.8},
+ {id:'d_steps',noun:'Steps',g:'dup',kind:'dist',draw:'dup',a:'steps',fam:'steps',name:'Duplicate Steps Edges',sub:'highway=steps',
   title:'The same flight of Steps is mapped twice. Remove the duplicate?',
-  lead:'Steps are short, so even a small offset between the two copies is visible.',
+  lead:'Steps are short, so even a small offset between the two copies is visible. An Edge counts as a duplicate only when both conditions hold: it lies within the distance, and at least the overlap share of its length runs alongside. It is removed whole or kept whole, never cut.',
   osw:'Steps is a core Edge: highway=steps.',
-  q:'Treat Steps Edges as duplicates when they are up to',ex:[0.3,1,2],rec:R},
- {id:'d_overlap',g:'dup',kind:'pct',draw:'overlap',name:'Required overlap',sub:'share of the Edge inside the buffer',
-  title:'A duplicate Edge only partly runs alongside. How much overlap removes it?',
-  lead:'An Edge is removed whole or kept whole; it is never cut. A lower share removes more partial duplicates.',
-  osw:'Removing an Edge never disconnects the network: if removing one would leave another Edge hanging, the union restores it.',
-  q:'Remove a duplicate Edge when at least this much of it runs alongside',ex:[1,0.85,0.5],rec:0.8},
- {id:'d_crossing',g:'dup',kind:'dist',draw:'dup',a:'crossing',name:'Duplicate Crossing Edges',sub:'footway=crossing or traffic_island',
+  q:'Remove a duplicate Steps Edge when it is within',ex:[0.3,1,2,{d:0.3,share:0.6}],rec:R,ov:0.8},
+ {id:'d_crossing',noun:'Crossing',g:'dup',kind:'dist',draw:'dup',a:'crossing',name:'Duplicate Crossing Edges',sub:'footway=crossing or traffic_island',
   title:'The same Crossing Edge is mapped twice. Remove the duplicate?',
-  lead:'Crossing Edges are short, curb to curb, so even a small offset is visible.',
+  lead:'Crossing Edges are short, curb to curb, so even a small offset is visible. An Edge counts as a duplicate only when both conditions hold: it lies within the distance, and at least the overlap share of its length runs alongside. It is removed whole or kept whole, never cut.',
   osw:'Only Edges of the same type count as duplicates: a Crossing is never removed as a duplicate of a Sidewalk.',
-  q:'Treat Crossing Edges as duplicates when they are up to',ex:[0.3,1,2],rec:R},
- {id:'d_road',g:'dup',kind:'dist',draw:'dup',a:'road',name:'Duplicate motor vehicle road Edges',sub:'Primary … Trunk Road, Service Road',
+  q:'Remove a duplicate Crossing Edge when it is within',ex:[0.3,1,2,{d:0.3,share:0.6}],rec:R,ov:0.8},
+ {id:'d_road',noun:'motor vehicle road',g:'dup',kind:'dist',draw:'dup',a:'road',name:'Duplicate motor vehicle road Edges',sub:'Primary … Trunk Road, Service Road',
   title:'The same motor vehicle road Edge is mapped twice. Remove the duplicate?',
-  lead:'Only Edges of the same type count: a Sidewalk beside a Residential Street is never removed as its duplicate.',
+  lead:'Only Edges of the same type count: a Sidewalk beside a Residential Street is never removed as its duplicate. An Edge counts as a duplicate only when both conditions hold: it lies within the distance, and at least the overlap share of its length runs alongside. It is removed whole or kept whole, never cut.',
   osw:'Motor Vehicle Roads are core Edges, so a duplicate road splits the network just as a duplicate Sidewalk does.',
-  q:'Treat motor vehicle road Edges as duplicates when they are up to',ex:[0.5,1.5,3],rec:R},
+  q:'Remove a duplicate motor vehicle road Edge when it is within',ex:[0.5,1.5,3,{d:0.5,share:0.6}],rec:R,ov:0.8},
+ {id:'d_living',noun:'Living Street',g:'dup',kind:'dist',draw:'dup',a:'living',name:'Duplicate Living Street Edges',sub:'highway=living_street',
+  title:'The same Living Street Edge is mapped twice. Remove the duplicate?',
+  lead:'Living Streets are wide shared streets, so two datasets may draw the centerline a little apart. An Edge counts as a duplicate only when both conditions hold: it lies within the distance, and at least the overlap share of its length runs alongside. It is removed whole or kept whole, never cut.',
+  osw:'Living Street is a core Edge: highway=living_street.',
+  q:'Remove a duplicate Living Street Edge when it is within',ex:[0.3,1,2.5,{d:0.3,share:0.6}],rec:R,ov:0.8},
+ {id:'d_other',noun:'other-type',g:'dup',kind:'dist',draw:'dup',a:'other',name:'Duplicate other Edges',sub:'Edges of a type OSW 0.3 does not define',
+  title:'The same Edge of a type OSW 0.3 doesn’t define is mapped twice. Remove the duplicate?',
+  lead:'For example a cycleway or a custom Edge mapped in both datasets. An Edge counts as a duplicate only when both conditions hold: it lies within the distance, and at least the overlap share of its length runs alongside. It is removed whole or kept whole, never cut.',
+  osw:'Custom entities sit outside the OSW 0.3 types; the union groups them as “other”.',
+  q:'Remove a duplicate other-type Edge when it is within',ex:[0.3,1,2.5,{d:0.3,share:0.6}],rec:R,ov:0.8},
  {id:'c_sidewalk',g:'link',kind:'dist',draw:'tee',a:'crossing',b:'sidewalk',kerb:true,name:'Crossing → Sidewalk',sub:'new Node on the Sidewalk + connector Edge',
   title:'A Crossing Edge ends just short of a Sidewalk Edge. Connect them?',
   lead:'No Node moves. A new Node is added on the Sidewalk (the Sidewalk Edge is split there) and a short connector Edge closes the gap, so a route can turn from the Crossing onto the Sidewalk. The connector copies the Crossing’s highway and footway tags.',
@@ -340,56 +381,77 @@ const STEPS=[
   lead:'A new Node is added where the Crossing meets the street centerline, and both Edges are split there. A Crossing that stops just short of the street can be connected too.',
   osw:'A road and a Crossing that intersects it should share a Node: both are split so their endpoints meet. Edges that cross without a shared Node are not connected.',
   q:'Add crossing Nodes, and connect Crossings that stop up to',ex:['x',0.2,1],rec:R},
- {id:'c_t_sidewalk',g:'link',kind:'dist',draw:'tee',a:'sidewalk',b:'sidewalk',fam:'sidewalk',name:'Sidewalk T-junction',sub:'Sidewalk end onto a Sidewalk, Footway, Pedestrian Road or Steps',
+ {id:'c_t_sidewalk',noun:'Sidewalk',g:'link',kind:'dist',draw:'tee',a:'sidewalk',b:'sidewalk',fam:'sidewalk',name:'Sidewalk T-junction',sub:'Sidewalk end onto a Sidewalk, Footway, Pedestrian Road or Steps',
   title:'A Sidewalk Edge ends just short of another Sidewalk Edge. Connect them?',
   lead:'For example a Sidewalk meeting another Sidewalk in a T. The other Edge is split at a new Node and a connector Edge closes the gap. An Edge running alongside another is never connected this way.',
   osw:'Edges only connect end-to-end, so a T-junction needs the through Edge split at a Node that both Edges reference.',
   q:'Connect a Sidewalk end when the gap is up to',ex:[0.2,0.6,1.5],rec:R},
- {id:'c_t_footway',g:'link',kind:'dist',draw:'tee',a:'footway',b:'sidewalk',fam:'footway',name:'Footway T-junction',sub:'Footway end onto a Sidewalk, Footway, Pedestrian Road or Steps',
+ {id:'c_t_footway',noun:'Footway',g:'link',kind:'dist',draw:'tee',a:'footway',b:'sidewalk',fam:'footway',name:'Footway T-junction',sub:'Footway end onto a Sidewalk, Footway, Pedestrian Road or Steps',
   title:'A Footway Edge ends just short of a Sidewalk. Connect them?',
   lead:'For example a park path or building access Footway that stops just before the Sidewalk it should join.',
   osw:'Edges only connect end-to-end, so a T-junction needs the through Edge split at a Node that both Edges reference.',
   q:'Connect a Footway end when the gap is up to',ex:[0.2,0.6,1.5],rec:R},
- {id:'c_t_pedroad',g:'link',kind:'dist',draw:'tee',a:'pedroad',b:'sidewalk',fam:'pedroad',name:'Pedestrian Road T-junction',sub:'Pedestrian Road end onto a Sidewalk, Footway, Pedestrian Road or Steps',
+ {id:'c_t_pedroad',noun:'Pedestrian Road',g:'link',kind:'dist',draw:'tee',a:'pedroad',b:'sidewalk',fam:'pedroad',name:'Pedestrian Road T-junction',sub:'Pedestrian Road end onto a Sidewalk, Footway, Pedestrian Road or Steps',
   title:'A Pedestrian Road ends just short of a Sidewalk. Connect them?',
   lead:'For example a pedestrian mall whose centerline stops just before the Sidewalk around it.',
   osw:'Pedestrian Road is a core Edge, so it must share a Node with the Edges it meets.',
   q:'Connect a Pedestrian Road end when the gap is up to',ex:[0.2,0.6,1.5],rec:R},
- {id:'c_t_steps',g:'link',kind:'dist',draw:'tee',a:'steps',b:'sidewalk',fam:'steps',name:'Steps T-junction',sub:'Steps end onto a Sidewalk, Footway, Pedestrian Road or Steps',
+ {id:'c_t_steps',noun:'Steps',g:'link',kind:'dist',draw:'tee',a:'steps',b:'sidewalk',fam:'steps',name:'Steps T-junction',sub:'Steps end onto a Sidewalk, Footway, Pedestrian Road or Steps',
   title:'A flight of Steps ends just short of a Sidewalk. Connect them?',
   lead:'For example Steps down from a building entrance that stop just before the Sidewalk.',
   osw:'Steps is a core Edge, so its top and bottom Nodes must be shared with the Edges it meets.',
   q:'Connect a Steps end when the gap is up to',ex:[0.2,0.6,1.5],rec:R},
+ {id:'c_t_living',noun:'Living Street',g:'link',kind:'dist',draw:'tee',a:'living',b:'living',name:'Living Street T-junction',sub:'Living Street end onto another Living Street',
+  title:'A Living Street ends just short of another Living Street. Connect them?',
+  lead:'The other Living Street is split at a new Node and a connector Edge closes the gap. An Edge running alongside another is never connected this way.',
+  osw:'Edges only connect end-to-end, so a T-junction needs the through Edge split at a Node that both Edges reference.',
+  q:'Connect a Living Street end when the gap is up to',ex:[0.2,0.6,1.5],rec:R},
  {id:'c_living',g:'link',kind:'dist',draw:'tee',a:'crossing',b:'living',name:'Crossing → Living Street',sub:'new Node on the Living Street + connector Edge',
   title:'A Crossing Edge ends just short of a Living Street Edge. Connect them?',
   lead:'Works like Crossings meeting Sidewalks, for Living Streets.',
   osw:'Living Streets are shared with pedestrians, so a Crossing can end on one.',
   q:'Connect a Crossing to a Living Street when the gap is up to',ex:[0,0.4,1.2],rec:R},
- {id:'x_points',g:'other',kind:'dist',draw:'points',name:'Points & Lines',sub:'Bench, Bollard, Fire Hydrant, Power Pole, Street Lamp… · Fence, Tree Row',
+ {id:'c_crossing',g:'link',kind:'dist',draw:'tee',a:'crossing',b:'crossing',name:'Crossing → Crossing',sub:'Crossing end onto a Crossing from the other dataset',
+  title:'A Crossing ends just short of a Crossing from the other dataset. Connect them?',
+  lead:'For example the two halves of a Crossing, split at the street centerline, one from each dataset, that don’t quite meet. The other Crossing is split at a new Node and a connector Edge closes the gap.',
+  osw:'A Crossing is split at the street centerline, so its halves must share a Node there.',
+  q:'Connect a Crossing end to a Crossing when the gap is up to',ex:[0.2,0.6,1.5],rec:R},
+ {id:'x_points',g:'other',kind:'dist',draw:'points',name:'Points & Lines distance',sub:'Bench, Bollard, Fire Hydrant, Power Pole, Street Lamp… · Fence, Tree Row',
   title:'The same Bench is mapped in both datasets. Keep only one?',
-  lead:'Points and Lines are adjacent entities: things beside the pedestrian network, such as Benches, Bollards, Fire Hydrants, Fences and Tree Rows. Only the same entity type merges: a Bench never merges with a Power Pole.',
+  lead:'Points and Lines are adjacent entities: things beside the pedestrian network, such as Benches, Bollards, Fire Hydrants, Fences and Tree Rows. Only the same entity type merges: a Bench never merges with a Power Pole. The DS1 feature is always the one kept, whichever dataset is the anchor, and it gains any fields only DS2 has. This distance is also the buffer used for Line overlap.',
   osw:'Adjacent entities (Points, Lines, Polygons) are not part of the network graph; they relate to it only spatially, so merging them never changes routing.',
   q:'Treat Points and Lines as the same when they are up to',ex:[0.3,1,2.5],rec:R},
- {id:'x_build',g:'other',kind:'pct',draw:'build',name:'Polygons & Zones',sub:'Building, Wood · Pedestrian Zone',
+ {id:'x_lines',g:'other',kind:'pct',draw:'overlap',a:'fence',name:'Line overlap',sub:'Fence, Tree Row',
+  title:'The same Fence is mapped in both datasets. How much must run alongside to keep only one?',
+  lead:'A DS2 Line merges into a DS1 Line when at least this share of its length lies within the Points & Lines distance of the DS1 Line. The DS1 Line is kept and gains any fields only DS2 has, whichever dataset is the anchor.',
+  osw:'Lines are adjacent entities: they are not part of the network graph.',
+  q:'Merge a DS2 Line when at least this much of it runs alongside a DS1 Line',ex:[1,0.75,0.5],rec:0.7},
+ {id:'x_build',g:'other',kind:'pct',draw:'build',name:'Polygon overlap',sub:'Building, Wood',
   title:'The same Building is mapped in both datasets. When is it the same Building?',
-  lead:'When two Polygons overlap enough, the anchor dataset’s Polygon is kept. When they overlap less, the two are merged into one. Zones, such as a Pedestrian Zone, use the same share; a merged Zone keeps referencing the final Nodes in _w_id.',
-  osw:'A Zone is a core entity: a Polygon whose boundary Nodes (_w_id) are all connected to each other. Building and Wood are adjacent Polygons.',
-  q:'Keep one Polygon when the overlap is at least',ex:[0.97,0.75,0.5],rec:0.7,needs:'x_points'}
+  lead:'When a DS2 Polygon covers more than this share of a DS1 Polygon, the DS1 Polygon is kept and gains any fields only DS2 has. When they overlap less, the two are merged into one Polygon. The DS1 copy is kept whichever dataset is the anchor.',
+  osw:'Building and Wood are adjacent Polygons: they are not part of the network graph.',
+  q:'Keep only the DS1 Polygon when the overlap is more than',ex:[0.97,0.75,0.5],rec:0.7},
+ {id:'x_zone',g:'other',kind:'pct',draw:'zone',name:'Zone overlap',sub:'Pedestrian Zone',
+  title:'The same Pedestrian Zone is mapped in both datasets. When is it the same Zone?',
+  lead:'When a DS2 Zone covers more than this share of a DS1 Zone, the DS2 Zone is dropped and the DS1 Zone kept. Below that, both Zones are kept. The kept Zone’s _w_id lists the final Nodes, following any snapping.',
+  osw:'A Zone is a core entity: a Polygon whose boundary Nodes (_w_id) are all connected to each other.',
+  q:'Keep only the DS1 Zone when the overlap is more than',ex:[0.97,0.75,0.5],rec:0.7}
 ];
 
 /* ═════════════ answers ═════════════ */
-const recAnswers=()=>{const a={trust:'ds1',kerb:false}; STEPS.forEach(s=>{ if('rec' in s) a[s.id]=s.rec; }); return a;};
+const recAnswers=()=>{const a={trust:'ds1',s_attrs:'merge'}; STEPS.forEach(s=>{ if('rec' in s) a[s.id]=s.rec; if('ov' in s) a[s.id+'_ov']=s.ov; if(s.g==='link') a[s.id+'_tags']=[]; }); return a;};
 let A=recAnswers(), view='compact', collapsed={}, ds={one:'',two:''}; const names={ds1:'',ds2:''};
-try{const v=JSON.parse(localStorage.getItem('u5wiz')||'null'); if(v){ const o=v.A||{}; [['s_path',['s_footway','s_pedroad','s_steps']],['d_path',['d_sidewalk','d_footway','d_pedroad','d_steps']],['c_tee',['c_t_sidewalk','c_t_footway','c_t_pedroad','c_t_steps']]].forEach(([k,ks])=>{ if(o[k]!=null){ ks.forEach(x=>{ if(o[x]==null) o[x]=o[k]; }); delete o[k]; } }); A=Object.assign(recAnswers(),o); if(v.view) view=v.view; if(v.collapsed) collapsed=v.collapsed; if(v.ds) ds=v.ds;}}catch(e){}
+try{const v=JSON.parse(localStorage.getItem('u5wiz')||'null'); if(v){ const o=v.A||{}; [['s_path',['s_footway','s_pedroad','s_steps']],['d_path',['d_sidewalk','d_footway','d_pedroad','d_steps']],['c_tee',['c_t_sidewalk','c_t_footway','c_t_pedroad','c_t_steps']]].forEach(([k,ks])=>{ if(o[k]!=null){ ks.forEach(x=>{ if(o[x]==null) o[x]=o[k]; }); delete o[k]; } }); if(o.kerb!=null){ if(o.kerb && !o.c_sidewalk_tags) o.c_sidewalk_tags=[['barrier','kerb'],['kerb','lowered']]; delete o.kerb; }
+  if(o.d_overlap!=null){ STEPS.filter(x=>'ov' in x).forEach(x=>{ if(o[x.id+'_ov']==null) o[x.id+'_ov']=o.d_overlap; }); delete o.d_overlap; } A=Object.assign(recAnswers(),o); if(v.view) view=v.view; if(v.collapsed) collapsed=v.collapsed; if(v.ds) ds=v.ds;}}catch(e){}
 const save=()=>{try{localStorage.setItem('u5wiz',JSON.stringify({A,view,collapsed,ds}));}catch(e){}};
 
 /* ═════════════ config (keys and ranges as content.union5_validate_config) ═════════════ */
 // Rule names say what the rule does; they label the rule in the run report and in ext:union_rule tags.
-const RULE={s_crossing:'snap_node_crossing',s_living:'snap_node_living_street',s_road:'snap_node_road',
-  d_crossing:'dedup_edge_crossing',d_road:'dedup_edge_road',
-  c_road:'connect_crossing_road',c_sidewalk:'connect_crossing_sidewalk',c_living:'connect_crossing_living_street'};
+const RULE={s_crossing:'snap_node_crossing',s_living:'snap_node_living_street',s_road:'snap_node_road',s_other:'snap_node_other',
+  d_crossing:'dedup_edge_crossing',d_road:'dedup_edge_road',d_living:'dedup_edge_living_street',d_other:'dedup_edge_other',
+  c_road:'connect_crossing_road',c_sidewalk:'connect_crossing_sidewalk',c_living:'connect_crossing_living_street',c_t_living:'connect_living_street_living_street',c_crossing:'connect_crossing_crossing'};
 /* The Footway family (OSW 0.3): Sidewalk, Footway (plain), Pedestrian Road, Steps.
-   Each has its own case on screen. In the configuration, types set to the same value share one rule.
+   Each has its own case on screen and its own rule in the configuration.
    Sidewalk, Pedestrian Road and Steps have exact matches; plain Footway does not (union 5.0 has no
    "highway=footway with no footway=* subtag" match), so the rule that includes Footway uses the union's
    built-in type `pedestrian` (Footway, Sidewalk, Pedestrian Road, Steps; never Crossings) and is listed last.
@@ -401,64 +463,132 @@ const FAMLBL={sidewalk:'Sidewalk',footway:'Footway',pedroad:'Pedestrian Road',st
 const FAMSPEC={sidewalk:'sidewalk',pedroad:{highway:'pedestrian'},steps:{highway:'steps'}};
 const FAMID={snap:t=>'s_'+t, dedup:t=>'d_'+t, connect:t=>'c_t_'+t};
 const NEVER={highway:'none'};               // matches no OSW Edge: a dedup rule with this "to" never removes anything
+/* Tags a connect rule writes on what it creates. The union writes an OSW Node key (barrier, kerb, tactile_paving)
+   as given on the new Node, and an OSW Edge key as given on the connector Edge; any other key is written as ext:<key>.
+   _id, _u_id, _v_id, _w_id and ext:union_* are set by the union and can't be used. */
+const NODE_KEYS=['barrier','kerb','tactile_paving'];
+const EDGE_KEYS=['highway','footway','name','description','surface','width','incline','length','foot','service','tactile_paving','crossing:markings','step_count','climb','building','opening_hours'];
+// Allowed values from the OSW 0.3 JSON schema; numbers and free text get a hint instead of a list.
+const KEY_VALUES={barrier:['kerb'],kerb:['lowered','raised','flush','rolled'],tactile_paving:['yes','no','contrasted','primitive'],
+  'crossing:markings':['yes','no','surface','lines','lines:paired','dashes','dots','zebra','zebra:double','zebra:paired','zebra:bicolour','ladder','skewed','ladder:paired','ladder:skewed','rainbow','lines:rainbow','zebra:rainbow','pictograms'],
+  surface:['asphalt','concrete','paving_stones','paved','unpaved','gravel','dirt','grass','grass_paver'],
+  foot:['yes','no','designated','permissive','destination','private','use_sidepath'],climb:['up','down']};
+const KEY_HINTS={width:'width in metres',incline:'e.g. 0.05 for 5 % uphill',length:'length in metres',step_count:'whole number',description:'free text',name:'free text'};
+const PRESETS={curb_ramp:['Curb Ramp',[['barrier','kerb'],['kerb','lowered']]],raised:['Raised Curb',[['barrier','kerb'],['kerb','raised']]],flush:['Flush Curb',[['barrier','kerb'],['kerb','flush']]],
+  rolled:['Rolled Curb',[['barrier','kerb'],['kerb','rolled']]],generic:['Generic Curb',[['barrier','kerb']]],tactile:['Tactile paving',[['tactile_paving','yes']]],
+  marked:['Marked crossing',[['crossing:markings','yes']]],unmarked:['Unmarked crossing',[['crossing:markings','no']]],zebra:['Zebra markings',[['crossing:markings','zebra']]]};
+/* What each connect case creates, so the tag editor offers only what fits there.
+   node: the new Node the rule adds; edge: the connector Edge (it copies the approaching Edge's highway/footway). */
+const CASE_TAGS={
+  c_sidewalk:{node:'a new Node on the Sidewalk where the Crossing meets it, which OSW maps as a Curb Node',edge:'a connector Edge tagged as a Crossing',keys:['barrier','kerb','tactile_paving','crossing:markings','surface','description'],presets:['curb_ramp','raised','flush','rolled','generic','tactile']},
+  c_road:{node:'a new Node where the Crossing meets the street centerline (a Bare Node in OSW: no curb there)',edge:'a connector Edge tagged as a Crossing, only when the Crossing stops short of the street',keys:['crossing:markings','surface','description'],presets:['marked','unmarked','zebra']},
+  c_living:{node:'a new Node on the Living Street where the Crossing meets it',edge:'a connector Edge tagged as a Crossing',keys:['barrier','kerb','tactile_paving','crossing:markings','surface','description'],presets:['flush','curb_ramp','tactile']},
+  c_crossing:{node:'a new Node on the other Crossing, usually at the street centerline or a Traffic Island',edge:'a connector Edge tagged as a Crossing',keys:['crossing:markings','surface','description'],presets:['marked','unmarked']},
+  c_t_sidewalk:{node:'a new Bare Node where the Sidewalk meets the other Edge',edge:'a connector Edge tagged as a Sidewalk',keys:['surface','width','incline','foot','description'],presets:[]},
+  c_t_footway:{node:'a new Bare Node where the Footway meets the other Edge',edge:'a connector Edge tagged as a Footway',keys:['surface','width','incline','foot','description'],presets:[]},
+  c_t_pedroad:{node:'a new Bare Node where the Pedestrian Road meets the other Edge',edge:'a connector Edge tagged as a Pedestrian Road',keys:['surface','width','incline','foot','description'],presets:[]},
+  c_t_steps:{node:'a new Node where the Steps meet the other Edge, at the top or bottom of the flight',edge:'a connector Edge tagged as Steps',keys:['tactile_paving','surface','width','incline','step_count','climb','foot','description'],presets:['tactile']},
+  c_t_living:{node:'a new Bare Node on the other Living Street',edge:'a connector Edge tagged as a Living Street',keys:['surface','width','foot','description'],presets:[]}
+};
+const tagRows=id=>A[id+'_tags']||(A[id+'_tags']=[]);
+function tagIssue(id,i){
+  const rows=tagRows(id), [k0,v0]=rows[i]||['',''], k=(k0||'').trim(), v=(v0||'').trim();
+  if(!k && !v) return '';
+  if(!k) return 'Enter a key.';
+  if(/\s/.test(k)) return 'A key can’t contain spaces.';
+  if(['_id','_u_id','_v_id','_w_id'].includes(k)||k.startsWith('ext:union_')) return 'The union sets this key itself.';
+  if(rows.slice(0,i).some(([x])=>(x||'').trim()===k)) return 'This key is already used above.';
+  if(!v) return 'Enter a value.';
+  return '';
+}
+function tagAdvice(id,i){
+  const [k0,v0]=tagRows(id)[i]||['',''], k=(k0||'').trim(), v=(v0||'').trim();
+  if(!k||!v||tagIssue(id,i)) return '';
+  if(KEY_VALUES[k] && !KEY_VALUES[k].includes(v)) return `Not an OSW 0.3 value for ${k}. It is still written as you typed it.`;
+  if(['width','incline','length'].includes(k) && isNaN(+v)) return `OSW 0.3 expects a number for ${k}.`;
+  if(k==='step_count' && !/^\d+$/.test(v)) return 'OSW 0.3 expects a whole number for step_count.';
+  if(!(CASE_TAGS[id]&&CASE_TAGS[id].keys.includes(k)) && !k.startsWith('ext:') && !NODE_KEYS.includes(k) && !EDGE_KEYS.includes(k)) return `OSW 0.3 doesn’t define ${k}, so it is written as ext:${k}.`;
+  return '';
+}
+function validTags(id){ const o={}; tagRows(id).forEach(([k,v],i)=>{ if((k||'').trim() && !tagIssue(id,i)) o[k.trim()]=v.trim(); }); return o; }
+const tagKey=id=>JSON.stringify(Object.entries(validTags(id)).sort());
+const onNode=k=> NODE_KEYS.includes(k)||k.startsWith('ext:') ? k : 'ext:'+k;
+const onEdge=k=> EDGE_KEYS.includes(k)||k.startsWith('ext:') ? k : 'ext:'+k;
+function tagPlacement(id){
+  const t=Object.entries(validTags(id)); if(!t.length) return null;
+  return {node:t.map(([k,v])=>`${onNode(k)}=${v}`), edge:t.map(([k,v])=>`${onEdge(k)}=${v}`)};
+}
 let OWNER={};                               // case id -> {rule, keep} for the last configuration built
 function famRules(stage,a){
-  const v=t=>+a[FAMID[stage](t)]||0, pre={snap:'snap_node_',dedup:'dedup_edge_',connect:'connect_tjunction_'}[stage];
-  const groups=[]; FAM.forEach(t=>{ if(v(t)>0){ const g=groups.find(x=>x.val===v(t)); g? g.types.push(t) : groups.push({val:v(t),types:[t]}); } });
+  const v=t=>+a[FAMID[stage](t)]||0, ov=t=>stage==='dedup'?+a[FAMID.dedup(t)+'_ov']: stage==='connect'? tagKey(FAMID.connect(t)) : null, pre={snap:'snap_node_',dedup:'dedup_edge_',connect:'connect_tjunction_'}[stage];
+  // one rule per OSW type, so each rule acts only between Edges (or Nodes) of that type
+  const groups=FAM.filter(t=>v(t)>0).map(t=>({val:v(t),ov:ov(t),types:[t]}));
   const out=[], fwg=groups.find(g=>g.types.includes('footway'));
-  const mk=(types,spec,val)=>{ const name=pre+types.map(t=>FAMTOK[t]).join('_');
-    const r= stage==='snap'?{name,type:spec,proximity:val}: stage==='dedup'?{name,from:spec,to:spec,proximity:val}:{name,from:spec,to:'pedestrian',operation:'geometry',proximity:val};
+  // two groups of the same types would get the same name; a suffix keeps names unique
+  const used={}, uniq=n=>{ used[n]=(used[n]||0)+1; return used[n]>1? n+'_'+used[n] : n; };
+  const mk=(types,spec,val,o)=>{ const name=uniq(pre+types.map(t=>FAMTOK[t]).join('_'));
+    const r= stage==='snap'?{name,type:spec,proximity:val}: stage==='dedup'?{name,from:spec,to:spec,proximity:val,min_overlap:o}:Object.assign({name,from:spec,to:'pedestrian',operation:'geometry',proximity:val}, o&&o!=='[]'?{tags:Object.fromEntries(JSON.parse(o))}:{});
     types.forEach(t=>OWNER[FAMID[stage](t)]={rule:r}); return r; };
   const exact=types=> types.length===1? FAMSPEC[types[0]] : types.map(t=>FAMSPEC[t]);
-  groups.filter(g=>g!==fwg).forEach(g=>out.push(mk(g.types,exact(g.types),g.val)));
+  groups.filter(g=>g!==fwg).forEach(g=>out.push(mk(g.types,exact(g.types),g.val,g.ov)));
   if(fwg){
     if(stage!=='connect') FAM.filter(t=>t!=='footway'&&!(v(t)>0)).forEach(t=>{
       const r= stage==='snap'? {name:'keep_node_'+FAMTOK[t],type:FAMSPEC[t],proximity:0} : {name:'keep_edge_'+FAMTOK[t],from:FAMSPEC[t],to:NEVER,proximity:0.1};
       OWNER[FAMID[stage](t)]={rule:r,keep:true}; out.push(r); });
-    out.push(mk(fwg.types,'pedestrian',fwg.val));
+    out.push(mk(fwg.types,'pedestrian',fwg.val,fwg.ov));
   }
   return out;
 }
 // Connect has no "keep" rule: a Footway T-junction rule also reaches Sidewalk, Pedestrian Road and Steps ends
 // whose own T-junction value is smaller (or off). Shown on the Footway T-junction line.
 function famNote(id){
+  if(id==='s_footway' && A.s_footway>0) return `Union 5.0 has no Footway-only type, so this rule also snaps a Footway Node onto a Sidewalk, Pedestrian Road or Steps Node of the other dataset up to ${(+A.s_footway).toFixed(1)} m away.`;
+  if(id==='d_footway' && A.d_footway>0) return `Union 5.0 has no Footway-only type, so a ${A.trust==='ds2'?'DS1':'DS2'} Footway Edge can also be removed as a duplicate of a ${A.trust==='ds2'?'DS2':'DS1'} Sidewalk, Pedestrian Road or Steps Edge within ${(+A.d_footway).toFixed(1)} m.`;
   if(id!=='c_t_footway' || !(A.c_t_footway>0)) return '';
   const extra=FAM.filter(t=>t!=='footway' && !((+A['c_t_'+t]||0)>=A.c_t_footway)).map(t=>FAMLBL[t]);
   return extra.length? `Union 5.0 has no Footway-only match for connections, so this also connects ${extra.join(', ')} ends up to ${(+A.c_t_footway).toFixed(1)} m.` : '';
 }
 function buildConfig(a=A){
   OWNER={};
-  const c={}, anch= a.trust==='ds2'?{anchor:'ds2'}:{};
+  const c={}, anch={anchor:a.trust==='ds2'?'ds2':'ds1'};   // written out even at its default, so the configuration says what it does
   const sr=[];
   if(a.s_crossing>0) sr.push((OWNER.s_crossing={rule:{name:RULE.s_crossing,type:'crossing',proximity:a.s_crossing}}).rule);
   sr.push(...famRules('snap',a));
   if(a.s_living>0) sr.push((OWNER.s_living={rule:{name:RULE.s_living,type:'living_street',proximity:a.s_living}}).rule);
   if(a.s_road>0) sr.push((OWNER.s_road={rule:{name:RULE.s_road,type:'road',proximity:a.s_road}}).rule);
-  if(sr.some(r=>!r.name.startsWith('keep_'))||a.s_same){ c.snap=Object.assign({mode:'custom'},anch); if(a.s_same) c.snap.coincident=true; c.snap.rules=sr; }
+  if(a.s_other>0) sr.push((OWNER.s_other={rule:{name:RULE.s_other,type:'other',proximity:a.s_other}}).rule);
+  c.snap= sr.some(r=>!r.name.startsWith('keep_'))||a.s_same ? Object.assign({mode:'custom'},anch,{attributes:a.s_attrs,coincident:!!a.s_same,rules:sr}) : {mode:'off'};
   const dr=[];
-  if(a.d_crossing>0) dr.push((OWNER.d_crossing={rule:{name:RULE.d_crossing,from:'crossing',to:'crossing',proximity:a.d_crossing}}).rule);
+  if(a.d_crossing>0) dr.push((OWNER.d_crossing={rule:{name:RULE.d_crossing,from:'crossing',to:'crossing',proximity:a.d_crossing,min_overlap:a.d_crossing_ov}}).rule);
   dr.push(...famRules('dedup',a));
-  if(a.d_road>0) dr.push((OWNER.d_road={rule:{name:RULE.d_road,from:'road',to:'road',proximity:a.d_road}}).rule);
-  if(dr.some(r=>!r.name.startsWith('keep_'))){ c.dedup=Object.assign({mode:'custom'},a.d_overlap!==0.8?{min_overlap:a.d_overlap}:{},anch,{rules:dr}); }
+  if(a.d_road>0) dr.push((OWNER.d_road={rule:{name:RULE.d_road,from:'road',to:'road',proximity:a.d_road,min_overlap:a.d_road_ov}}).rule);
+  if(a.d_living>0) dr.push((OWNER.d_living={rule:{name:RULE.d_living,from:'living_street',to:'living_street',proximity:a.d_living,min_overlap:a.d_living_ov}}).rule);
+  if(a.d_other>0) dr.push((OWNER.d_other={rule:{name:RULE.d_other,from:'other',to:'other',proximity:a.d_other,min_overlap:a.d_other_ov}}).rule);
+  c.dedup= dr.some(r=>!r.name.startsWith('keep_')) ? Object.assign({mode:'custom'},anch,{rules:dr}) : {mode:'off'};
   const cr=[];
-  if(a.c_road>0) cr.push((OWNER.c_road={rule:{name:RULE.c_road,from:'crossing',to:'road',operation:'point',proximity:a.c_road}}).rule);
-  if(a.c_sidewalk>0){ const r={name:RULE.c_sidewalk,from:'crossing',to:'sidewalk',operation:'geometry',proximity:a.c_sidewalk}; if(a.kerb) r.tags={barrier:'kerb',kerb:'lowered'}; OWNER.c_sidewalk={rule:r}; cr.push(r); }
-  if(a.c_living>0) cr.push((OWNER.c_living={rule:{name:RULE.c_living,from:'crossing',to:'living_street',operation:'geometry',proximity:a.c_living}}).rule);
+  const withTags=(id,r)=>{ const t=validTags(id); if(Object.keys(t).length) r.tags=t; OWNER[id]={rule:r}; return r; };
+  if(a.c_road>0) cr.push(withTags('c_road',{name:RULE.c_road,from:'crossing',to:'road',operation:'point',proximity:a.c_road}));
+  if(a.c_sidewalk>0) cr.push(withTags('c_sidewalk',{name:RULE.c_sidewalk,from:'crossing',to:'sidewalk',operation:'geometry',proximity:a.c_sidewalk}));
+  if(a.c_living>0) cr.push(withTags('c_living',{name:RULE.c_living,from:'crossing',to:'living_street',operation:'geometry',proximity:a.c_living}));
   cr.push(...famRules('connect',a));
-  if(cr.length) c.connect={mode:'custom',rules:cr};
-  if(a.x_points>0){ c.extensions={mode:'default',proximity:a.x_points}; if(a.x_build!==0.7){c.extensions.polygon_overlap=a.x_build;c.extensions.zone_overlap=a.x_build;} }
+  if(a.c_t_living>0) cr.push(withTags('c_t_living',{name:RULE.c_t_living,from:'living_street',to:'living_street',operation:'geometry',proximity:a.c_t_living}));
+  if(a.c_crossing>0) cr.push(withTags('c_crossing',{name:RULE.c_crossing,from:'crossing',to:'crossing',operation:'geometry',proximity:a.c_crossing}));
+  c.connect= cr.length? {mode:'custom',rules:cr} : {mode:'off'};
+  c.extensions= a.x_points>0? {mode:'default',proximity:a.x_points,line_overlap:a.x_lines,polygon_overlap:a.x_build,zone_overlap:a.x_zone} : {mode:'off'};
   return c;
 }
 function stepConfig(s){
   const c=buildConfig();
   const stage={s:'snap',d:'dedup',c:'connect'}[s.id[0]];
-  const o=OWNER[s.id]; if(o && c[stage]) return {[stage]:{rules:['…',o.rule]}};
+  const o=OWNER[s.id]; if(o && c[stage]){ const st={}; if(c[stage].anchor) st.anchor=c[stage].anchor; st.rules=['…',o.rule]; return {[stage]:st}; }
   switch(s.id){
     case 'trust': return {snap:{anchor:A.trust},dedup:{anchor:A.trust}};
-    case 's_same': return A.s_same?{snap:{coincident:true}}:null;
-    case 'd_overlap': return c.dedup?{dedup:{min_overlap:A.d_overlap}}:null;
-    case 'x_points': return c.extensions?{extensions:{mode:'default',proximity:A.x_points}}:null;
-    case 'x_build': return c.extensions?{extensions:{polygon_overlap:A.x_build,zone_overlap:A.x_build}}:null;
+    case 's_same': return c.snap.mode==='off'? {snap:{mode:'off'}} : {snap:{coincident:!!A.s_same}};
+    case 's_attrs': return c.snap.mode==='off'? null : {snap:{attributes:A.s_attrs}};
+    case 'x_points': return {extensions: A.x_points>0?{mode:'default',proximity:A.x_points}:{mode:'off'}};
+    case 'x_lines': return A.x_points>0?{extensions:{line_overlap:A.x_lines}}:null;
+    case 'x_build': return A.x_points>0?{extensions:{polygon_overlap:A.x_build}}:null;
+    case 'x_zone': return A.x_points>0?{extensions:{zone_overlap:A.x_zone}}:null;
   }
   return null;
 }
@@ -493,17 +623,18 @@ function drawSame(s,after,yes){
   if(after&&yes) return g+`<circle cx="140" cy="${y}" r="10" class="ring"/>`+dot(140,y,trusted())+`<text x="140" y="${y+28}" text-anchor="middle" class="dt">one node, connected</text>`;
   return g+dot(137,y,1)+dot(143,y,2)+`<text x="140" y="${y+28}" text-anchor="middle" class="dt">two nodes, not connected</text>`;
 }
-function drawDup(s,d,after,yes){
-  const k=s.a, ys=k==='road'?9:13, y1=50, y2=50-d*ys, t=trusted();
+function drawDup(s,e,after,yes){
+  const d=typeof e==='object'?e.d:e, sh=typeof e==='object'?e.share:1;
+  const k=s.a, ys=k==='road'?9:13, y1=50, y2=50-d*ys, t=trusted(), x2=20+(1-sh)*240, x2e=Math.min(260+(1-sh)*240*0.0,260);
   const gone=after&&yes;
   const l1= gone&&t===2? seg(20,y1,260,y1,'g',k) : seg(20,y1,260,y1,1,k);
-  const l2= gone&&t===1? seg(20,y2,260,y2,'g',k) : seg(20,y2,260,y2,2,k);
+  const l2= gone&&t===1? seg(x2,y2,260,y2,'g',k) : seg(x2,y2,260,y2,2,k);
   return l1+l2+`<line x1="268" y1="${y2}" x2="268" y2="${y1}" class="dim"/><text x="264" y="${Math.min(y1,y2)-6>8?Math.min(y1,y2)-6:12}" text-anchor="end" class="dt">${m(d)} apart</text>`;
 }
 function drawOverlap(s,share,after,yes){
-  const L=170, x0=20, y1=46, y2=36, x2=x0+(1-share)*L, t=trusted(), gone=after&&yes;
-  return (gone&&t===2?seg(x0,y1,x0+L,y1,'g','sidewalk'):seg(x0,y1,x0+L,y1,1,'sidewalk'))
-    +(gone&&t===1?seg(x2,y2,x2+L,y2,'g','sidewalk'):seg(x2,y2,x2+L,y2,2,'sidewalk'))
+  const L=170, x0=20, y1=46, y2=36, x2=x0+(1-share)*L, t=1, k=s.a||'sidewalk', gone=after&&yes;   // Lines always keep DS1
+  return (gone&&t===2?seg(x0,y1,x0+L,y1,'g',k):seg(x0,y1,x0+L,y1,1,k))
+    +(gone&&t===1?seg(x2,y2,x2+L,y2,'g',k):seg(x2,y2,x2+L,y2,2,k))
     +`<text x="${Math.min(x2+L,262)}" y="${y2-8}" text-anchor="end" class="dt">${Math.round(share*100)} % alongside</text>`;
 }
 function drawTee(s,d,after,yes){
@@ -531,15 +662,22 @@ function drawRoad(s,d,after,yes){
   return g;
 }
 function drawPoints(s,d,after,yes){
-  const sc=40,y=34,xa=140-d*sc/2,xb=140+d*sc/2,t=trusted();
+  const sc=40,y=34,xa=140-d*sc/2,xb=140+d*sc/2,t=1;   // extensions always keep DS1
   const bench=(x,cls)=>`<rect x="${x-9}" y="${y-5}" width="18" height="10" rx="2" class="${cls}"/>`;
   if(after&&yes){ const ax=t===1?xa:xb, mx=t===1?xb:xa; return `<rect x="${mx-9}" y="${y-5}" width="18" height="10" rx="2" class="pg"/>`+bench(ax,t===1?'p1':'p2')+`<circle cx="${ax}" cy="${y}" r="15" class="ring"/><text x="${ax}" y="${y+30}" text-anchor="middle" class="dt">one Bench</text>`; }
   return bench(xa,'p1')+bench(xb,'p2')+gapLabel(xa,xb,y+18,m(d));
 }
+function drawZone(s,share,after,yes){
+  const w=44,x=110,y=12,dx=(1-share)*w;
+  const z1=`<rect x="${x}" y="${y}" width="${w}" height="${w}" rx="6" class="p1" stroke-dasharray="5 3"/>`;
+  if(!after) return z1+`<rect x="${x+dx}" y="${y+2}" width="${w}" height="${w}" rx="6" class="p2" stroke-dasharray="5 3"/><text x="${x+w+dx+8}" y="${y+26}" class="dt">${Math.round(share*100)} % overlap</text>`;
+  if(yes) return `<rect x="${x+dx}" y="${y+2}" width="${w}" height="${w}" rx="6" class="pg"/>`+z1+`<text x="${x+w+dx+8}" y="${y+26}" class="dt">one Zone</text>`;
+  return z1+`<rect x="${x+dx}" y="${y+2}" width="${w}" height="${w}" rx="6" class="p2" stroke-dasharray="5 3"/><text x="${x+w+dx+8}" y="${y+26}" class="dt">both kept</text>`;
+}
 function drawBuild(s,share,after,yes,thr){
-  const w=44,x=110,y=12,dx=(1-share)*w,t=trusted();
+  const w=44,x=110,y=12,dx=(1-share)*w,t=1;   // extensions always keep DS1
   if(!after) return `<rect x="${x}" y="${y}" width="${w}" height="${w}" class="p1"/><rect x="${x+dx}" y="${y+2}" width="${w}" height="${w}" class="p2"/><text x="${x+w+dx+8}" y="${y+26}" class="dt">${Math.round(share*100)} % overlap</text>`;
-  if(share>=thr){ const keepX=t===1?x:x+dx, goX=t===1?x+dx:x; return `<rect x="${goX}" y="${y+2}" width="${w}" height="${w}" class="pg"/><rect x="${keepX}" y="${y}" width="${w}" height="${w}" class="${t===1?'p1':'p2'}"/><text x="${x+w+dx+8}" y="${y+26}" class="dt">one Building</text>`; }
+  if(share>thr+1e-9){ const keepX=t===1?x:x+dx, goX=t===1?x+dx:x; return `<rect x="${goX}" y="${y+2}" width="${w}" height="${w}" class="pg"/><rect x="${keepX}" y="${y}" width="${w}" height="${w}" class="${t===1?'p1':'p2'}"/><text x="${x+w+dx+8}" y="${y+26}" class="dt">one Building</text>`; }
   return `<path d="M${x},${y} h${w} v2 h${dx} v${w} h-${w} v-2 h-${dx} z" class="pm"/><text x="${x+w+dx+8}" y="${y+26}" class="dt">polygons merged</text>`;
 }
 
@@ -547,12 +685,15 @@ function drawBuild(s,share,after,yes,thr){
 function outcome(s,e){
   const v=A[s.id];
   if(s.kind==='pct'){
-    if(s.id==='d_overlap'){ const any=dedupOn(); if(!any) return {yes:false,text:'Not used: no duplicate Edges are removed',na:true}; const y=e>=v-1e-9; return {yes:y,text:y?'Duplicate edge removed':'Both edges kept'}; }
-    if(!(A.x_points>0)) return {yes:false,text:'Not used: extension features are kept as they are',na:true};
-    const y=e>=v-1e-9; return {yes:true,keep:y,text:y?'One Building polygon kept':'Merged into one polygon'};
+    if(!(A.x_points>0)) return {yes:false,text:'Not used: kept as they are',na:true};
+    if(s.id==='x_lines'){ const y=e>=v-1e-9; return {yes:y,text:y?'One Line kept (DS1)':'Both Lines kept'}; }
+    if(s.id==='x_zone'){ const y=e>v+1e-9; return {yes:y,text:y?'One Zone kept (DS1)':'Both Zones kept'}; }
+    const y=e>v+1e-9; return {yes:true,keep:y,text:y?'One Polygon kept (DS1)':'Merged into one Polygon'};
   }
   if(s.kind==='yesno') return {yes:!!v,text:v?'Merged into one node':'Left as two nodes'};
   if(!(v>0)) return {yes:false,text:'Left as mapped'};
+  if(s.draw==='dup'){ const d=typeof e==='object'?e.d:e, sh=typeof e==='object'?e.share:1, ok=d<=v+1e-9, okov=sh>=A[s.id+'_ov']-1e-9;
+    return {yes:ok&&okov,text: ok&&okov?'Duplicate edge removed': !ok?'Both kept: too far apart':'Both kept: too little runs alongside'}; }
   if(s.draw==='road' && e==='x') return {yes:true,text:'New node added'};
   const y=e<=v+1e-9;
   const words={ends:['Snapped into one node','Left as two nodes'],dup:['Duplicate edge removed','Both edges kept'],tee:['Connected','Not connected'],road:['Connected to the Street','Not connected'],points:['One Bench kept','Both kept']}[s.draw];
@@ -569,11 +710,14 @@ function draw(s,e,after){
     case 'road': return drawRoad(s,e,after,yes);
     case 'points': return drawPoints(s,e,after,yes);
     case 'build': return drawBuild(s,e,after&&!o.na,true,A[s.id]);
+    case 'zone': return drawZone(s,e,after&&!o.na,yes);
   }
 }
 function exLabel(s,e){
+  if(s.draw==='dup') return typeof e==='object'? [`${Math.round(e.share*100)} % alongside`,`${m(e.d)} apart, partly alongside`] : [`${m(e)} apart`,'fully alongside'];
   if(s.draw==='same') return ['Same coordinate','Footway meets Crossing at the curb'];
-  if(s.draw==='overlap') return [`${Math.round(e*100)} % alongside`, e===1?'a full duplicate':e>0.8?'mostly a duplicate':'half a duplicate'];
+  if(s.draw==='overlap') return [`${Math.round(e*100)} % alongside`, e===1?'a full copy':e>0.7?'mostly a copy':'half a copy'];
+  if(s.draw==='zone') return [`${Math.round(e*100)} % overlap`, e>0.9?'nearly identical':e>0.6?'roughly the same':'only half overlaps'];
   if(s.draw==='build') return [`${Math.round(e*100)} % overlap`, e>0.9?'nearly identical':e>0.6?'roughly the same':'only half overlaps'];
   if(s.draw==='road' && e==='x') return ['Crosses the Street','no shared node'];
   if(s.draw==='tee' && e===0) return ['Ends on the edge','touching, no shared node'];
@@ -594,34 +738,99 @@ function exRows(s){
       <div class="res ${o.yes&&!o.na?'y':'n'}"><i>${o.yes&&!o.na?'✓':'–'}</i>${o.text}</div></div>`;}).join('')}</div>`;
 }
 
+const pctTxt=x=>String(+(x*100).toFixed(2));
 const dedupOn=()=>['d_crossing','d_road',...FAM.map(t=>'d_'+t)].some(k=>A[k]>0);
 function chosen(s){
-  const v=A[s.id];
+  A.snapOff= buildConfig().snap.mode==='off';
+  const v=A[s.id], ovRec= !('ov' in s) || Math.abs(A[s.id+'_ov']-s.ov)<1e-9;
   if(s.kind==='choice') return {txt:dsLabel(A.trust==='ds2'?2:1),off:false,rec:A.trust==='ds1'};
   if(s.kind==='yesno') return {txt:v?'Yes':'No',off:!v,rec:v===s.rec};
-  if(s.kind==='pct'){ const na=(s.id==='d_overlap'&&!dedupOn())||(s.id==='x_build'&&!(A.x_points>0)); return {txt:na?'Not used':`${Math.round(v*100)} %`,off:na,rec:Math.abs(v-s.rec)<1e-9}; }
-  return {txt:v>0?`${(+v).toFixed(1)} m`:'Off',off:!(v>0),rec:Math.abs(v-s.rec)<1e-9,};
+  if(s.kind==='attrs') return {txt:v==='anchor_only'?'Anchor only':'Merge',off:A.snapOff,rec:v===s.rec};
+  if(s.kind==='pct'){ const na=s.g==='other'&&!(A.x_points>0); return {txt:na?'Not used':`${pctTxt(v)} %`,off:na,rec:Math.abs(v-s.rec)<1e-9}; }
+  return {txt:v>0?`${(+v).toFixed(1)} m`:'Off',off:!(v>0),rec:Math.abs(v-s.rec)<1e-9&&ovRec};
 }
 function thumbsHTML(s){
-  if(view==='detail' && s.kind!=='choice') return exRows(s);
-  if(s.kind==='choice') return `<p class="note">${esc(dsFull(A.trust==='ds2'?2:1))} Nodes and Edges stay in place; the other dataset’s Nodes are snapped onto them and its duplicate Edges are removed.</p>`;
+  if(s.kind==='choice'||s.kind==='attrs') return '';
+  if(view==='detail') return exRows(s);
   const exs=s.draw==='same'?[null]:s.ex;
-  return `<div class="thumbs ${exs.length===1?'one':''}">${exs.map(e=>{const o=outcome(s,e), ok=o.yes&&!o.na, l=exLabel(s,e)[0];
+  return `<div class="thumbs ${exs.length===1?'one':''}" style="grid-template-columns:repeat(${exs.length},minmax(0,1fr))">${exs.map(e=>{const o=outcome(s,e), ok=o.yes&&!o.na, l=exLabel(s,e)[0];
     return `<div class="thumb">${svg(draw(s,e,true),l+': '+o.text)}<span class="${ok?'y':''}" title="${esc(l+' — '+o.text)}">${ok?'✓ ':''}${esc(l)}</span></div>`;}).join('')}</div>`;
 }
 function valueHTML(s){
   const c=chosen(s), v=A[s.id];
   let ctl;
+  ctl='';
   if(s.kind==='dist') ctl=`<label class="num"><input type="number" id="n-${s.id}" data-num="${s.id}" min="0" max="5" step="0.1" value="${(+v).toFixed(1)}" aria-label="${esc(s.name)} proximity in metres"><span>m</span></label>`;
-  else if(s.kind==='pct') ctl=`<label class="num"><input type="number" id="n-${s.id}" data-num="${s.id}" min="30" max="100" step="5" value="${Math.round(v*100)}" ${c.off?'disabled':''} aria-label="${esc(s.name)} in percent"><span>%</span></label>`;
-  else ctl=`<b class="${c.off?'offv':''}" style="font:700 15px var(--f-alt);color:${c.off?'var(--off)':'var(--brand)'}">${esc(c.txt)}</b>`;
-  const kerb= s.kerb? `<label class="kerbopt"><input type="checkbox" data-kerb="1" ${A.kerb?'checked':''} ${v>0?'':'disabled'}><span>Tag as Curb Ramp (barrier=kerb, kerb=lowered)</span></label>`:'';
-  return ctl+`<span class="pref ${c.rec?'rec':'own'}" id="p-${s.id}">${c.rec?'Recommended':'Your value'}</span>${kerb}`;
+  if('ov' in s) ctl+=`<label class="num"><input type="number" id="o-${s.id}" data-ov="${s.id}" min="0.1" max="100" step="any" value="${pctTxt(A[s.id+'_ov'])}" ${v>0?'':'disabled'} aria-label="${esc(s.name)}: share that must run alongside, in percent"><span>% alongside</span></label>`;
+  else if(s.kind==='pct') ctl=`<label class="num"><input type="number" id="n-${s.id}" data-num="${s.id}" min="0.1" max="100" step="any" value="${pctTxt(v)}" ${c.off?'disabled':''} aria-label="${esc(s.name)} in percent"><span>%</span></label>`;
+  else if(s.kind!=='dist') ctl=`<b class="${c.off?'offv':''}" style="font:700 15px var(--f-alt);color:${c.off?'var(--off)':'var(--brand)'}">${esc(c.txt)}</b>`;
+  return ctl+`<span class="pref ${c.rec?'rec':'own'}" id="p-${s.id}">${c.rec?'Recommended':'Your value'}</span>`;
+}
+// One plain sentence per case: exactly what the union will do with the values set now.
+function linkText(s,v,mm){
+  if(s.id==='c_sidewalk') return `When a Crossing ends up to ${mm(v)} short of a Sidewalk from the other dataset, a new Node is added on the Sidewalk and a connector Edge joins them. Nothing moves.`;
+  if(s.id==='c_road') return `Where a Crossing passes over a motor vehicle road from the other dataset, a new Node is added and both are split there. A Crossing that stops up to ${mm(v)} short is connected too.`;
+  if(s.id==='c_t_living') return `When a Living Street end stops up to ${mm(v)} short of a Living Street from the other dataset, that Living Street is split at a new Node and a connector Edge joins them.`;
+  if(s.id==='c_crossing') return `When a Crossing end stops up to ${mm(v)} short of a Crossing from the other dataset, that Crossing is split at a new Node and a connector Edge joins them.`;
+  if(s.id==='c_living') return `When a Crossing ends up to ${mm(v)} short of a Living Street from the other dataset, a new Node is added on it and a connector Edge joins them.`;
+  return `When a ${s.noun} end stops up to ${mm(v)} short of a Sidewalk, Footway, Pedestrian Road or Steps Edge from the other dataset, that Edge is split at a new Node and a connector Edge joins them.`;
+}
+function doesText(s){
+  const v=A[s.id], an=A.trust==='ds2'?'DS2':'DS1', ot=A.trust==='ds2'?'DS1':'DS2', mm=x=>`${(+x).toFixed(1)} m`, pc=x=>`${pctTxt(x)} %`;
+  if(s.kind==='choice') return `${an} Nodes and Edges stay where they are. ${ot} Nodes are snapped onto them and ${ot}’s duplicate Edges are removed. Curb Nodes never move. Points, Lines, Polygons and Zones always keep their DS1 copy.`;
+  if(s.kind==='attrs') return A.snapOff? 'Not used: no Nodes are snapped.' : v==='anchor_only'? `The kept ${an} Node keeps only its own fields. Values from the snapped ${ot} Node are recorded as ext:union_audit_<key> but never added.` : `The kept ${an} Node keeps its own position, _id and fields, and gains any field only the snapped ${ot} Node had. Every value that differs is recorded as ext:union_audit_<key>.`;
+  if(s.g==='other' && s.kind==='pct' && !(A.x_points>0)) return `Off: ${({x_lines:'Lines',x_build:'Polygons',x_zone:'Zones'})[s.id]} from both datasets are all kept.`;
+  if(s.id==='x_lines') return `A DS2 Line with at least ${pc(v)} of its length within ${mm(A.x_points)} of a DS1 Line merges into it: the DS1 Line is kept and gains any fields only DS2 has.`;
+  if(s.id==='x_zone') return `A DS2 Zone covering more than ${pc(v)} of a DS1 Zone is dropped and the DS1 Zone kept. Below that, both Zones are kept.`;
+  if(s.id==='s_same') return v? 'A DS1 Node and a DS2 Node at exactly the same coordinate become one Node, whatever their Edge types.' : 'Off: DS1 and DS2 Nodes at the same coordinate stay separate, so their Edges are not connected.';
+  if(s.id==='x_build') return `A DS2 Polygon covering more than ${pc(v)} of a DS1 Polygon is dropped and the DS1 Polygon kept, gaining any fields only DS2 has. One that overlaps less is merged with it into one Polygon.`;
+  if(s.id==='x_points' && !(v>0)) return 'Off: Points, Lines, Polygons and Zones from both datasets are all kept as mapped. This one switch turns the whole adjacent-entity and Zone merge on or off.';
+  if(!(v>0)) return 'Off: left exactly as mapped in both datasets.';
+  if(s.g==='join') return `A ${ot} ${s.noun} Node up to ${mm(v)} from a ${an} ${s.noun} Node is snapped onto it. Its Edges move with it.`;
+  if(s.g==='dup') return `A ${ot} ${s.noun} Edge is removed when it lies within ${mm(v)} of a ${an} ${s.noun} Edge and at least ${pc(A[s.id+'_ov'])} of its length runs alongside it.`;
+  if(s.g==='link'){ const base=linkText(s,v,mm), tp=tagPlacement(s.id); const n=tp?tp.node.length:0; return base+(n?` New Nodes and connector Edges get the ${n===1?'tag':n+' tags'} below.`:''); }
+  if(s.id==='x_points') return `Two Points of the same type up to ${mm(v)} apart become one: the DS1 Point is kept and gains any fields only DS2 has. This distance is also the Line overlap buffer, and this switch also turns Line, Polygon and Zone merging on.`;
+  return '';
 }
 function infoHTML(s){
-  const recTxt= s.kind==='choice'?esc(dsFull(1)): s.kind==='yesno'?(s.rec?'Yes':'No'): s.kind==='pct'?Math.round(s.rec*100)+' %': s.rec+' m';
-  const range= s.kind==='dist'?'0 to 5 m (0 turns it off)': s.kind==='pct'?'30 to 100 %':'';
+  const recTxt= s.kind==='choice'?esc(dsFull(1)): s.kind==='attrs'?'Merge': s.kind==='yesno'?(s.rec?'Yes':'No'): s.kind==='pct'?Math.round(s.rec*100)+' %': s.rec+' m'+('ov' in s?`, ${Math.round(s.ov*100)} % alongside`:'');
+  const range= s.kind==='dist'?'0 to 5 m (0 turns it off)'+('ov' in s?', above 0 up to 100 % alongside':''): s.kind==='pct'?'above 0 up to 100 %':'';
   return `<b>${esc(s.title)}</b><span>${s.lead}</span>${s.osw?`<span class="oswref"><span class="osw-tag">OSW 0.3</span>${esc(s.osw)}</span>`:''}<span class="note">Recommended: ${recTxt}${range?` · Allowed: ${range}`:''}${s.sub?` · Applies to: ${esc(s.sub)}`:''}${OWNER[s.id]&&!OWNER[s.id].keep?` · Rule name in the run report: <code>${OWNER[s.id].rule.name}</code>`:''}</span>`;
+}
+function keyOptions(id,i){ const used=tagRows(id).map(([k],j)=>j!==i?(k||'').trim():'').filter(Boolean); return (CASE_TAGS[id]?CASE_TAGS[id].keys:[]).filter(k=>!used.includes(k)); }
+function valueOptions(k){ return KEY_VALUES[(k||'').trim()]||[]; }
+function tagsInner(s){
+  const id=s.id, rows=tagRows(id), ctx=CASE_TAGS[id]||{keys:[],presets:[]};
+  const rowHTML=([k,v],i)=>{ const err=tagIssue(id,i), adv=tagAdvice(id,i), vals=valueOptions(k);
+    return `<div class="trow"><input class="tk ${err&&/key/i.test(err)?'bad':''}" id="tk-${id}-${i}" data-tk="${id}" data-i="${i}" value="${esc(k||'')}" placeholder="key" list="dk-${id}-${i}" autocomplete="off" spellcheck="false" aria-label="Tag ${i+1} key">
+      <datalist id="dk-${id}-${i}">${keyOptions(id,i).map(o=>`<option value="${esc(o)}">`).join('')}</datalist>
+      <span class="teq" aria-hidden="true">=</span>
+      <input class="tv ${err&&/value/i.test(err)?'bad':''}" id="tv-${id}-${i}" data-tv="${id}" data-i="${i}" value="${esc(v||'')}" placeholder="${esc(KEY_HINTS[(k||'').trim()]||(vals.length?'choose or type':'value'))}" ${vals.length?`list="dv-${id}-${i}"`:''} autocomplete="off" spellcheck="false" aria-label="Tag ${i+1} value">
+      <datalist id="dv-${id}-${i}">${vals.map(o=>`<option value="${esc(o)}">`).join('')}</datalist>
+      <button class="tdel" data-tdel="${id}" data-i="${i}" aria-label="Remove tag ${i+1}">✕</button>
+      <span class="terr ${err?'':'adv'}" id="te-${id}-${i}">${esc(err||adv)}</span></div>`; };
+  return `<div class="thead"><span class="tlabel">Tags on what this rule creates</span>
+      <span class="tadd"><button class="tchip" data-tadd="${id}">+ Add tag</button>${ctx.presets.map(pk=>`<button class="tchip" data-tpre="${id}" data-pk="${pk}">${PRESETS[pk][0]}</button>`).join('')}</span></div>
+    <p class="tctx">This rule adds ${esc(ctx.node||'a new Node')}, and ${esc(ctx.edge||'a connector Edge')} across any gap.${ctx.keys.length?` Fields that fit here: ${ctx.keys.join(', ')}.`:''}</p>
+    ${rows.length? `<div class="trows">${rows.map(rowHTML).join('')}</div>` : '<p class="tnone">No tags yet.</p>'}
+    <div class="tprev" id="tp-${id}">${tagPrevText(id)}</div>`;
+}
+function tagPrevText(id){
+  const tp=tagPlacement(id);
+  if(!tp) return '<span class="hint">Connector Edges always copy the approaching Edge’s highway and footway tags. New Nodes and connectors always carry ext:union_rule and ext:union_confidence.</span>';
+  return `<span><b>New Node:</b> ${esc(tp.node.join(', '))}</span><span><b>Connector Edge:</b> ${esc(tp.edge.join(', '))}</span>
+    <span class="hint">OSW Node keys (barrier, kerb, tactile_paving) stay as given on the Node and OSW Edge keys on the connector; any other key is written as ext:&lt;key&gt;. A Node that already exists keeps its own values and records differing ones as ext:union_audit_&lt;key&gt;.</span>`;
+}
+function refreshTags(id){
+  tagRows(id).forEach(([k],i)=>{ const err=tagIssue(id,i), adv=tagAdvice(id,i), te=$('te-'+id+'-'+i), tk=$('tk-'+id+'-'+i), tv=$('tv-'+id+'-'+i);
+    if(te){ te.textContent=err||adv; te.classList.toggle('adv',!err); }
+    if(tk) tk.classList.toggle('bad',!!err&&/key/i.test(err)); if(tv) tv.classList.toggle('bad',!!err&&/value/i.test(err));
+    // the value list follows the key typed; the key list leaves out keys already used in this case
+    const vals=valueOptions(k), dv=$('dv-'+id+'-'+i), dk=$('dk-'+id+'-'+i);
+    if(dv) dv.innerHTML=vals.map(o=>`<option value="${esc(o)}">`).join('');
+    if(dk) dk.innerHTML=keyOptions(id,i).map(o=>`<option value="${esc(o)}">`).join('');
+    if(tv){ if(vals.length) tv.setAttribute('list','dv-'+id+'-'+i); else tv.removeAttribute('list'); tv.placeholder=KEY_HINTS[(k||'').trim()]||(vals.length?'choose or type':'value'); } });
+  const tp=$('tp-'+id); if(tp) tp.innerHTML=tagPrevText(id);
 }
 function itemCfgText(s){ const c=stepConfig(s); return c? JSON.stringify(c,null,2) : 'Nothing — these features are left exactly as mapped.'; }
 function itemHTML(s,i){
@@ -633,7 +842,9 @@ function itemHTML(s,i){
       ${det?'':`<div id="th-${s.id}">${thumbsHTML(s)}</div>`}
       <div class="chip" id="v-${s.id}">${valueHTML(s)}</div>
       <div id="sw-${s.id}">${switchHTML(s)}</div></div>
+    <p class="does ${c.off?'off':''}" id="do-${s.id}">${esc(doesText(s))}</p>
     <p class="fnote" id="fn-${s.id}" ${famNote(s.id)?'':'hidden'}>${esc(famNote(s.id))}</p>
+    ${s.g==='link'?`<div class="tagbox" id="tg-${s.id}" ${A[s.id]>0?'':'hidden'}>${tagsInner(s)}</div>`:''}
     <div class="infobox" id="ib-${s.id}" ${det?'':'hidden'}>${infoHTML(s)}</div>
     ${det?`<div id="th-${s.id}">${thumbsHTML(s)}</div>`:''}
     <details class="icfg"><summary>Configuration for this case</summary><div class="body"><pre id="cf-${s.id}">${esc(itemCfgText(s))}</pre>
@@ -641,13 +852,14 @@ function itemHTML(s,i){
 }
 function switchHTML(s){
   if(s.kind==='choice') return `<div class="mini" role="group" aria-label="Anchor dataset"><button data-qtrust="ds1" aria-pressed="${A.trust==='ds1'}" title="${esc(dsFull(1))}">${esc(dsLabel(1))}</button><button data-qtrust="ds2" aria-pressed="${A.trust==='ds2'}" title="${esc(dsFull(2))}">${esc(dsLabel(2))}</button></div>`;
-  if(s.kind==='pct') return `<span class="dep">${chosen(s).off?'Turns on with the step above':'Follows the step above'}</span>`;
+  if(s.kind==='attrs') return `<div class="mini" role="group" aria-label="Fields of snapped Nodes"><button data-qattr="merge" aria-pressed="${A.s_attrs!=='anchor_only'}">Merge</button><button data-qattr="anchor_only" aria-pressed="${A.s_attrs==='anchor_only'}">Anchor only</button></div>`;
+  if(s.kind==='pct') return `<span class="dep">${chosen(s).off?'Off with Points & Lines':s.id==='x_lines'?'On with Points & Lines; uses its distance':'On with Points & Lines'}</span>`;
   const on= s.kind==='yesno'? !!A[s.id] : A[s.id]>0;
   return `<button class="sw" role="switch" aria-checked="${on}" data-sw="${s.id}" aria-label="${esc(s.name)}"><span class="tr"></span>${on?'On':'Off'}</button>`;
 }
 function totalsHTML(){
   const items=STEPS;
-  const on=items.filter(s=>!chosen(s).off && s.kind!=='choice').length, off=items.filter(s=>chosen(s).off).length, own=items.filter(s=>!chosen(s).rec).length;
+  const on=items.filter(s=>!chosen(s).off && !['choice','attrs'].includes(s.kind)).length, off=items.filter(s=>chosen(s).off).length, own=items.filter(s=>!chosen(s).rec).length;
   return `<span class="stat"><i style="background:var(--ok)"></i><b>${on}</b> on</span><span class="stat"><i style="background:var(--off)"></i><b>${off}</b> left as mapped</span><span class="stat"><i style="background:var(--made)"></i><b>${own}</b> changed from recommended</span>`;
 }
 /* refresh one review line (and everything that depends on it) without re-rendering the value box being typed in */
@@ -658,16 +870,16 @@ function refreshReview(changedId){
     const th=$('th-'+s.id), newTh=thumbsHTML(s); if(th.innerHTML!==newTh) th.innerHTML=newTh;
     $('sw-'+s.id).innerHTML=switchHTML(s);
     $('cf-'+s.id).textContent=itemCfgText(s);
-    if(s.id===changedId){ const p=$('p-'+s.id); if(p){p.className='pref '+(c.rec?'rec':'own'); p.textContent=c.rec?'Recommended':'Your value';} const k=$('v-'+s.id).querySelector('[data-kerb]'); if(k) k.disabled=!(A[s.id]>0); }
+    if(s.id===changedId){ const p=$('p-'+s.id); if(p){p.className='pref '+(c.rec?'rec':'own'); p.textContent=c.rec?'Recommended':'Your value';} const oi=$('v-'+s.id).querySelector('[data-ov]'); if(oi) oi.disabled=!(A[s.id]>0); }
     else $('v-'+s.id).innerHTML=valueHTML(s);
   });
-  STEPS.forEach(s=>{ const ib=$('ib-'+s.id); if(ib) ib.innerHTML=infoHTML(s); const fn=$('fn-'+s.id); if(fn){ const t=famNote(s.id); fn.textContent=t; fn.hidden=!t; } });
+  STEPS.forEach(s=>{ const tg=$('tg-'+s.id); if(tg) tg.hidden=!(A[s.id]>0); const dz=$('do-'+s.id); if(dz){ dz.textContent=doesText(s); dz.classList.toggle('off',chosen(s).off); } const ib=$('ib-'+s.id); if(ib) ib.innerHTML=infoHTML(s); const fn=$('fn-'+s.id); if(fn){ const t=famNote(s.id); fn.textContent=t; fn.hidden=!t; } });
   GROUPS.forEach(([k])=>{ const g=$('gs-'+k); if(g) g.textContent=groupSum(k); });
   $('totals').innerHTML=totalsHTML(); $('full').textContent=JSON.stringify(buildConfig(),null,2);
   $('legend').innerHTML=legendHTML(); $('barsum').innerHTML=barSum(); refreshDatasets(); refreshLead(); save();
 }
 function groupSum(k){
-  const its=STEPS.filter(s=>s.g===k), on=its.filter(s=>!chosen(s).off&&s.kind!=='choice').length, own=its.filter(s=>!chosen(s).rec).length;
+  const its=STEPS.filter(s=>s.g===k), on=its.filter(s=>!chosen(s).off&&!['choice','attrs'].includes(s.kind)).length, own=its.filter(s=>!chosen(s).rec).length;
   if(k==='start') return `${dsLabel(A.trust==='ds2'?2:1)} is the anchor${own?'':' · recommended'}`;
   return `${its.length} case${its.length>1?'s':''} · ${on} on · ${own?own+' changed':'all recommended'}`;
 }
@@ -686,12 +898,13 @@ function refreshDatasets(){
   const run=$('run'), ready=ds.one.trim()&&ds.two.trim()&&!prob; if(run){ run.disabled=!ready; run.title= ready?'':'Choose DS1 and DS2 first'; }
 }
 function barSum(){
-  const its=STEPS.filter(s=>s.kind!=='choice'), on=its.filter(s=>!chosen(s).off).length;
+  const its=STEPS.filter(s=>!['choice','attrs'].includes(s.kind)), on=its.filter(s=>!chosen(s).off).length;
   const pick=k=>ds[k].trim()?esc(ds[k].trim()):'not chosen';
   return `<b>${on} of ${its.length} operations on</b><small>DS1: ${pick('one')} · DS2: ${pick('two')} · anchor ${A.trust==='ds2'?'DS2':'DS1'}</small>`;
 }
+const allOff=c=>['snap','dedup','connect','extensions'].every(k=>!c[k]||c[k].mode==='off');
 function viewHTML(){
-  const c=buildConfig(), empty=!Object.keys(c).length;
+  const c=buildConfig(), empty=allOff(c);
   const groups=GROUPS.map(([k,t])=>{ const open=!collapsed[k];
     return `<section class="rgroup"><button class="ghead" data-grp="${k}" aria-expanded="${open}" aria-controls="gb-${k}"><span class="chev" aria-hidden="true"></span><h3>${t}</h3><span class="gsum" id="gs-${k}">${groupSum(k)}</span></button>
     <div class="gbody" id="gb-${k}" ${open?'':'hidden'}>${STEPS.map((s,i)=>[s,i]).filter(([s])=>s.g===k).map(([s,i])=>itemHTML(s,i)).join('')}</div></section>`; }).join('');
@@ -707,6 +920,19 @@ function viewHTML(){
     <div class="toolbar"><div class="legend" id="legend">${legendHTML()}</div>
       <div class="tright"><div class="qa"><button id="expall">Expand all</button><span aria-hidden="true">·</span><button id="colall">Collapse all</button></div>
       <div class="mini" role="group" aria-label="View"><button data-view="compact" aria-pressed="${view==='compact'}">Compact</button><button data-view="detail" aria-pressed="${view==='detail'}">Detailed</button></div></div></div>
+    <details class="always"><summary>What the union always does (not configurable)</summary><ul>
+      <li>Only DS1 × DS2 pairs are joined. Gaps inside one dataset are left for self-merge.</li>
+      <li>Edge ends are matched to Nodes by exact coordinate, and every output Edge end equals the Node it references.</li>
+      <li>Snap: the nearest Node wins (tie: lowest original _id). Anchor Nodes never move, a Node that moved is never a target, and an Edge is never collapsed onto one Node.</li>
+      <li>Curb Nodes (barrier=kerb) never move, and two Curb Nodes join only at exactly the same coordinate.</li>
+      <li>Snap: a pair of Nodes that matches several cases, such as two corners on both a Sidewalk and a Crossing, follows the Crossing case first, then the Sidewalk, Footway, Pedestrian Road and Steps cases, then Living Street, motor vehicle road and other.</li>
+      <li>Remove duplicates: an Edge must run within 30° of the anchor Edge; a short stub meeting it at a right angle is kept. An Edge that adds a connection the anchor network lacks is kept. After connecting, a removed Edge is restored if its removal left another Edge hanging.</li>
+      <li>Connect: rules run in the order listed; the first rule that reaches a place takes it, and a later rule landing within reach of an earlier new Node reuses it. Each end joins only the nearest Edge, a T-junction needs an angle of 30° or more, only the nearer end of a short Edge joins, and two ends facing across one gap make one junction.</li>
+      <li>Connect: Edges on a different layer, level, bridge or tunnel never join, even where they cross on the map. New Nodes and connector Edges are never split or moved by a later rule.</li>
+      <li>Connector Edges copy the approaching Edge’s highway and footway tags. New Nodes and connectors carry ext:union_rule (the rule name) and ext:union_confidence.</li>
+      <li>Snapped Nodes record ext:union_absorbed (original _ids) and ext:union_confidence; differing values are kept as ext:union_audit_&lt;key&gt;.</li>
+      <li>Nodes the union leaves unused are dropped; Nodes that were unused in the input are kept.</li>
+    </ul></details>
     ${groups}
     <div class="cfg"><h3>Union configuration</h3><pre id="full">${esc(JSON.stringify(c,null,2))}</pre>
     <p class="note">Paste this into the union job’s configuration. Any node, edge or feature type not listed is left exactly as mapped.</p></div>`;
@@ -738,9 +964,8 @@ function readConfig(text){
   const sn=j.snap;
   if(sn && sn.mode && sn.mode!=='off'){
     setAnchor(sn,'snap');
-    if(sn.attributes==='anchor_only') notes.push('snap.attributes “anchor_only” is not offered here; attributes will be merged.');
-    if(sn.mode==='default'){ const p=dist(stagePx(sn),'snap'); Object.assign(a,{s_crossing:p,s_living:p,s_road:p}); FAM.forEach(t=>a['s_'+t]=p); a.s_same= sn.coincident!==false;
-      notes.push('snap default also snaps “other” edge types (Edges that are not Sidewalk, Footway, Pedestrian Road, Steps, Crossing, Living Street or motor vehicle road Edges); this page has no case for them, so they will no longer snap.'); }
+    a.s_attrs= sn.attributes==='anchor_only'?'anchor_only':'merge';
+    if(sn.mode==='default'){ const p=dist(stagePx(sn),'snap'); Object.assign(a,{s_crossing:p,s_living:p,s_road:p,s_other:p}); FAM.forEach(t=>a['s_'+t]=p); a.s_same= sn.coincident!==false; }
     else {
       a.s_same= sn.coincident===true;
       if(sn.others!=null) notes.push(`snap.others (${sn.others} m) has no case here and will be dropped.`);
@@ -751,7 +976,7 @@ function readConfig(text){
         const f=famOf(r.type);
         if(f){ famSet(claimed,f).forEach(t=>{ a['s_'+t]=p; claimed.add(t); }); }
         else if(isType(r.type,'crossing')) a.s_crossing=p;
-        else if(isType(r.type,'living_street')) a.s_living=p; else if(isType(r.type,'road')) a.s_road=p;
+        else if(isType(r.type,'living_street')) a.s_living=p; else if(isType(r.type,'road')) a.s_road=p; else if(isType(r.type,'other')) a.s_other=p;
         else notes.push(`${w}: type ${typeTxt(r.type)} has no case here and will be dropped.`); });
     }
   }
@@ -759,47 +984,48 @@ function readConfig(text){
   const dd=j.dedup;
   if(dd && dd.mode && dd.mode!=='off'){
     setAnchor(dd,'dedup');
-    if(dd.min_overlap!=null) a.d_overlap=Math.min(1,Math.max(0.3,+dd.min_overlap));
-    if(dd.mode==='default'){ const p=dist(stagePx(dd),'dedup'); Object.assign(a,{d_crossing:p,d_road:p}); FAM.forEach(t=>a['d_'+t]=p);
-      notes.push('dedup default also removes duplicate Living Street and “other” Edges; this page has no case for those, so they will be kept.'); }
+    const ovOf=(x,w)=>{ if(x==null) return null; const n=+x; if(!(n>0)) return null; return Math.min(1,Math.round(n*10000)/10000); };
+    const stageOv= ovOf(dd.min_overlap,'dedup') ?? 0.8, setOv=(k,r,w)=>{ a[k+'_ov']= ovOf(r&&r.min_overlap,w) ?? stageOv; };
+    STEPS.filter(x=>'ov' in x).forEach(x=>a[x.id+'_ov']=stageOv);
+    if(dd.mode==='default'){ const p=dist(stagePx(dd),'dedup'); Object.assign(a,{d_crossing:p,d_road:p,d_living:p,d_other:p}); FAM.forEach(t=>a['d_'+t]=p); }
     else { const claimed=new Set(); (dd.rules||[]).forEach((r,i)=>{ const w=`dedup rule ${i+1}${r.name?` “${r.name}”`:''}`;
       const f=famOf(r.from);
       if(f && isNever(r.to)){ famSet(claimed,f).forEach(t=>{ a['d_'+t]=0; claimed.add(t); }); return; }
-      if(r.min_overlap!=null && +r.min_overlap!==+a.d_overlap) notes.push(`${w}: its own overlap (${Math.round(r.min_overlap*100)} %) is replaced by the page’s single overlap setting.`);
       const p= dist(r.proximity!=null?r.proximity:stagePx(dd), w);
       const pair=`${typeTxt(r.from)}→${typeTxt(r.to)}`;
-      if(f && famOf(r.to)){ famSet(claimed,f).forEach(t=>{ a['d_'+t]=p; claimed.add(t); }); }
-      else if(pair==='crossing→crossing') a.d_crossing=p; else if(pair==='road→road') a.d_road=p;
+      if(f && famOf(r.to)){ famSet(claimed,f).forEach(t=>{ a['d_'+t]=p; setOv('d_'+t,r,w); claimed.add(t); }); }
+      else if(pair==='crossing→crossing'){ a.d_crossing=p; setOv('d_crossing',r,w); } else if(pair==='road→road'){ a.d_road=p; setOv('d_road',r,w); }
+      else if(pair==='living_street→living_street'){ a.d_living=p; setOv('d_living',r,w); } else if(pair==='other→other'){ a.d_other=p; setOv('d_other',r,w); }
       else notes.push(`${w}: ${typeTxt(r.from)} → ${typeTxt(r.to)} has no case here and will be dropped.`); }); }
   }
   // connect
   const cn=j.connect;
   if(cn && cn.mode && cn.mode!=='off'){
-    if(cn.mode==='default'){ const p=dist(stagePx(cn),'connect'); Object.assign(a,{c_road:p,c_sidewalk:p,c_living:p}); FAM.forEach(t=>a['c_t_'+t]=p);
-      notes.push('connect default also connects Living Street to Living Street and Crossing to Crossing; this page has no case for those, so they will not be connected.'); }
+    if(cn.mode==='default'){ const p=dist(stagePx(cn),'connect'); Object.assign(a,{c_road:p,c_sidewalk:p,c_living:p,c_t_living:p,c_crossing:p}); FAM.forEach(t=>a['c_t_'+t]=p); }
     else { const claimed=new Set(); (cn.rules||[]).forEach((r,i)=>{ const w=`connect rule ${i+1}${r.name?` “${r.name}”`:''}`;
       const p= dist(r.proximity!=null?r.proximity:stagePx(cn), w), key=`${typeTxt(r.from)}→${typeTxt(r.to)}:${r.operation}`;
-      const tags=r.tags||{}, tagKeys=Object.keys(tags);
-      if(key==='crossing→road:point') a.c_road=p;
-      else if(key==='crossing→sidewalk:geometry'){ a.c_sidewalk=p; a.kerb= tags.barrier==='kerb'; }
-      else if(key==='crossing→living_street:geometry') a.c_living=p;
-      else if(r.operation==='geometry' && famOf(r.from) && famOf(r.to)) famSet(claimed,famOf(r.from)).forEach(t=>{ a['c_t_'+t]=p; claimed.add(t); });
+      const tags=r.tags&&typeof r.tags==='object'?r.tags:{}, rows=Object.entries(tags).map(([k,v])=>[k,String(v)]);
+      const set=id=>{ a[id]=p; a[id+'_tags']=rows.map(x=>x.slice()); };
+      if(key==='crossing→road:point') set('c_road');
+      else if(key==='crossing→sidewalk:geometry') set('c_sidewalk');
+      else if(key==='crossing→living_street:geometry') set('c_living');
+      else if(key==='living_street→living_street:geometry') set('c_t_living');
+      else if(key==='crossing→crossing:geometry') set('c_crossing');
+      else if(r.operation==='geometry' && famOf(r.from) && famOf(r.to)) famSet(claimed,famOf(r.from)).forEach(t=>{ set('c_t_'+t); claimed.add(t); });
       else { notes.push(`${w}: ${typeTxt(r.from)} → ${typeTxt(r.to)} (${r.operation}) has no case here and will be dropped.`); return; }
-      const other=tagKeys.filter(k=>!(key.startsWith('crossing→sidewalk') && (k==='barrier'||k==='kerb')));
-      if(other.length) notes.push(`${w}: tag${other.length>1?'s':''} ${other.join(', ')} ${other.length>1?'are':'is'} not offered here and will be dropped.`); }); }
+      }); }
   }
   // extensions
   const ex=j.extensions;
   if(ex && ex.mode==='default'){
     a.x_points= dist(ex.proximity!=null?ex.proximity:0.5,'extensions') || 0.1;
-    if(ex.polygon_overlap!=null) a.x_build=Math.min(1,Math.max(0.3,+ex.polygon_overlap));
-    if(ex.line_overlap!=null && +ex.line_overlap!==0.7) notes.push(`extensions.line_overlap (${Math.round(ex.line_overlap*100)} %) is not offered here; the union default (70 %) will be used.`);
-    if(ex.zone_overlap!=null && ex.polygon_overlap!=null && +ex.zone_overlap!==+ex.polygon_overlap) notes.push('extensions.zone_overlap differs from polygon_overlap; this page uses one value for both (the polygon one).');
+    const pc=x=> x!=null && +x>0 ? Math.min(1,+x) : 0.7;
+    a.x_lines=pc(ex.line_overlap); a.x_build=pc(ex.polygon_overlap); a.x_zone=pc(ex.zone_overlap);
   }
   a.trust= anchor||'ds1';
   return {answers:a,notes};
 }
-function offState(){ const a=recAnswers(); STEPS.forEach(s=>{ if(s.kind==='dist') a[s.id]=0; if(s.kind==='yesno') a[s.id]=false; }); a.kerb=false; return a; }
+function offState(){ const a=recAnswers(); STEPS.forEach(s=>{ if(s.kind==='dist') a[s.id]=0; if(s.kind==='yesno') a[s.id]=false; }); return a; }
 function loadPanelHTML(){
   return `<div class="loadp" id="loadp" hidden><h3>Load an existing configuration</h3>
     <p class="note">Paste a union configuration, or a whole union request that contains one. Every case below is set from it.</p>
@@ -817,19 +1043,21 @@ function tryLoad(){
   A=Object.assign(r.answers,{_last:{}}); pendingLoad=null; render(); save(); flash('Configuration loaded');
 }
 function render(){ $('app').innerHTML=viewHTML(); $('barsum').innerHTML=barSum(); refreshDatasets(); }
-const refreshLead=()=>{ const l=$('lead'); if(l) l.textContent=leadText(!Object.keys(buildConfig()).length); };
+const refreshLead=()=>{ const l=$('lead'); if(l) l.textContent=leadText(allOff(buildConfig())); };
 
 document.addEventListener('input',e=>{
   const d=e.target.dataset||{};
   if(d.num){ const st=STEPS.find(x=>x.id===d.num); let v=parseFloat(e.target.value); if(isNaN(v)) return;
-    v= st.kind==='pct'? Math.min(100,Math.max(30,v))/100 : Math.min(5,Math.max(0,Math.round(v*10)/10));
+    if(st.kind==='pct'){ if(!(v>0)) return; v=Math.min(100,v)/100; } else v=Math.min(5,Math.max(0,Math.round(v*10)/10));
     A[d.num]=v; refreshReview(d.num); refreshLead(); return; }
-  if(d.kerb){ A.kerb=e.target.checked; refreshReview(); }
+  if(d.tk||d.tv){ const id=d.tk||d.tv, i=+d.i, rows=tagRows(id); rows[i]=rows[i]||['','']; rows[i][d.tk?0:1]=e.target.value; refreshTags(id); refreshReview(id); return; }
+  if(d.ov){ let v=parseFloat(e.target.value); if(isNaN(v)) return; if(!(v>0)) return; A[d.ov+'_ov']=Math.min(100,v)/100; refreshReview(d.ov); return; }
   if(d.ds){ ds[d.ds]=e.target.value; $('barsum').innerHTML=barSum(); refreshDatasets(); save();
     document.dispatchEvent(new CustomEvent('tdei-dataset-search',{detail:{dataset:d.ds==='one'?'DS1':'DS2',query:e.target.value}})); }
 });
 document.addEventListener('input',e=>{ if(e.target.id==='loadtxt' && pendingLoad){ pendingLoad=null; $('loadmsg').innerHTML=''; $('loadgo').textContent='Load'; } });
-document.addEventListener('change',e=>{ const nid=e.target.dataset&&e.target.dataset.num; if(nid){ const st=STEPS.find(x=>x.id===nid); e.target.value= st.kind==='pct'?Math.round(A[nid]*100):(+A[nid]).toFixed(1); } });
+document.addEventListener('change',e=>{ const oid=e.target.dataset&&e.target.dataset.ov; if(oid) e.target.value=pctTxt(A[oid+'_ov']); });
+document.addEventListener('change',e=>{ const nid=e.target.dataset&&e.target.dataset.num; if(nid){ const st=STEPS.find(x=>x.id===nid); e.target.value= st.kind==='pct'?pctTxt(A[nid]):(+A[nid]).toFixed(1); } });
 document.addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
   if(b.id==='reset'){ A=Object.assign(recAnswers(),{trust:A.trust}); render(); save(); return flash('Recommended values restored'); }
@@ -843,6 +1071,12 @@ document.addEventListener('click',e=>{
   if(b.dataset.view){ view=b.dataset.view; render(); save(); return; }
   if(b.dataset.info){ const box=$('ib-'+b.dataset.info), open=box.hidden; box.hidden=!open; b.setAttribute('aria-expanded',String(open)); return; }
   if(b.dataset.copyitem){ const id=b.dataset.copyitem; return copy($('cf-'+id),'t-'+id); }
+  if(b.dataset.tadd){ const id=b.dataset.tadd; tagRows(id).push(['','']); $('tg-'+id).innerHTML=tagsInner(STEPS.find(x=>x.id===id)); const n=tagRows(id).length-1; const k=$('tk-'+id+'-'+n); if(k) k.focus(); refreshReview(id); return; }
+  if(b.dataset.tpre){ const id=b.dataset.tpre, rows=tagRows(id); PRESETS[b.dataset.pk][1].forEach(([k,v])=>{ const r=rows.find(x=>(x[0]||'').trim()===k); r? r[1]=v : rows.push([k,v]); });
+    for(let i=rows.length-1;i>=0;i--) if(!(rows[i][0]||'').trim()&&!(rows[i][1]||'').trim()) rows.splice(i,1);
+    $('tg-'+id).innerHTML=tagsInner(STEPS.find(x=>x.id===id)); refreshReview(id); return; }
+  if(b.dataset.tdel){ const id=b.dataset.tdel; tagRows(id).splice(+b.dataset.i,1); $('tg-'+id).innerHTML=tagsInner(STEPS.find(x=>x.id===id)); refreshReview(id); return; }
+  if(b.dataset.qattr){ A.s_attrs=b.dataset.qattr; refreshReview(); return; }
   if(b.dataset.qtrust){ A.trust=b.dataset.qtrust; refreshReview(); return; }
   if(b.dataset.sw){ const st=STEPS.find(x=>x.id===b.dataset.sw); A._last=A._last||{};
     if(st.kind==='yesno') A[st.id]=!A[st.id];

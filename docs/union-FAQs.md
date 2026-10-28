@@ -86,7 +86,7 @@ A zip with the union's output and its run report:
 | File | Contents |
 |---|---|
 | `osw.nodes.geojson`, `osw.edges.geojson`, `osw.zones.geojson`, `osw.points.geojson`, `osw.lines.geojson`, `osw.polygons.geojson` | The combined dataset, OpenSidewalks 0.3 |
-| `union_report.json` | What the union did: the effective config, per-rule counts, warnings and totals ([The run report](#the-run-report)) |
+| `union_report.json` | What the union did: the effective config, per-rule counts, warnings and totals ([union-report.md](union-report.md)) |
 
 ---
 
@@ -170,9 +170,11 @@ Whole lines only: a line is kept whole or removed whole, never trimmed.
   "mode": "custom",
   "rules": [
     { "name": "kerbed-crossing", "from": "crossing", "to": "sidewalk", "operation": "geometry",
-      "proximity": 1, "tags": { "barrier": "kerb", "kerb": "lowered", "survey_batch": "2026-10" } },
+      "proximity": 1,
+      "node_tags": { "barrier": "kerb", "kerb": "lowered", "survey_batch": "2026-10" },
+      "edge_tags": { "crossing:markings": "zebra", "surface": "asphalt" } },
     { "name": "road-crossing", "from": "crossing", "to": "road", "operation": "point",
-      "proximity": 0.3, "tags": { "tactile_paving": "yes" } }
+      "proximity": 0.3, "node_tags": { "tactile_paving": "yes" } }
   ]
 }
 ```
@@ -184,7 +186,8 @@ Whole lines only: a line is kept whole or removed whole, never trimmed.
 | `to` | required | Line B: the line that is split |
 | `operation` | required | `point` or `geometry` (below) |
 | `proximity` | section's, else 0.5 m | Point: how far A may stop short of B. Geometry: the largest gap between A's end and B |
-| `tags` | none | Tags for the node and connector the rule creates |
+| `node_tags` | none | Tags for the junction node the rule makes or reuses |
+| `edge_tags` | none | Tags for the connector edges the rule adds |
 
 - **`point`**: where A crosses B with no shared node, a node is made and both lines are split;
   an end of A that stops short of B gets a node on B and a connector.
@@ -259,10 +262,16 @@ The joined point also carries `ext:union_absorbed` (the original ids that joined
 
 ### What do created nodes and connectors carry?
 
-The rule's `tags` — standard OpenSidewalks keys as given (`barrier=kerb` on a node), anything
-else as `ext:<key>` (`survey_batch` becomes `ext:survey_batch`; `barrier` on a connector
-becomes `ext:barrier`, because barrier is not a line key) — plus `ext:union_rule` (the rule's
-name) and `ext:union_confidence`. A connector also copies A's `highway` and `footway`. A node
+A junction node gets the rule's `node_tags`; a connector gets the rule's `edge_tags`. Each set
+goes only where it is named: `kerb=lowered` in `node_tags` never reaches the connector, and
+`crossing:markings=zebra` in `edge_tags` never reaches the node. Standard OpenSidewalks keys
+are written as given (`barrier`, `kerb`, `tactile_paving` on a node; `surface`, `width`,
+`crossing:markings` and the other line keys on a connector); anything else becomes
+`ext:<key>` (`survey_batch` becomes `ext:survey_batch`; `barrier` in `edge_tags` becomes
+`ext:barrier`, because barrier is not a line key). A node that already has a key keeps its own
+value; a different value from the rule is recorded as `ext:union_audit_<key>`. Both kinds also
+get `ext:union_rule` (the rule's name) and `ext:union_confidence`. The older single `tags`
+setting is rejected with a message pointing to `node_tags` and `edge_tags`. A connector also copies A's `highway` and `footway`. A node
 several rules used lists them all in `ext:union_rule`, in rule order. Pieces of a split line
 keep their own tags and gain nothing.
 
@@ -292,6 +301,9 @@ keep their own tags and gain nothing.
 | connect | `candidates`, `junctions`, `nodes_created`, `nodes_reused`, `joined_earlier_node`, `connectors`, `edges_split`, and why locations were passed over: `skipped_taken` (an earlier rule had it), `skipped_nearer_end`, `skipped_angle`, `skipped_level`, `skipped_mutual` |
 
 Every rule appears, even one that did nothing — a rule with all zeros is worth a second look.
+
+Every key, count and warning is explained in [union-report.md](union-report.md), with what to
+look for when reading one.
 
 ---
 

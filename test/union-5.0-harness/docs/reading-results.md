@@ -40,7 +40,7 @@ one junction, and only named edges count towards its degree.
 | `connectors [by <rule>]: expected N, got M` | connector edges in the case area (optionally by rule) |
 | `node: key=… (want …)`, `key missing`, `(should be absent)` | node attributes: anchor values, added keys, `ext:union_audit_*`, `ext:union_rule` |
 | `a node remains at (x,y)` | a node that should have moved onto its anchor is still there |
-| `connector: key=… (want …)`, `no connector by <rule>` | a connector's tags: A's `highway`/`footway`, the rule's tags (OSW keys as-is, others as `ext:`) |
+| `connector: key=… (want …)`, `no connector by <rule>` | a connector's tags: A's `highway`/`footway`, the rule's `edge_tags` (OSW keys as-is, others as `ext:`), and none of its `node_tags` |
 | `<kind>s: expected N, got M`, `<kind>: key=…` | zones, extension points / lines / polygons in the area, and their attributes |
 
 Coordinates `(x,y)` are metres from the dataset origin. Each case's setup and

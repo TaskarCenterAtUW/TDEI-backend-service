@@ -13,7 +13,7 @@ reads no data, so this needs only the union deployed.
 Each case: (name, config, expectation)
   ("error", "fragment")         rejected, the message contains fragment
   ("ok", [(path, op, value)])   accepted; the effective config at path (dotted;
-                                [n] indexes a list) compares to value. op: ==, len
+                                [n] indexes a list) compares to value. op: ==, len, absent
 """
 import argparse, json, re, sys
 
@@ -72,15 +72,23 @@ CASES = [
     ("tag value a number",       {"snap": {"mode": "custom", "rules": [R(type={"highway": 5})]}},
                                  ("error", "config.snap.rules[1].type.highway: a tag value must be a string")),
     ("type list of numbers",     {"snap": {"mode": "custom", "rules": [R(type=[1])]}},  ("error", "each list entry must be a type name or a tag match")),
-    # ── tags (V1) ───────────────────────────────────────────────────────────
-    ("tags not an object",       {"connect": {"mode": "custom", "rules": [R(name="a", **{"from": "crossing", "to": "road"}, operation="point", tags=["x"])]}},
-                                 ("error", "config.connect.rules[1].tags: tags must be an object")),
-    ("reserved tag _id",         {"connect": {"mode": "custom", "rules": [R(name="a", **{"from": "crossing", "to": "road"}, operation="point", tags={"_id": "1"})]}},
-                                 ("error", "config.connect.rules[1].tags._id: this key is reserved")),
-    ("reserved tag ext:union_",  {"connect": {"mode": "custom", "rules": [R(name="a", **{"from": "crossing", "to": "road"}, operation="point", tags={"ext:union_rule": "x"})]}},
+    # ── node_tags / edge_tags (V1) ─────────────────────────────────────────
+    ("tags replaced",            {"connect": {"mode": "custom", "rules": [R(name="a", **{"from": "crossing", "to": "road"}, operation="point", tags={"kerb": "lowered"})]}},
+                                 ("error", "config.connect.rules[1].tags: a connect rule takes node_tags (for the junction node) and edge_tags (for the connector edge) instead of tags")),
+    ("node_tags not an object",  {"connect": {"mode": "custom", "rules": [R(name="a", **{"from": "crossing", "to": "road"}, operation="point", node_tags=["x"])]}},
+                                 ("error", "config.connect.rules[1].node_tags: tags must be an object")),
+    ("edge_tags not an object",  {"connect": {"mode": "custom", "rules": [R(name="a", **{"from": "crossing", "to": "road"}, operation="point", edge_tags="zebra")]}},
+                                 ("error", "config.connect.rules[1].edge_tags: tags must be an object")),
+    ("reserved node tag _id",    {"connect": {"mode": "custom", "rules": [R(name="a", **{"from": "crossing", "to": "road"}, operation="point", node_tags={"_id": "1"})]}},
+                                 ("error", "config.connect.rules[1].node_tags._id: this key is reserved")),
+    ("reserved edge tag _u_id",  {"connect": {"mode": "custom", "rules": [R(name="a", **{"from": "crossing", "to": "road"}, operation="point", edge_tags={"_u_id": "1"})]}},
+                                 ("error", "config.connect.rules[1].edge_tags._u_id: this key is reserved")),
+    ("reserved tag ext:union_",  {"connect": {"mode": "custom", "rules": [R(name="a", **{"from": "crossing", "to": "road"}, operation="point", edge_tags={"ext:union_rule": "x"})]}},
                                  ("error", "this key is reserved")),
-    ("nested tag value",         {"connect": {"mode": "custom", "rules": [R(name="a", **{"from": "crossing", "to": "road"}, operation="point", tags={"kerb": {"a": 1}})]}},
-                                 ("error", "config.connect.rules[1].tags.kerb: a tag value must be a string, number or boolean")),
+    ("nested node tag value",    {"connect": {"mode": "custom", "rules": [R(name="a", **{"from": "crossing", "to": "road"}, operation="point", node_tags={"kerb": {"a": 1}})]}},
+                                 ("error", "config.connect.rules[1].node_tags.kerb: a tag value must be a string, number or boolean")),
+    ("nested edge tag value",    {"connect": {"mode": "custom", "rules": [R(name="a", **{"from": "crossing", "to": "road"}, operation="point", edge_tags={"surface": ["asphalt"]})]}},
+                                 ("error", "config.connect.rules[1].edge_tags.surface: a tag value must be a string, number or boolean")),
 
     # ── accepted configs, and what they expand to ───────────────────────────
     ("nothing configured",       {},  ("ok", [("snap.mode", "==", "off"), ("dedup.mode", "==", "off"),
@@ -112,10 +120,18 @@ CASES = [
                                          ("snap.rules[1].anchor", "==", "ds2"), ("snap.rules[1].proximity", "==", 1),
                                          ("snap.rules[2].proximity", "==", 0), ("snap.rules[2].anchor", "==", "ds1"),
                                          ("snap.others.proximity", "==", 0.5), ("snap.coincident", "==", False)])),
-    ("custom connect: tags, lists of types", {"connect": {"mode": "custom", "proximity": 1, "rules": [
+    ("custom connect: node_tags, edge_tags, lists of types", {"connect": {"mode": "custom", "proximity": 1, "rules": [
                                     R(name="kerbed", **{"from": "crossing", "to": [{"footway": "sidewalk"}, "living_street"]},
-                                      operation="geometry", tags={"barrier": "kerb", "survey_batch": 2026, "verified": True})]}},
-                                 ("ok", [("connect.rules[1].proximity", "==", 1), ("connect.rules[1].tags.survey_batch", "==", 2026)])),
+                                      operation="geometry", node_tags={"barrier": "kerb", "survey_batch": 2026, "verified": True},
+                                      edge_tags={"crossing:markings": "zebra", "width": 2.5})]}},
+                                 ("ok", [("connect.rules[1].proximity", "==", 1), ("connect.rules[1].node_tags.survey_batch", "==", 2026),
+                                         ("connect.rules[1].edge_tags.crossing:markings", "==", "zebra"),
+                                         ("connect.rules[1].edge_tags.width", "==", 2.5),
+                                         ("connect.rules[1].tags", "absent", None)])),
+    ("custom connect: no tag sets", {"connect": {"mode": "custom", "rules": [R(name="plain", **{"from": "crossing", "to": "road"}, operation="point")]}},
+                                 ("ok", [("connect.rules[1].node_tags", "==", {}), ("connect.rules[1].edge_tags", "==", {})])),
+    ("default connect: empty tag sets", {"connect": {"mode": "default"}},
+                                 ("ok", [("connect.rules[2].node_tags", "==", {}), ("connect.rules[2].edge_tags", "==", {})])),
     ("50 rules is the limit",    {"connect": {"mode": "custom", "rules": many(50)}},     ("ok", [("connect.rules", "len", 50)])),
 ]
 
@@ -162,6 +178,12 @@ def check(results_file):
             else:
                 eff = json.loads(res[1])
                 for path, op, val in want[1]:
+                    if op == "absent":
+                        try:
+                            get(eff, path); problems.append(f"{path} present, want it absent")
+                        except (KeyError, IndexError, TypeError):
+                            pass
+                        continue
                     try:
                         v = get(eff, path)
                     except (KeyError, IndexError, TypeError):

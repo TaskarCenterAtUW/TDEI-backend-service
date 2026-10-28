@@ -56,7 +56,7 @@ Union 5.0 harness
 
 | Mark | Meaning |
 |---|---|
-| magenta line | **connector** a connect rule made (Identify: `ext:union_rule`, `ext:union_confidence`, the rule's tags) |
+| magenta line | **connector** a connect rule made (Identify: `ext:union_rule`, `ext:union_confidence`, the rule's `edge_tags`) |
 | red dashed line | input edge **removed**: nothing in the output comes from it (a duplicate) |
 | purple line | input edge **split** into 2+ pieces lying exactly on it |
 | orange line | input edge **modified**: one line, reshaped (an end snapped) |

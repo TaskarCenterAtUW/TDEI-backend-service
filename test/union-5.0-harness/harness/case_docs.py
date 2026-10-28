@@ -20,7 +20,7 @@ SECTIONS = [
      "joins a sidewalk, footway or road."),
     ("Per-type snap distances (SN)", r"^SN\d+$", "Mostly checked under `custom_snap`."),
     ("Anchors and attributes (AN)", r"^AN\d+$", "Checked under `custom_anchor` (DS2 anchored for sidewalks)."),
-    ("Ordered connect rules with tags (CC)", r"^CC\d+$",
+    ("Ordered connect rules with node_tags / edge_tags (CC)", r"^CC\d+$",
      "Checked under `custom_connect`. The ids in titles (O1–O3, W1–W5, G1, G3) are the decided edge cases "
      "of the requirement spec; see [union-expectations.md](union-expectations.md)."),
     ("Dedup guards (DG)", r"^DG\d+$", "The stranding and connectivity guards of the dedup stage."),

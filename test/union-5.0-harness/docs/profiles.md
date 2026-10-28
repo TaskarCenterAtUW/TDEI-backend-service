@@ -74,18 +74,19 @@ Connect runs with snap and dedup off. Checks that junctions do not depend on
 snap (X3, X4), that coincident joining is snap's job (SN6 stays apart), and that
 nothing is removed (A keeps both copies).
 
-### `custom_connect` — ordered rules with tags
+### `custom_connect` — ordered rules with node_tags / edge_tags
 
 ```json
 {"snap": {"mode": "default", "proximity": 0.5}, "dedup": {"mode": "default", "proximity": 0.5},
  "connect": {"mode": "custom", "rules": [
    {"name": "kerbed-crossing",     "from": "crossing", "to": "sidewalk", "operation": "geometry", "proximity": 1.0,
-    "tags": {"barrier": "kerb", "kerb": "lowered", "survey_batch": "2026-10"}},
+    "node_tags": {"barrier": "kerb", "kerb": "lowered", "survey_batch": "2026-10"},
+    "edge_tags": {"crossing:markings": "zebra", "surface": "asphalt", "verified": "yes"}},
    {"name": "sidewalk-sidewalk",   "from": "sidewalk", "to": "sidewalk", "operation": "geometry", "proximity": 1.0},
    {"name": "footway-sidewalk",    "from": {"highway": "footway"}, "to": "sidewalk", "operation": "geometry", "proximity": 1.0,
-    "tags": {"ext:source": "rule2"}},
+    "node_tags": {"ext:source": "rule2"}},
    {"name": "road-crossing",       "from": "crossing", "to": "road", "operation": "point", "proximity": 0.3,
-    "tags": {"tactile_paving": "yes"}},
+    "node_tags": {"tactile_paving": "yes"}, "edge_tags": {"crossing:markings": "lines"}},
    {"name": "duplicate-of-rule-1", "from": "crossing", "to": "sidewalk", "operation": "geometry", "proximity": 1.0}]}}
 ```
 

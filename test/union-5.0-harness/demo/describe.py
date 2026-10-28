@@ -348,7 +348,9 @@ def config_columns(run):
             what = _type(r["from"]) if r["from"] == r["to"] else f"{_type(r['from'])} → {_type(r['to'])}"
             lines.append(f"{r['name']}: {what} within {_p(r['proximity'])}, ≥ {r.get('min_overlap', 0.8) * 100:.0f} % "
                          f"overlap, anchor {str(r.get('anchor', 'ds1')).upper()}  →  {m.get('removed', 0)} removed"
-                         f" of {m.get('candidates', 0)}")
+                         f" of {m.get('candidates', 0)}"
+                         + (f", {m['restored']} put back (removing it would leave a line hanging)"
+                            if m.get("restored") else ""))
         cols.append(("DEDUP", st["mode"], lines))
 
     st = eff.get("connect", {"mode": "off"})
@@ -358,7 +360,8 @@ def config_columns(run):
         lines = []
         for i, r in enumerate(st.get("rules", []), 1):
             m = metrics.get(("connect", r["name"]), {})
-            tags = ", tags " + " ".join(f"{k}={v}" for k, v in r["tags"].items()) if r.get("tags") else ""
+            tags = "".join(f", {label} " + " ".join(f"{k}={v}" for k, v in r[key].items())
+                           for key, label in (("node_tags", "node"), ("edge_tags", "connector")) if r.get(key))
             skipped = sum(v for k, v in m.items() if k.startswith("skipped_"))
             lines.append(f"{i}. {r['name']}: {_type(r['from'])} → {_type(r['to'])}, {r['operation']} within "
                          f"{_p(r['proximity'])}{tags}  →  {_n(m.get('junctions', 0), 'junction')}, "

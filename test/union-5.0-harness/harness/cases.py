@@ -397,32 +397,40 @@ CASES = [
                                  ("node_absent", (120, 680))],
                "default": [("count", "AN3: ds1 copy", 1), ("count", "AN3: ds2 copy", 0)]}),
 
- # ── custom_connect: ordered rules with tags ────────────────────────────────
+ # ── custom_connect: ordered rules with node_tags / edge_tags ────────────────────────────────
  dict(id="CC1", title="O1: two rules match the same spot",
       setup="A DS2 crossing ends 0.5 m short of a DS1 sidewalk.",
-      expected="kerbed-crossing (listed first) takes it: a node on the sidewalk tagged barrier=kerb, kerb=lowered "
-               "and ext:survey_batch, and a connector carrying ext:barrier and ext:kerb (not edge keys). The "
-               "broader footway-sidewalk rule skips it.",
+      expected="kerbed-crossing (listed first) takes it: a node on the sidewalk with its node_tags (barrier=kerb, "
+               "kerb=lowered, ext:survey_batch) and a connector with its edge_tags (crossing:markings=zebra, "
+               "surface=asphalt, ext:verified). Neither set reaches the other. The broader footway-sidewalk rule "
+               "skips it.",
       asserts={"custom_connect": [("count", "CC1: sidewalk", 2), ("count", "CC1: crossing", 1),
                                   ("connectors", 1, "kerbed-crossing"),
                                   ("junction", (20, 720), 3, ["CC1: sidewalk", "CC1: crossing"]),
                                   ("node_attr", (20, 720), {"barrier": "kerb", "kerb": "lowered",
                                                             "ext:survey_batch": "2026-10",
-                                                            "ext:union_rule": "kerbed-crossing"}),
+                                                            "ext:union_rule": "kerbed-crossing",
+                                                            "crossing:markings": ABSENT, "surface": ABSENT,
+                                                            "ext:crossing:markings": ABSENT, "ext:surface": ABSENT,
+                                                            "ext:verified": ABSENT}),
                                   ("edge_attr", "kerbed-crossing", {"highway": "footway", "footway": "crossing",
-                                                                    "ext:barrier": "kerb", "ext:kerb": "lowered",
-                                                                    "ext:survey_batch": "2026-10",
-                                                                    "barrier": ABSENT})]}),
+                                                                    "crossing:markings": "zebra", "surface": "asphalt",
+                                                                    "ext:verified": "yes",
+                                                                    "barrier": ABSENT, "kerb": ABSENT,
+                                                                    "ext:barrier": ABSENT, "ext:kerb": ABSENT,
+                                                                    "ext:survey_batch": ABSENT})]}),
  dict(id="CC2", title="The broader rule catches a plain footway",
       setup="A DS2 plain footway ends 0.5 m short of a DS1 sidewalk.",
-      expected="Only footway-sidewalk matches: its node carries ext:source=rule2.",
+      expected="Only footway-sidewalk matches: its node carries ext:source=rule2 (node_tags); the rule has no "
+               "edge_tags, so its connector carries only A's highway/footway and the union tags.",
       asserts={"custom_connect": [("junction", (80, 720), 3, ["CC2: sidewalk", "CC2: plain footway"]),
                                   ("node_attr", (80, 720), {"ext:source": "rule2",
-                                                            "ext:union_rule": "footway-sidewalk"})]}),
+                                                            "ext:union_rule": "footway-sidewalk"}),
+                                  ("edge_attr", "footway-sidewalk", {"highway": "footway", "ext:source": ABSENT})]}),
  dict(id="CC3", title="O2: a later rule meets an earlier node",
       setup="kerbed-crossing makes node J on a sidewalk; a footway ends 0.78 m from J (0.6 m from the span).",
-      expected="footway-sidewalk reuses J rather than making a second node beside it. J lists both rules and "
-               "keeps kerbed-crossing's tags.",
+      expected="footway-sidewalk reuses J rather than making a second node beside it. J lists both rules, "
+               "keeps kerbed-crossing's node_tags and gains footway-sidewalk's.",
       asserts={"custom_connect": [("minted", 1),
                                   ("junction", (140, 720), 4, ["CC3: sidewalk", "CC3: crossing", "CC3: plain footway"]),
                                   ("node_attr", (140, 720), {"ext:union_rule": "kerbed-crossing,footway-sidewalk",
@@ -435,15 +443,19 @@ CASES = [
                                   ("connectors", 1, "kerbed-crossing")]}),
  dict(id="CC5", title="Point rule: a crossing and a near miss",
       setup="One DS2 crossing crosses a DS1 road; another stops 0.2 m short of it.",
-      expected="road-crossing (point, 0.3 m) makes a node at each, tagged tactile_paving=yes; the near miss "
-               "gets a connector.",
+      expected="road-crossing (point, 0.3 m) makes a node at each, tagged tactile_paving=yes (node_tags); the "
+               "near miss gets a connector tagged crossing:markings=lines (edge_tags). Neither set reaches the other.",
       asserts={"custom_connect": [("count", "CC5: road", 3), ("count", "CC5: crossing through", 2),
                                   ("count", "CC5: crossing short", 1), ("minted", 2),
                                   ("connectors", 1, "road-crossing"),
                                   ("junction", (260, 750), 4, ["CC5: road", "CC5: crossing through"]),
                                   ("junction", (260, 715), 3, ["CC5: road", "CC5: crossing short"]),
-                                  ("node_attr", (260, 750), {"tactile_paving": "yes", "ext:union_rule": "road-crossing"}),
-                                  ("node_attr", (260, 715), {"tactile_paving": "yes", "ext:union_rule": "road-crossing"})]}),
+                                  ("node_attr", (260, 750), {"tactile_paving": "yes", "ext:union_rule": "road-crossing",
+                                                             "crossing:markings": ABSENT, "ext:crossing:markings": ABSENT}),
+                                  ("node_attr", (260, 715), {"tactile_paving": "yes", "ext:union_rule": "road-crossing",
+                                                             "crossing:markings": ABSENT, "ext:crossing:markings": ABSENT}),
+                                  ("edge_attr", "road-crossing", {"crossing:markings": "lines",
+                                                                  "tactile_paving": ABSENT})]}),
  dict(id="CC6", title="G1: a crossing on a bridge",
       setup="A DS2 crossing tagged bridge=yes, layer=1 passes over a DS1 road.",
       expected="Never joined: lines whose layer or bridge differ do not meet, even where they cross on the map.",

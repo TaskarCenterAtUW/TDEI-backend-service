@@ -1,0 +1,34 @@
+{
+  "about": "Union 5.0 demo input. Paste the configurator's config below (or replace this whole file with the configurator's output or a job request), then run ./run_demo.sh local. The picture goes to runs/demo_input/demo.png.",
+  "config": {
+    "dedup": {
+      "mode": "custom",
+      "rules": [
+        {
+          "name": "dedup_edge_crossing",
+          "from": "crossing",
+          "to": "crossing",
+          "proximity": 1
+        },
+        {
+          "name": "dedup_edge_sidewalk",
+          "from": "sidewalk",
+          "to": "sidewalk",
+          "proximity": 1
+        }
+      ]
+    },
+    "connect": {
+      "mode": "custom",
+      "rules": [
+        {
+          "name": "connect_crossing_road",
+          "from": "crossing",
+          "to": "road",
+          "operation": "point",
+          "proximity": 1
+        }
+      ]
+    }
+  }
+}

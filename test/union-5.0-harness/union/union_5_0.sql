@@ -21,6 +21,10 @@
 --                                     short connector edge; an end that crosses
 --                                     the line and overshoots it meets it where
 --                                     it crosses. Nothing moves.
+--              A rule may set node_tags (written on the junction node it makes
+--              or reuses; existing values win, differing ones are audited) and
+--              edge_tags (written on the connector edges it adds). Each set is
+--              written only where it is named.
 --   extensions zones and extension points/lines/polygons: off, or default =
 --              the 4.3.2 merging (no custom mode).
 --
@@ -302,7 +306,7 @@ END $$;
 --   connect road-crossing (crossing → road, point); crossing-sidewalk,
 --           crossing-living-street, pedestrian-pedestrian,
 --           living-street-living-street, crossing-crossing (geometry) — all at
---           `proximity`, no tags
+--           `proximity`, no node_tags / edge_tags
 --   `proximity` defaults to 0.5 m everywhere.
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION content.union5_validate_config(config jsonb)
@@ -443,12 +447,12 @@ BEGIN
             prox := content.union5_cfg_num(st->'proximity', 'connect.proximity', 0, false, 5, 0.5);
             IF md = 'default' THEN
                 rules := jsonb_build_array(
-                    jsonb_build_object('name', 'road-crossing',               'from', 'crossing',      'to', 'road',          'operation', 'point',    'proximity', prox, 'tags', '{}'::jsonb),
-                    jsonb_build_object('name', 'crossing-sidewalk',           'from', 'crossing',      'to', 'sidewalk',      'operation', 'geometry', 'proximity', prox, 'tags', '{}'::jsonb),
-                    jsonb_build_object('name', 'crossing-living-street',      'from', 'crossing',      'to', 'living_street', 'operation', 'geometry', 'proximity', prox, 'tags', '{}'::jsonb),
-                    jsonb_build_object('name', 'pedestrian-pedestrian',       'from', 'pedestrian',    'to', 'pedestrian',    'operation', 'geometry', 'proximity', prox, 'tags', '{}'::jsonb),
-                    jsonb_build_object('name', 'living-street-living-street', 'from', 'living_street', 'to', 'living_street', 'operation', 'geometry', 'proximity', prox, 'tags', '{}'::jsonb),
-                    jsonb_build_object('name', 'crossing-crossing',           'from', 'crossing',      'to', 'crossing',      'operation', 'geometry', 'proximity', prox, 'tags', '{}'::jsonb));
+                    jsonb_build_object('name', 'road-crossing',               'from', 'crossing',      'to', 'road',          'operation', 'point',    'proximity', prox, 'node_tags', '{}'::jsonb, 'edge_tags', '{}'::jsonb),
+                    jsonb_build_object('name', 'crossing-sidewalk',           'from', 'crossing',      'to', 'sidewalk',      'operation', 'geometry', 'proximity', prox, 'node_tags', '{}'::jsonb, 'edge_tags', '{}'::jsonb),
+                    jsonb_build_object('name', 'crossing-living-street',      'from', 'crossing',      'to', 'living_street', 'operation', 'geometry', 'proximity', prox, 'node_tags', '{}'::jsonb, 'edge_tags', '{}'::jsonb),
+                    jsonb_build_object('name', 'pedestrian-pedestrian',       'from', 'pedestrian',    'to', 'pedestrian',    'operation', 'geometry', 'proximity', prox, 'node_tags', '{}'::jsonb, 'edge_tags', '{}'::jsonb),
+                    jsonb_build_object('name', 'living-street-living-street', 'from', 'living_street', 'to', 'living_street', 'operation', 'geometry', 'proximity', prox, 'node_tags', '{}'::jsonb, 'edge_tags', '{}'::jsonb),
+                    jsonb_build_object('name', 'crossing-crossing',           'from', 'crossing',      'to', 'crossing',      'operation', 'geometry', 'proximity', prox, 'node_tags', '{}'::jsonb, 'edge_tags', '{}'::jsonb));
             ELSE
                 IF jsonb_typeof(st->'rules') IS DISTINCT FROM 'array' OR jsonb_array_length(st->'rules') = 0 THEN
                     RAISE EXCEPTION 'config.connect.rules: custom mode needs a non-empty list of rules' USING ERRCODE = '22023';
@@ -459,7 +463,10 @@ BEGIN
                 rules := '[]'::jsonb; names := ARRAY[]::text[];
                 FOR i IN 0 .. jsonb_array_length(st->'rules') - 1 LOOP
                     r := st->'rules'->i; path := format('connect.rules[%s]', i + 1);
-                    PERFORM content.union5_cfg_keys(r, path, ARRAY['name', 'from', 'to', 'operation', 'proximity', 'tags']);
+                    IF r ? 'tags' THEN
+                        RAISE EXCEPTION 'config.%.tags: a connect rule takes node_tags (for the junction node) and edge_tags (for the connector edge) instead of tags', path USING ERRCODE = '22023';
+                    END IF;
+                    PERFORM content.union5_cfg_keys(r, path, ARRAY['name', 'from', 'to', 'operation', 'proximity', 'node_tags', 'edge_tags']);
                     nm := content.union5_cfg_name(r->'name', path || '.name', NULL);
                     IF nm = ANY(names) THEN RAISE EXCEPTION 'config.%.name: "%" is used by an earlier connect rule — names must be unique', path, nm USING ERRCODE = '22023'; END IF;
                     names := names || nm;
@@ -469,7 +476,8 @@ BEGIN
                         'name', nm, 'from', r->'from', 'to', r->'to',
                         'operation', content.union5_cfg_enum(r->'operation', path || '.operation', ARRAY['point', 'geometry'], NULL),
                         'proximity', content.union5_cfg_num(r->'proximity', path || '.proximity', 0, false, 5, prox),
-                        'tags', content.union5_cfg_tags(r->'tags', path || '.tags')));
+                        'node_tags', content.union5_cfg_tags(r->'node_tags', path || '.node_tags'),
+                        'edge_tags', content.union5_cfg_tags(r->'edge_tags', path || '.edge_tags')));
                 END LOOP;
             END IF;
             eff := eff || jsonb_build_object('connect', jsonb_build_object('mode', md, 'rules', rules));
@@ -685,7 +693,7 @@ BEGIN
 
     DROP TABLE IF EXISTS u5_connect_rules;
     CREATE TEMP TABLE u5_connect_rules (seq int, name text, from_tid int, to_tid int, op text, prox float8,
-                                        prox_deg float8, tags jsonb) ON COMMIT DROP;
+                                        prox_deg float8, node_tags jsonb, edge_tags jsonb) ON COMMIT DROP;
     FOR v_i IN 0 .. jsonb_array_length(v_cfg->'connect'->'rules') - 1 LOOP
         v_rule := v_cfg->'connect'->'rules'->v_i;
         v_norm := content.union5_normalize_type(v_rule->'from', 'connect');
@@ -695,7 +703,8 @@ BEGIN
         INSERT INTO u5_types (clauses) VALUES (v_norm) ON CONFLICT (clauses) DO NOTHING;
         SELECT tid INTO v_tid2 FROM u5_types WHERE clauses = v_norm;
         INSERT INTO u5_connect_rules VALUES (v_i + 1, v_rule->>'name', v_tid, v_tid2, v_rule->>'operation',
-            (v_rule->>'proximity')::float8, NULL, COALESCE(v_rule->'tags', '{}'::jsonb));
+            (v_rule->>'proximity')::float8, NULL, COALESCE(v_rule->'node_tags', '{}'::jsonb),
+            COALESCE(v_rule->'edge_tags', '{}'::jsonb));
     END LOOP;
 
     -- every rule appears in the report, even one that does nothing
@@ -1395,12 +1404,12 @@ BEGIN
             UPDATE u5_metrics SET v = v_n WHERE stage = 'connect' AND rule = r.name AND k = 'edges_split';
             v_next_eid := content.union5_apply_splits(v_next_eid);
 
-            -- connectors across a gap: A's highway/footway + the rule's tags
+            -- connectors across a gap: A's highway/footway + the rule's edge_tags
             INSERT INTO u5_e (eid, src, orig_id, geom, props, u, v, alive, tm, is_connector, rule, levelkey)
             SELECT v_next_eid + ROW_NUMBER() OVER (ORDER BY c.e_nid), 0, NULL,
                    ST_MakeLine(en.geom, tn.geom),
                    jsonb_strip_nulls(jsonb_build_object('highway', a.props->'highway', 'footway', a.props->'footway'))
-                     || content.union5_tags_for('edge', r.tags)
+                     || content.union5_tags_for('edge', r.edge_tags)
                      || jsonb_build_object('ext:union_rule', r.name,
                                            'ext:union_confidence', round(GREATEST(0.0, 1.0 - c.d / r.prox)::numeric, 3)),
                    c.e_nid, c.target, true, '{}', true, r.name, a.levelkey
@@ -1414,9 +1423,9 @@ BEGIN
             v_next_eid := v_next_eid + v_n + 1;
             UPDATE u5_metrics SET v = v_n WHERE stage = 'connect' AND rule = r.name AND k = 'connectors';
 
-            -- the junction node: the rule's node tags (existing values win; differing
+            -- the junction node: the rule's node_tags (existing values win; differing
             -- ones audited), the rules that used it (in rule order), a confidence
-            v_ntags := content.union5_tags_for('node', r.tags);
+            v_ntags := content.union5_tags_for('node', r.node_tags);
             UPDATE u5_n n SET
                 props = n.props || COALESCE((SELECT jsonb_object_agg(t.key, t.value) FROM jsonb_each(v_ntags) t
                                              WHERE NOT n.props ? t.key), '{}'::jsonb),
