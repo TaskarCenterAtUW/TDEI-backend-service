@@ -22,6 +22,8 @@ what it expects under each profile it is checked under.
 | `custom_snap` | per-type snap distances, `others`, coincident | first-rule-wins, per-type proximity |
 | `custom_anchor` | DS2 as the anchor; `anchor_only` attributes | anchors, audit |
 | `connect_only` | connect on its defaults, snap and dedup off | stages are independent |
+| `custom_extensions` | extensions only: Points 0.5 m, Lines `line_proximity` 2.5 m | Points and Lines use separate distances |
+| `ext_lines_polygons`, `ext_points_zones` | extensions only, two types on and two off | each type has its own switch |
 | `custom_connect` | five ordered connect rules with node_tags / edge_tags | O1–O3, W1–W5, G1, G3, tags |
 
 A separate suite (`harness/config_cases.py`, 48 configs) checks that invalid

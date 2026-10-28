@@ -22,6 +22,27 @@
     "barrier": "fence",
     "ext:case": "E2"
    }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0972178,
+      44.6381
+     ],
+     [
+      -123.0967119,
+      44.6381
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1850002",
+    "barrier": "hedge",
+    "ext:case": "E5"
+   }
   }
  ]
 }

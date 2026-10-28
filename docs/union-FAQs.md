@@ -111,7 +111,7 @@ Up to four sections. Each has a `mode`:
 | snap | Points at exactly the same spot join, whatever their type; then crossing, pedestrian, living street, road and other points each join their own kind |
 | dedup | Crossing, pedestrian, living street, road and other lines: a line is a duplicate of one of its own kind when at least 80 % of it lies within `proximity` |
 | connect | `road-crossing` (where a crossing crosses or nearly meets a road), `crossing-sidewalk`, `crossing-living-street`, `pedestrian-pedestrian`, `living-street-living-street`, `crossing-crossing` |
-| extensions | Same-type points within `proximity` merge; lines with 70 % inside the buffer merge; polygons and zones covering more than 70 % of the first dataset's area merge |
+| extensions | Same-type points within `proximity` merge; lines with `line_overlap` (70 %) of their length within `line_proximity` of a first-dataset line merge (`line_proximity` defaults to `proximity`; points never use it). `points`, `lines`, `polygons` and `zones` (all `true` by default) switch each type on or off: a type that is off keeps both datasets' copies; polygons and zones covering more than 70 % of the first dataset's area merge |
 
 Nothing else is joined: no default rule joins a road and a sidewalk, a sidewalk and a living
 street, or a crossing and a plain footway. Add a custom rule if you want one.
@@ -357,6 +357,8 @@ The report's counts show the effect of each change.
 | `entity_filters` edge filters | Custom snap, dedup and connect rules naming those types |
 | `duplicate_buffer_width`, `duplicate_overlap_percentage` | A dedup rule's `proximity` and `min_overlap` (0–1, not 0–100) |
 | line / polygon / zone overlap | `extensions` `line_overlap`, `polygon_overlap`, `zone_overlap` (0–1) |
+| line buffer distance | `extensions` `line_proximity` (above 0, at most 5 m; defaults to `proximity`) |
+| merge one type but not another | `extensions` `points`, `lines`, `polygons`, `zones`: `true` / `false`, all `true` by default; a type that is off keeps both copies |
 
 The defaults are close to 4.x, not identical: connect rules add connector lines instead of
 moving ends, and anything 4.x did implicitly (for example road × crossing nodes) is now a

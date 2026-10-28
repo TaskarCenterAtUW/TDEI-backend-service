@@ -5,11 +5,17 @@
       "mode": "custom",
       "rules": [
         {
-          "name": "connect_crossing_road",
+          "name": "connect_crossing_sidewalk",
           "from": "crossing",
-          "to": "road",
-          "operation": "point",
-          "proximity": 1
+          "to": "sidewalk",
+          "operation": "geometry",
+          "proximity": 2,
+          "node_tags": {
+            "cross-sidewalk": "junction"
+          },
+          "edge_tags": {
+            "cross-sidewalk": "connector"
+          }
         }
       ]
     }

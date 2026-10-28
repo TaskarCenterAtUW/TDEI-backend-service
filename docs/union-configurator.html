@@ -418,22 +418,22 @@ const STEPS=[
   lead:'For example the two halves of a Crossing, split at the street centerline, one from each dataset, that don’t quite meet. The other Crossing is split at a new Node and a connector Edge closes the gap.',
   osw:'A Crossing is split at the street centerline, so its halves must share a Node there.',
   q:'Connect a Crossing end to a Crossing when the gap is up to',ex:[0.2,0.6,1.5],rec:R},
- {id:'x_points',g:'other',kind:'dist',draw:'points',name:'Points & Lines distance',sub:'Bench, Bollard, Fire Hydrant, Power Pole, Street Lamp… · Fence, Tree Row',
+ {id:'x_points',g:'other',kind:'dist',draw:'points',name:'Points',sub:'Bench, Bollard, Fire Hydrant, Power Pole, Street Lamp…',
   title:'The same Bench is mapped in both datasets. Keep only one?',
-  lead:'Points and Lines are adjacent entities: things beside the pedestrian network, such as Benches, Bollards, Fire Hydrants, Fences and Tree Rows. Only the same entity type merges: a Bench never merges with a Power Pole. The DS1 feature is always the one kept, whichever dataset is the anchor, and it gains any fields only DS2 has. This distance is also the buffer used for Line overlap.',
+  lead:'Points are adjacent entities: things beside the pedestrian network, such as Benches, Bollards and Fire Hydrants. Only the same entity type merges: a Bench never merges with a Power Pole. The DS1 Point is always the one kept, whichever dataset is the anchor, and it gains any fields only DS2 has.',
   osw:'Adjacent entities (Points, Lines, Polygons) are not part of the network graph; they relate to it only spatially, so merging them never changes routing.',
-  q:'Treat Points and Lines as the same when they are up to',ex:[0.3,1,2.5],rec:R},
- {id:'x_lines',g:'other',kind:'pct',draw:'overlap',a:'fence',name:'Line overlap',sub:'Fence, Tree Row',
-  title:'The same Fence is mapped in both datasets. How much must run alongside to keep only one?',
-  lead:'A DS2 Line merges into a DS1 Line when at least this share of its length lies within the Points & Lines distance of the DS1 Line. The DS1 Line is kept and gains any fields only DS2 has, whichever dataset is the anchor.',
+  q:'Treat two Points as the same when they are up to',ex:[0.3,1,2.5],rec:R},
+ {id:'x_lines',g:'other',kind:'pct',draw:'overlap',a:'fence',name:'Lines',sub:'Fence, Tree Row',lpx:R,
+  title:'The same Fence is mapped in both datasets. When is it the same Fence?',
+  lead:'A DS2 Line merges into a DS1 Line when at least this share of its length lies within this distance of the DS1 Line. Lines have their own distance: the Points distance never applies to them. The DS1 Line is kept and gains any fields only DS2 has, whichever dataset is the anchor.',
   osw:'Lines are adjacent entities: they are not part of the network graph.',
-  q:'Merge a DS2 Line when at least this much of it runs alongside a DS1 Line',ex:[1,0.75,0.5],rec:0.7},
- {id:'x_build',g:'other',kind:'pct',draw:'build',name:'Polygon overlap',sub:'Building, Wood',
+  q:'Merge a DS2 Line when this much of it lies within this distance of a DS1 Line',ex:[1,0.75,0.5],rec:0.7},
+ {id:'x_build',g:'other',kind:'pct',draw:'build',name:'Polygons',sub:'Building, Wood',
   title:'The same Building is mapped in both datasets. When is it the same Building?',
   lead:'When a DS2 Polygon covers more than this share of a DS1 Polygon, the DS1 Polygon is kept and gains any fields only DS2 has. When they overlap less, the two are merged into one Polygon. The DS1 copy is kept whichever dataset is the anchor.',
   osw:'Building and Wood are adjacent Polygons: they are not part of the network graph.',
   q:'Keep only the DS1 Polygon when the overlap is more than',ex:[0.97,0.75,0.5],rec:0.7},
- {id:'x_zone',g:'other',kind:'pct',draw:'zone',name:'Zone overlap',sub:'Pedestrian Zone',
+ {id:'x_zone',g:'other',kind:'pct',draw:'zone',name:'Zones',sub:'Pedestrian Zone',
   title:'The same Pedestrian Zone is mapped in both datasets. When is it the same Zone?',
   lead:'When a DS2 Zone covers more than this share of a DS1 Zone, the DS2 Zone is dropped and the DS1 Zone kept. Below that, both Zones are kept. The kept Zone’s _w_id lists the final Nodes, following any snapping.',
   osw:'A Zone is a core entity: a Polygon whose boundary Nodes (_w_id) are all connected to each other.',
@@ -441,11 +441,14 @@ const STEPS=[
 ];
 
 /* ═════════════ answers ═════════════ */
-const recAnswers=()=>{const a={trust:'ds1',s_attrs:'merge'}; STEPS.forEach(s=>{ if('rec' in s) a[s.id]=s.rec; if('ov' in s) a[s.id+'_ov']=s.ov; if(s.g==='link'){ a[s.id+'_ntags']=[]; a[s.id+'_etags']=[]; } }); return a;};
+const recAnswers=()=>{const a={trust:'ds1',s_attrs:'merge'}; STEPS.forEach(s=>{ if('rec' in s) a[s.id]=s.rec; if('ov' in s) a[s.id+'_ov']=s.ov; if('lpx' in s) a[s.id+'_px']=s.lpx; if(s.g==='other'&&s.kind==='pct') a[s.id+'_on']=true; if(s.g==='link'){ a[s.id+'_ntags']=[]; a[s.id+'_etags']=[]; } }); return a;};
 let A=recAnswers(), view='compact', collapsed={}, ds={one:'',two:''}; const names={ds1:'',ds2:''};
 try{const v=JSON.parse(localStorage.getItem('u5wiz')||'null'); if(v){ const o=v.A||{}; [['s_path',['s_footway','s_pedroad','s_steps']],['d_path',['d_sidewalk','d_footway','d_pedroad','d_steps']],['c_tee',['c_t_sidewalk','c_t_footway','c_t_pedroad','c_t_steps']]].forEach(([k,ks])=>{ if(o[k]!=null){ ks.forEach(x=>{ if(o[x]==null) o[x]=o[k]; }); delete o[k]; } }); if(o.kerb!=null){ if(o.kerb && !o.c_sidewalk_ntags && !o.c_sidewalk_tags) o.c_sidewalk_ntags=[['barrier','kerb'],['kerb','lowered']]; delete o.kerb; }
   // one tag list per case became two (Node / connector Edge): split the old list by where OSW defines each key
   Object.keys(o).filter(k=>/_tags$/.test(k)&&!/_(n|e)tags$/.test(k)).forEach(k=>{ const id=k.slice(0,-5), sp=splitTags(o[k]||[]); if(!o[id+'_ntags']) o[id+'_ntags']=sp.n; if(!o[id+'_etags']) o[id+'_etags']=sp.e; delete o[k]; });
+  if(o.x_lines_px==null && +o.x_points>0) o.x_lines_px=+o.x_points;
+  // before each type had a switch, Points off turned the whole stage off
+  if(o.x_points!=null && !(+o.x_points>0) && o.x_lines_on==null) ['x_lines','x_build','x_zone'].forEach(k=>o[k+'_on']=false);
   if(o.d_overlap!=null){ STEPS.filter(x=>'ov' in x).forEach(x=>{ if(o[x.id+'_ov']==null) o[x.id+'_ov']=o.d_overlap; }); delete o.d_overlap; } A=Object.assign(recAnswers(),o); if(v.view) view=v.view; if(v.collapsed) collapsed=v.collapsed; if(v.ds) ds=v.ds;}}catch(e){}
 const save=()=>{try{localStorage.setItem('u5wiz',JSON.stringify({A,view,collapsed,ds}));}catch(e){}};
 
@@ -591,7 +594,11 @@ function buildConfig(a=A){
   if(a.c_t_living>0) cr.push(withTags('c_t_living',{name:RULE.c_t_living,from:'living_street',to:'living_street',operation:'geometry',proximity:a.c_t_living}));
   if(a.c_crossing>0) cr.push(withTags('c_crossing',{name:RULE.c_crossing,from:'crossing',to:'crossing',operation:'geometry',proximity:a.c_crossing}));
   c.connect= cr.length? {mode:'custom',rules:cr} : {mode:'off'};
-  c.extensions= a.x_points>0? {mode:'default',proximity:a.x_points,line_overlap:a.x_lines,polygon_overlap:a.x_build,zone_overlap:a.x_zone} : {mode:'off'};
+  // each type switched on or off on its own; a value is written only for a type that is on
+  const xp=extOn('x_points',a), xl=extOn('x_lines',a), xb=extOn('x_build',a), xz=extOn('x_zone',a);
+  c.extensions= xp||xl||xb||xz ? Object.assign({mode:'default',points:xp,lines:xl,polygons:xb,zones:xz},
+      xp?{proximity:a.x_points}:{}, xl?{line_proximity:a.x_lines_px,line_overlap:a.x_lines}:{},
+      xb?{polygon_overlap:a.x_build}:{}, xz?{zone_overlap:a.x_zone}:{}) : {mode:'off'};
   return c;
 }
 function stepConfig(s){
@@ -602,10 +609,10 @@ function stepConfig(s){
     case 'trust': return {snap:{anchor:A.trust},dedup:{anchor:A.trust}};
     case 's_same': return c.snap.mode==='off'? {snap:{mode:'off'}} : {snap:{coincident:!!A.s_same}};
     case 's_attrs': return c.snap.mode==='off'? null : {snap:{attributes:A.s_attrs}};
-    case 'x_points': return {extensions: A.x_points>0?{mode:'default',proximity:A.x_points}:{mode:'off'}};
-    case 'x_lines': return A.x_points>0?{extensions:{line_overlap:A.x_lines}}:null;
-    case 'x_build': return A.x_points>0?{extensions:{polygon_overlap:A.x_build}}:null;
-    case 'x_zone': return A.x_points>0?{extensions:{zone_overlap:A.x_zone}}:null;
+    case 'x_points': return c.extensions.mode==='off'? {extensions:{mode:'off'}} : {extensions: A.x_points>0?{points:true,proximity:A.x_points}:{points:false}};
+    case 'x_lines': return c.extensions.mode==='off'? {extensions:{mode:'off'}} : {extensions: extOn('x_lines')?{lines:true,line_proximity:A.x_lines_px,line_overlap:A.x_lines}:{lines:false}};
+    case 'x_build': return c.extensions.mode==='off'? {extensions:{mode:'off'}} : {extensions: extOn('x_build')?{polygons:true,polygon_overlap:A.x_build}:{polygons:false}};
+    case 'x_zone': return c.extensions.mode==='off'? {extensions:{mode:'off'}} : {extensions: extOn('x_zone')?{zones:true,zone_overlap:A.x_zone}:{zones:false}};
   }
   return null;
 }
@@ -702,7 +709,7 @@ function drawBuild(s,share,after,yes,thr){
 function outcome(s,e){
   const v=A[s.id];
   if(s.kind==='pct'){
-    if(!(A.x_points>0)) return {yes:false,text:'Not used: kept as they are',na:true};
+    if(!extOn(s.id)) return {yes:false,text:'Off: both kept as mapped',na:true};
     if(s.id==='x_lines'){ const y=e>=v-1e-9; return {yes:y,text:y?'One Line kept (DS1)':'Both Lines kept'}; }
     if(s.id==='x_zone'){ const y=e>v+1e-9; return {yes:y,text:y?'One Zone kept (DS1)':'Both Zones kept'}; }
     const y=e>v+1e-9; return {yes:true,keep:y,text:y?'One Polygon kept (DS1)':'Merged into one Polygon'};
@@ -755,6 +762,7 @@ function exRows(s){
       <div class="res ${o.yes&&!o.na?'y':'n'}"><i>${o.yes&&!o.na?'✓':'–'}</i>${o.text}</div></div>`;}).join('')}</div>`;
 }
 
+const extOn=(id,a=A)=> id==='x_points'? a.x_points>0 : a[id+'_on']!==false;
 const pctTxt=x=>String(+(x*100).toFixed(2));
 const dedupOn=()=>['d_crossing','d_road',...FAM.map(t=>'d_'+t)].some(k=>A[k]>0);
 function chosen(s){
@@ -763,7 +771,7 @@ function chosen(s){
   if(s.kind==='choice') return {txt:dsLabel(A.trust==='ds2'?2:1),off:false,rec:A.trust==='ds1'};
   if(s.kind==='yesno') return {txt:v?'Yes':'No',off:!v,rec:v===s.rec};
   if(s.kind==='attrs') return {txt:v==='anchor_only'?'Anchor only':'Merge',off:A.snapOff,rec:v===s.rec};
-  if(s.kind==='pct'){ const na=s.g==='other'&&!(A.x_points>0); return {txt:na?'Not used':`${pctTxt(v)} %`,off:na,rec:Math.abs(v-s.rec)<1e-9}; }
+  if(s.kind==='pct'){ const na=s.g==='other'&&!extOn(s.id); return {txt:na?'Off':`${pctTxt(v)} %`,off:na,rec:Math.abs(v-s.rec)<1e-9&&(!('lpx' in s)||Math.abs(A[s.id+'_px']-s.lpx)<1e-9)&&!na}; }
   return {txt:v>0?`${(+v).toFixed(1)} m`:'Off',off:!(v>0),rec:Math.abs(v-s.rec)<1e-9&&ovRec};
 }
 function thumbsHTML(s){
@@ -779,7 +787,7 @@ function valueHTML(s){
   ctl='';
   if(s.kind==='dist') ctl=`<label class="num"><input type="number" id="n-${s.id}" data-num="${s.id}" min="0" max="5" step="0.1" value="${(+v).toFixed(1)}" aria-label="${esc(s.name)} proximity in metres"><span>m</span></label>`;
   if('ov' in s) ctl+=`<label class="num"><input type="number" id="o-${s.id}" data-ov="${s.id}" min="0.1" max="100" step="any" value="${pctTxt(A[s.id+'_ov'])}" ${v>0?'':'disabled'} aria-label="${esc(s.name)}: share that must run alongside, in percent"><span>% alongside</span></label>`;
-  else if(s.kind==='pct') ctl=`<label class="num"><input type="number" id="n-${s.id}" data-num="${s.id}" min="0.1" max="100" step="any" value="${pctTxt(v)}" ${c.off?'disabled':''} aria-label="${esc(s.name)} in percent"><span>%</span></label>`;
+  else if(s.kind==='pct') ctl=('lpx' in s?`<label class="num"><input type="number" id="lp-${s.id}" data-lpx="${s.id}" min="0.1" max="5" step="0.1" value="${(+A[s.id+'_px']).toFixed(1)}" ${c.off?'disabled':''} aria-label="${esc(s.name)} distance in metres"><span>m</span></label>`:'')+`<label class="num"><input type="number" id="n-${s.id}" data-num="${s.id}" min="0.1" max="100" step="any" value="${pctTxt(v)}" ${c.off?'disabled':''} aria-label="${esc(s.name)} in percent"><span>%</span></label>`;
   else if(s.kind!=='dist') ctl=`<b class="${c.off?'offv':''}" style="font:700 15px var(--f-alt);color:${c.off?'var(--off)':'var(--brand)'}">${esc(c.txt)}</b>`;
   return ctl+`<span class="pref ${c.rec?'rec':'own'}" id="p-${s.id}">${c.rec?'Recommended':'Your value'}</span>`;
 }
@@ -796,23 +804,23 @@ function doesText(s){
   const v=A[s.id], an=A.trust==='ds2'?'DS2':'DS1', ot=A.trust==='ds2'?'DS1':'DS2', mm=x=>`${(+x).toFixed(1)} m`, pc=x=>`${pctTxt(x)} %`;
   if(s.kind==='choice') return `${an} Nodes and Edges stay where they are. ${ot} Nodes are snapped onto them and ${ot}’s duplicate Edges are removed. Curb Nodes never move. Points, Lines, Polygons and Zones always keep their DS1 copy.`;
   if(s.kind==='attrs') return A.snapOff? 'Not used: no Nodes are snapped.' : v==='anchor_only'? `The kept ${an} Node keeps only its own fields. Values from the snapped ${ot} Node are recorded as ext:union_audit_<key> but never added.` : `The kept ${an} Node keeps its own position, _id and fields, and gains any field only the snapped ${ot} Node had. Every value that differs is recorded as ext:union_audit_<key>.`;
-  if(s.g==='other' && s.kind==='pct' && !(A.x_points>0)) return `Off: ${({x_lines:'Lines',x_build:'Polygons',x_zone:'Zones'})[s.id]} from both datasets are all kept.`;
-  if(s.id==='x_lines') return `A DS2 Line with at least ${pc(v)} of its length within ${mm(A.x_points)} of a DS1 Line merges into it: the DS1 Line is kept and gains any fields only DS2 has.`;
+  if(s.g==='other' && s.kind==='pct' && !extOn(s.id)) return `Off: ${({x_lines:'Lines',x_build:'Polygons',x_zone:'Zones'})[s.id]} from both datasets are all kept as mapped.`;
+  if(s.id==='x_lines') return `A DS2 Line with at least ${pc(v)} of its length within ${mm(A.x_lines_px)} of a DS1 Line merges into it: the DS1 Line is kept and gains any fields only DS2 has.`;
   if(s.id==='x_zone') return `A DS2 Zone covering more than ${pc(v)} of a DS1 Zone is dropped and the DS1 Zone kept. Below that, both Zones are kept.`;
   if(s.id==='s_same') return v? 'A DS1 Node and a DS2 Node at exactly the same coordinate become one Node, whatever their Edge types.' : 'Off: DS1 and DS2 Nodes at the same coordinate stay separate, so their Edges are not connected.';
   if(s.id==='x_build') return `A DS2 Polygon covering more than ${pc(v)} of a DS1 Polygon is dropped and the DS1 Polygon kept, gaining any fields only DS2 has. One that overlaps less is merged with it into one Polygon.`;
-  if(s.id==='x_points' && !(v>0)) return 'Off: Points, Lines, Polygons and Zones from both datasets are all kept as mapped. This one switch turns the whole adjacent-entity and Zone merge on or off.';
+  if(s.id==='x_points' && !(v>0)) return 'Off: Points from both datasets are all kept as mapped.';
   if(!(v>0)) return 'Off: left exactly as mapped in both datasets.';
   if(s.g==='join') return `A ${ot} ${s.noun} Node up to ${mm(v)} from a ${an} ${s.noun} Node is snapped onto it. Its Edges move with it.`;
   if(s.g==='dup') return `A ${ot} ${s.noun} Edge is removed when it lies within ${mm(v)} of a ${an} ${s.noun} Edge and at least ${pc(A[s.id+'_ov'])} of its length runs alongside it.`;
   if(s.g==='link'){ const base=linkText(s,v,mm), tp=tagPlacement(s.id); const n=tp?tp.node.length:0, e=tp?tp.edge.length:0, t=x=>x===1?'1 tag':x+' tags';
     return base+(n&&e?` New Nodes get ${t(n)} and connector Edges ${t(e)}, set below.`: n?` New Nodes get ${t(n)}, set below.`: e?` Connector Edges get ${t(e)}, set below.`:''); }
-  if(s.id==='x_points') return `Two Points of the same type up to ${mm(v)} apart become one: the DS1 Point is kept and gains any fields only DS2 has. This distance is also the Line overlap buffer, and this switch also turns Line, Polygon and Zone merging on.`;
+  if(s.id==='x_points') return `Two Points of the same type up to ${mm(v)} apart become one: the DS1 Point is kept and gains any fields only DS2 has.`;
   return '';
 }
 function infoHTML(s){
-  const recTxt= s.kind==='choice'?esc(dsFull(1)): s.kind==='attrs'?'Merge': s.kind==='yesno'?(s.rec?'Yes':'No'): s.kind==='pct'?Math.round(s.rec*100)+' %': s.rec+' m'+('ov' in s?`, ${Math.round(s.ov*100)} % alongside`:'');
-  const range= s.kind==='dist'?'0 to 5 m (0 turns it off)'+('ov' in s?', above 0 up to 100 % alongside':''): s.kind==='pct'?'above 0 up to 100 %':'';
+  const recTxt= s.kind==='choice'?esc(dsFull(1)): s.kind==='attrs'?'Merge': s.kind==='yesno'?(s.rec?'Yes':'No'): s.kind==='pct'?Math.round(s.rec*100)+' %'+('lpx' in s?` within ${s.lpx} m`:''): s.rec+' m'+('ov' in s?`, ${Math.round(s.ov*100)} % alongside`:'');
+  const range= s.kind==='dist'?'0 to 5 m (0 turns it off)'+('ov' in s?', above 0 up to 100 % alongside':''): s.kind==='pct'?'above 0 up to 100 %'+('lpx' in s?', distance above 0 up to 5 m':''):'';
   return `<b>${esc(s.title)}</b><span>${s.lead}</span>${s.osw?`<span class="oswref"><span class="osw-tag">OSW 0.3</span>${esc(s.osw)}</span>`:''}<span class="note">Recommended: ${recTxt}${range?` · Allowed: ${range}`:''}${s.sub?` · Applies to: ${esc(s.sub)}`:''}${OWNER[s.id]&&!OWNER[s.id].keep?` · Rule name in the run report: <code>${OWNER[s.id].rule.name}</code>`:''}</span>`;
 }
 function keyOptions(L,i){ const used=tagRows(L).map(([k],j)=>j!==i?(k||'').trim():'').filter(Boolean); return sideCtx(L).keys.filter(k=>!used.includes(k)); }
@@ -875,8 +883,7 @@ function itemHTML(s,i){
 function switchHTML(s){
   if(s.kind==='choice') return `<div class="mini" role="group" aria-label="Anchor dataset"><button data-qtrust="ds1" aria-pressed="${A.trust==='ds1'}" title="${esc(dsFull(1))}">${esc(dsLabel(1))}</button><button data-qtrust="ds2" aria-pressed="${A.trust==='ds2'}" title="${esc(dsFull(2))}">${esc(dsLabel(2))}</button></div>`;
   if(s.kind==='attrs') return `<div class="mini" role="group" aria-label="Fields of snapped Nodes"><button data-qattr="merge" aria-pressed="${A.s_attrs!=='anchor_only'}">Merge</button><button data-qattr="anchor_only" aria-pressed="${A.s_attrs==='anchor_only'}">Anchor only</button></div>`;
-  if(s.kind==='pct') return `<span class="dep">${chosen(s).off?'Off with Points & Lines':s.id==='x_lines'?'On with Points & Lines; uses its distance':'On with Points & Lines'}</span>`;
-  const on= s.kind==='yesno'? !!A[s.id] : A[s.id]>0;
+  const on= s.kind==='yesno'? !!A[s.id] : s.kind==='pct'? extOn(s.id) : A[s.id]>0;
   return `<button class="sw" role="switch" aria-checked="${on}" data-sw="${s.id}" aria-label="${esc(s.name)}"><span class="tr"></span>${on?'On':'Off'}</button>`;
 }
 function totalsHTML(){
@@ -1030,14 +1037,16 @@ function readConfig(text){
   // extensions
   const ex=j.extensions;
   if(ex && ex.mode==='default'){
-    a.x_points= dist(ex.proximity!=null?ex.proximity:0.5,'extensions') || 0.1;
+    a.x_points= ex.points===false? 0 : dist(ex.proximity!=null?ex.proximity:0.5,'extensions') || 0.1;
+    a.x_lines_on= ex.lines!==false; a.x_build_on= ex.polygons!==false; a.x_zone_on= ex.zones!==false;
     const pc=x=> x!=null && +x>0 ? Math.min(1,+x) : 0.7;
     a.x_lines=pc(ex.line_overlap); a.x_build=pc(ex.polygon_overlap); a.x_zone=pc(ex.zone_overlap);
+    a.x_lines_px= dist(ex.line_proximity!=null?ex.line_proximity:ex.proximity!=null?ex.proximity:0.5,'extensions.line_proximity') || 0.1;
   }
   a.trust= anchor||'ds1';
   return {answers:a,notes};
 }
-function offState(){ const a=recAnswers(); STEPS.forEach(s=>{ if(s.kind==='dist') a[s.id]=0; if(s.kind==='yesno') a[s.id]=false; }); return a; }
+function offState(){ const a=recAnswers(); STEPS.forEach(s=>{ if(s.kind==='dist') a[s.id]=0; if(s.kind==='yesno') a[s.id]=false; if(s.id+'_on' in a) a[s.id+'_on']=false; }); return a; }
 function loadPanelHTML(){
   return `<div class="loadp" id="loadp" hidden><h3>Load an existing configuration</h3>
     <p class="note">Paste a union configuration, or a whole union request that contains one. Every case below is set from it.</p>
@@ -1063,12 +1072,13 @@ document.addEventListener('input',e=>{
     if(st.kind==='pct'){ if(!(v>0)) return; v=Math.min(100,v)/100; } else v=Math.min(5,Math.max(0,Math.round(v*10)/10));
     A[d.num]=v; refreshReview(d.num); refreshLead(); return; }
   if(d.tk||d.tv){ const L=d.tk||d.tv, i=+d.i, rows=tagRows(L); rows[i]=rows[i]||['','']; rows[i][d.tk?0:1]=e.target.value; refreshTags(L); refreshReview(lcase(L)); return; }
+  if(d.lpx){ let v=parseFloat(e.target.value); if(isNaN(v)||!(v>0)) return; A[d.lpx+'_px']=Math.min(5,Math.max(0.1,Math.round(v*10)/10)); refreshReview(d.lpx); return; }
   if(d.ov){ let v=parseFloat(e.target.value); if(isNaN(v)) return; if(!(v>0)) return; A[d.ov+'_ov']=Math.min(100,v)/100; refreshReview(d.ov); return; }
   if(d.ds){ ds[d.ds]=e.target.value; $('barsum').innerHTML=barSum(); refreshDatasets(); save();
     document.dispatchEvent(new CustomEvent('tdei-dataset-search',{detail:{dataset:d.ds==='one'?'DS1':'DS2',query:e.target.value}})); }
 });
 document.addEventListener('input',e=>{ if(e.target.id==='loadtxt' && pendingLoad){ pendingLoad=null; $('loadmsg').innerHTML=''; $('loadgo').textContent='Load'; } });
-document.addEventListener('change',e=>{ const oid=e.target.dataset&&e.target.dataset.ov; if(oid) e.target.value=pctTxt(A[oid+'_ov']); });
+document.addEventListener('change',e=>{ const oid=e.target.dataset&&e.target.dataset.ov; if(oid) e.target.value=pctTxt(A[oid+'_ov']); const lid=e.target.dataset&&e.target.dataset.lpx; if(lid) e.target.value=(+A[lid+'_px']).toFixed(1); });
 document.addEventListener('change',e=>{ const nid=e.target.dataset&&e.target.dataset.num; if(nid){ const st=STEPS.find(x=>x.id===nid); e.target.value= st.kind==='pct'?pctTxt(A[nid]):(+A[nid]).toFixed(1); } });
 document.addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
@@ -1093,6 +1103,7 @@ document.addEventListener('click',e=>{
   if(b.dataset.qtrust){ A.trust=b.dataset.qtrust; refreshReview(); return; }
   if(b.dataset.sw){ const st=STEPS.find(x=>x.id===b.dataset.sw); A._last=A._last||{};
     if(st.kind==='yesno') A[st.id]=!A[st.id];
+    else if(st.kind==='pct') A[st.id+'_on']=!extOn(st.id);
     else if(A[st.id]>0){ A._last[st.id]=A[st.id]; A[st.id]=0; }
     else A[st.id]=A._last[st.id]||st.rec;
     refreshReview(); refreshLead();

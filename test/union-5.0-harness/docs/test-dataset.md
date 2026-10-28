@@ -13,7 +13,7 @@ Synthetic but schema-valid OSW data built to exercise `content.tdei_union_datase
 - **Ids** are numeric (TDEI stores `_id` as `bigint`). DS1 starts at nodes `1000001`, edges `1500001`, zones `1700001`, points `1800001`, lines `1850001`, polygons `1900001`; DS2 the same with a leading 2.
 - **Profiles:** a case is checked only under the profiles listed for it ([profiles.md](profiles.md)); "default" means both `default_1m` and `default_3m`.
 
-Reference sheets (inputs and what each profile expects, one panel per case): [off](images/reference_off.png), [default_1m](images/reference_default_1m.png), [default_3m](images/reference_default_3m.png), [custom_snap](images/reference_custom_snap.png), [custom_anchor](images/reference_custom_anchor.png), [connect_only](images/reference_connect_only.png), [custom_connect](images/reference_custom_connect.png).
+Reference sheets (inputs and what each profile expects, one panel per case): [off](images/reference_off.png), [default_1m](images/reference_default_1m.png), [default_3m](images/reference_default_3m.png), [custom_snap](images/reference_custom_snap.png), [custom_anchor](images/reference_custom_anchor.png), [connect_only](images/reference_connect_only.png), [custom_extensions](images/reference_custom_extensions.png), [ext_lines_polygons](images/reference_ext_lines_polygons.png), [ext_points_zones](images/reference_ext_points_zones.png), [custom_connect](images/reference_custom_connect.png).
 
 ![default_1m reference sheet](images/reference_default_1m.png)
 
@@ -139,8 +139,10 @@ The `extensions` section: `default` keeps 4.3.2's merging.
 
 | Case | Setup | Expected | Checked under |
 |---|---|---|---|
-| **E1** Points: same type merges, other types do not | A bench in both datasets 0.3 m apart (ext:color green / red), and a DS2 pole 0.5 m away. | The benches merge at DS1's position, DS1's colour kept and DS2's audited; the pole stays. | default (1 m, 3 m), `off` |
-| **E2** Lines: the same fence | The same fence line in both datasets 0.3 m apart; DS2 adds ext:height. | One line: DS1's geometry, gaining ext:height. | default (1 m, 3 m), `off` |
-| **E3** Polygons: the same building, plus a kiosk | The same building in both datasets (0.5 m shift; DS2 adds ext:levels) and a DS2-only kiosk. | Two polygons: the building (DS1 geometry, gaining ext:levels) and the kiosk. | default (1 m, 3 m), `off` |
-| **E4** Zones: the same pedestrian zone | The same pedestrian zone in both datasets, 0.2 m apart. | One zone (DS1's); its _w_id lists output nodes. | default (1 m, 3 m), `off` |
+| **E1** Points: same type merges, other types do not | A bench in both datasets 0.3 m apart (ext:color green / red), and a DS2 pole 0.5 m away. | The benches merge at DS1's position, DS1's colour kept and DS2's audited; the pole stays. | default (1 m, 3 m), `custom_extensions`, `ext_lines_polygons`, `ext_points_zones`, `off` |
+| **E2** Lines: the same fence | The same fence line in both datasets 0.3 m apart; DS2 adds ext:height. | One line: DS1's geometry, gaining ext:height. | default (1 m, 3 m), `custom_extensions`, `ext_lines_polygons`, `ext_points_zones`, `off` |
+| **E3** Polygons: the same building, plus a kiosk | The same building in both datasets (0.5 m shift; DS2 adds ext:levels) and a DS2-only kiosk. | Two polygons: the building (DS1 geometry, gaining ext:levels) and the kiosk. | default (1 m, 3 m), `custom_extensions`, `ext_lines_polygons`, `ext_points_zones`, `off` |
+| **E4** Zones: the same pedestrian zone | The same pedestrian zone in both datasets, 0.2 m apart. | One zone (DS1's); its _w_id lists output nodes. | default (1 m, 3 m), `custom_extensions`, `ext_lines_polygons`, `ext_points_zones`, `off` |
+| **E5** Lines use their own distance (line_proximity) | The same hedge in both datasets, 2 m apart; DS2 adds ext:height. | Merged only when line_proximity reaches 2 m: kept apart at 1 m (line_proximity follows proximity), one Line at 3 m and under custom_extensions (Points 0.5 m, Lines 2.5 m). | `default_1m`, `default_3m`, `custom_extensions`, `ext_lines_polygons`, `ext_points_zones`, `off` |
+| **E6** Points use proximity only | A waste basket in both datasets, 1.5 m apart. | Kept apart at 1 m, merged at 3 m; under custom_extensions the larger line_proximity (2.5 m) does not reach Points, which stay apart at proximity 0.5 m. | `default_1m`, `default_3m`, `custom_extensions`, `ext_lines_polygons`, `ext_points_zones`, `off` |
 

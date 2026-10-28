@@ -55,6 +55,20 @@ PROFILES = {
         title="Connect on its default rules (1 m) with snap and dedup off: stages are independent",
         config={"connect": {"mode": "default", "proximity": 1}},
         proximity=1.0, coincident=False, routability="preserve"),
+    "custom_extensions": dict(
+        title="Extensions only: Points join within 0.5 m, Lines use their own 2.5 m buffer",
+        config={"extensions": {"mode": "default", "proximity": 0.5, "line_proximity": 2.5}},
+        proximity=0.5, coincident=False, routability="preserve"),
+    "ext_lines_polygons": dict(
+        title="Extensions at 3 m with only Lines and Polygons on (points and zones off)",
+        config={"extensions": {"mode": "default", "proximity": 3, "points": False, "lines": True,
+                               "polygons": True, "zones": False}},
+        proximity=3.0, coincident=False, routability="preserve"),
+    "ext_points_zones": dict(
+        title="Extensions at 3 m with only Points and Zones on (lines and polygons off)",
+        config={"extensions": {"mode": "default", "proximity": 3, "points": True, "lines": False,
+                               "polygons": False, "zones": True}},
+        proximity=3.0, coincident=False, routability="preserve"),
     "custom_connect": dict(
         title="Ordered connect rules with node_tags / edge_tags; snap and dedup on their defaults at 0.5 m",
         config={"snap":  {"mode": "default", "proximity": 0.5},
@@ -93,6 +107,7 @@ REPORT_CHECKS = {
     "custom_anchor": [("metric", "dedup", "sidewalks-ds2", "removed", ">=", 1)],
     "connect_only": [("effective_rules", "snap", 0), ("effective_rules", "dedup", 0), ("effective_rules", "connect", 6),
                      ("metric", "connect", "crossing-sidewalk", "junctions", ">=", 5)],
+    "custom_extensions": [("effective_rules", "snap", 0), ("effective_rules", "dedup", 0), ("effective_rules", "connect", 0)],
     "custom_connect": [("warning", "duplicate-of-rule-1"),
                        ("metric", "connect", "kerbed-crossing", "junctions", ">=", 5),
                        ("metric", "connect", "footway-sidewalk", "skipped_taken", ">=", 1),

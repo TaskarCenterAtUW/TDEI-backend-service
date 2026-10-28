@@ -32,6 +32,22 @@
     "power": "pole",
     "ext:case": "E1"
    }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0963135,
+     44.6381
+    ]
+   },
+   "properties": {
+    "_id": "2800003",
+    "amenity": "waste_basket",
+    "ext:case": "E6",
+    "ext:color": "black"
+   }
   }
  ]
 }

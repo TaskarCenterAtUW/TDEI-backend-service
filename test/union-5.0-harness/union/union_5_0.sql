@@ -26,7 +26,12 @@
 --              edge_tags (written on the connector edges it adds). Each set is
 --              written only where it is named.
 --   extensions zones and extension points/lines/polygons: off, or default =
---              the 4.3.2 merging (no custom mode).
+--              the 4.3.2 merging (no custom mode). In default mode `points`,
+--              `lines`, `polygons` and `zones` (all true by default) switch each
+--              type's merge on or off; a type that is off keeps both copies.
+--              Points join within `proximity`; a DS2 Line merges when
+--              `line_overlap` of it lies within `line_proximity` of a DS1 Line
+--              (line_proximity defaults to proximity).
 --
 -- Stage order is fixed: snap → dedup → (snap topology) → connect → stranding
 -- guard → zones and extensions → output and report.
@@ -495,9 +500,23 @@ BEGIN
             PERFORM content.union5_cfg_keys(st, 'extensions', ARRAY['mode']);
             eff := eff || jsonb_build_object('extensions', jsonb_build_object('mode', 'off'));
         ELSE
-            PERFORM content.union5_cfg_keys(st, 'extensions', ARRAY['mode', 'proximity', 'line_overlap', 'polygon_overlap', 'zone_overlap']);
+            PERFORM content.union5_cfg_keys(st, 'extensions', ARRAY['mode', 'points', 'lines', 'polygons', 'zones',
+                                                                    'proximity', 'line_proximity', 'line_overlap', 'polygon_overlap', 'zone_overlap']);
+            -- each type can be switched off on its own (both copies kept); all four on by default
+            IF NOT (content.union5_cfg_bool(st->'points', 'extensions.points', true) OR content.union5_cfg_bool(st->'lines', 'extensions.lines', true)
+                    OR content.union5_cfg_bool(st->'polygons', 'extensions.polygons', true) OR content.union5_cfg_bool(st->'zones', 'extensions.zones', true)) THEN
+                RAISE EXCEPTION 'config.extensions: points, lines, polygons and zones are all off — use "mode": "off" instead' USING ERRCODE = '22023';
+            END IF;
+            -- proximity: how far apart two Points may be; line_proximity: the width of the
+            -- buffer around a DS1 Line (defaults to proximity)
+            prox := content.union5_cfg_num(st->'proximity', 'extensions.proximity', 0, false, 5, 0.5);
             eff := eff || jsonb_build_object('extensions', jsonb_build_object('mode', 'default',
-                'proximity',       content.union5_cfg_num(st->'proximity', 'extensions.proximity', 0, false, 5, 0.5),
+                'points',          content.union5_cfg_bool(st->'points', 'extensions.points', true),
+                'lines',           content.union5_cfg_bool(st->'lines', 'extensions.lines', true),
+                'polygons',        content.union5_cfg_bool(st->'polygons', 'extensions.polygons', true),
+                'zones',           content.union5_cfg_bool(st->'zones', 'extensions.zones', true),
+                'proximity',       prox,
+                'line_proximity',  content.union5_cfg_num(st->'line_proximity', 'extensions.line_proximity', 0, false, 5, prox),
                 'line_overlap',    content.union5_cfg_num(st->'line_overlap', 'extensions.line_overlap', 0, false, 1, 0.7),
                 'polygon_overlap', content.union5_cfg_num(st->'polygon_overlap', 'extensions.polygon_overlap', 0, false, 1, 0.7),
                 'zone_overlap',    content.union5_cfg_num(st->'zone_overlap', 'extensions.zone_overlap', 0, false, 1, 0.7)));
@@ -611,6 +630,7 @@ DECLARE
     v_ext       jsonb;
     v_ext_prox  float8;
     v_ext_deg   float8;
+    v_ext_ldeg  float8;
     v_cur       refcursor;
     v_mixed     jsonb;
     v_t         text;
@@ -1527,6 +1547,7 @@ BEGIN
     RAISE NOTICE 'Phase 7: zones and extensions (%) at %', v_ext->>'mode', clock_timestamp();
     v_ext_prox := COALESCE((v_ext->>'proximity')::float8, 0.5);
     v_ext_deg  := v_ext_prox / v_mlon;
+    v_ext_ldeg := COALESCE((v_ext->>'line_proximity')::float8, v_ext_prox) / v_mlon;
 
     -- zones: each ring vertex → its node (by _w_id position, else by coordinate) → final node
     DROP TABLE IF EXISTS u5_zones;
@@ -1586,7 +1607,7 @@ BEGIN
                        WHERE r2.zid = r1.zid ORDER BY r2.ring, u.o) AS ids
           FROM u5_zone_rings r1 GROUP BY r1.zid) rr ON rr.zid = z.zid
     WHERE ST_NPoints(rr.outer_ring) >= 4 AND ST_IsClosed(rr.outer_ring);
-    IF v_ext->>'mode' = 'default' THEN
+    IF (v_ext->>'zones')::boolean THEN        -- default mode with zones on
         -- a DS2 zone covering more than zone_overlap of a DS1 zone's area is the same zone (DS1's kept)
         CREATE INDEX ON u5_zone_out USING GIST (geom);
         ANALYZE u5_zone_out;
@@ -1615,7 +1636,7 @@ BEGIN
     ANALYZE u5_pts;
     DROP TABLE IF EXISTS u5_pt_match;
     CREATE TEMP TABLE u5_pt_match (ds2_id bigint, ds1_id bigint) ON COMMIT DROP;
-    IF v_ext->>'mode' = 'default' THEN
+    IF (v_ext->>'points')::boolean THEN        -- default mode with points on
         INSERT INTO u5_pt_match
         SELECT DISTINCT ON (p2.id) p2.id, p1.id
         FROM u5_pts p2 JOIN u5_pts p1 ON p1.src = 1 AND p2.src = 2
@@ -1648,7 +1669,7 @@ BEGIN
         WHERE p2.src = 2 AND NOT EXISTS (SELECT 1 FROM u5_pt_match m WHERE m.ds2_id = p2.id)) x;
 
     -- extension lines: a DS2 line with at least line_overlap of its length inside a
-    -- DS1 line's proximity buffer is the same line (DS1 geometry; DS2-only keys added)
+    -- DS1 line's line_proximity buffer is the same line (DS1 geometry; DS2-only keys added)
     DROP TABLE IF EXISTS u5_lines;
     CREATE TEMP TABLE u5_lines ON COMMIT DROP AS
     SELECT l.id, CASE WHEN l.tdei_dataset_id = v_ds1 THEN 1 ELSE 2 END::smallint AS src,
@@ -1658,10 +1679,10 @@ BEGIN
     ANALYZE u5_lines;
     DROP TABLE IF EXISTS u5_ln_match;
     CREATE TEMP TABLE u5_ln_match (ds2_id bigint, ds1_id bigint) ON COMMIT DROP;
-    IF v_ext->>'mode' = 'default' THEN
+    IF (v_ext->>'lines')::boolean THEN        -- default mode with lines on
         DROP TABLE IF EXISTS u5_ln_buf;
         CREATE TEMP TABLE u5_ln_buf ON COMMIT DROP AS
-        SELECT id, ST_Buffer(geom, v_ext_deg) AS buf FROM u5_lines WHERE src = 1;
+        SELECT id, ST_Buffer(geom, v_ext_ldeg) AS buf FROM u5_lines WHERE src = 1;
         CREATE INDEX ON u5_ln_buf USING GIST (buf);
         INSERT INTO u5_ln_match
         SELECT DISTINCT ON (ds2_id) ds2_id, ds1_id FROM (
@@ -1698,7 +1719,7 @@ BEGIN
     FROM content.extension_polygon p WHERE p.tdei_dataset_id IN (v_ds1, v_ds2);
     DROP TABLE IF EXISTS u5_poly_pairs;
     CREATE TEMP TABLE u5_poly_pairs (ds1_id bigint, ds2_id bigint, ov float8) ON COMMIT DROP;
-    IF v_ext->>'mode' = 'default' THEN
+    IF (v_ext->>'polygons')::boolean THEN        -- default mode with polygons on
         CREATE INDEX ON u5_polys USING GIST (geom);  -- each DS1 polygon meets only the DS2 polygons it touches
         CREATE INDEX ON u5_polys (id);
         ANALYZE u5_polys;

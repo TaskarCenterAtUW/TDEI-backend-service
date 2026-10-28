@@ -17,6 +17,21 @@
     "ext:case": "E1",
     "ext:color": "green"
    }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0963325,
+     44.6381
+    ]
+   },
+   "properties": {
+    "_id": "1800002",
+    "amenity": "waste_basket",
+    "ext:case": "E6"
+   }
   }
  ]
 }

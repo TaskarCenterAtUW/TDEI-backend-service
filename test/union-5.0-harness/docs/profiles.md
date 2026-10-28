@@ -64,6 +64,28 @@ any types (SN6).
 Checks: the DS1 end moves onto DS2's node (AN1), `anchor_only` audits without
 adding (AN2), dedup anchored on DS2 removes the DS1 copy (AN3).
 
+### `custom_extensions` — Points and Lines each use their own distance
+
+```json
+{"extensions": {"mode": "default", "proximity": 0.5, "line_proximity": 2.5}}
+```
+
+Only the extensions stage runs. Points join within `proximity` (0.5 m) and a DS2
+Line merges when `line_overlap` of it lies within `line_proximity` (2.5 m) of a
+DS1 Line. Checks that the 2 m hedge merges (E5) while the 1.5 m waste baskets
+stay apart (E6): the Lines' distance never reaches Points.
+
+### `ext_lines_polygons` and `ext_points_zones` — each type has its own switch
+
+```json
+{"extensions": {"mode": "default", "proximity": 3, "points": false, "lines": true, "polygons": true, "zones": false}}
+{"extensions": {"mode": "default", "proximity": 3, "points": true, "lines": false, "polygons": false, "zones": true}}
+```
+
+Only the extensions stage runs, at 3 m, with two types on and two off. A type
+that is off keeps both copies; a type that is on merges as in `default_3m`. The
+E cases check each type both ways across the two profiles.
+
 ### `connect_only` — stages are independent
 
 ```json

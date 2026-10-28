@@ -522,6 +522,14 @@ ds2.polygon([C(130,890), C(140,890), C(140,900), C(130,900)], building="kiosk", 
 ds1.zone([C(160,890), C(180,890), C(180,910), C(160,910)], highway="pedestrian", **{"ext:case": "E4"})
 ds2.zone([C(160.2,890), C(180.2,890), C(180.2,910), C(160.2,910)], highway="pedestrian", **{"ext:case": "E4"})
 
+# E5 — the same hedge in both datasets, 2 m apart: merges only when the Lines'
+#      own distance (line_proximity) reaches 2 m.
+ds1.line([C(220,900), C(260,900)], barrier="hedge", **{"ext:case": "E5"})
+ds2.line([C(220,902), C(260,902)], barrier="hedge", **{"ext:case": "E5", "ext:height": "0.8"})
+# E6 — a waste basket in both datasets, 1.5 m apart: Points use proximity only.
+ds1.point(C(290,900),   amenity="waste_basket", **{"ext:case": "E6"})
+ds2.point(C(291.5,900), amenity="waste_basket", **{"ext:case": "E6", "ext:color": "black"})
+
 # ── Node attributes, so property merge + ext:union_audit_* is exercised ──────
 # Case A: coincident sidewalk endpoints carrying DIFFERENT values for the same
 # key, plus a DS2-only key. DS1 wins the shared key; DS2's value is audited;

@@ -74,7 +74,7 @@ trimmed: `…` marks rules left out. It has seven keys:
         …
       ]
     },
-    "extensions": { "mode": "default", "proximity": 1, "line_overlap": 0.7, "polygon_overlap": 0.7, "zone_overlap": 0.7 }
+    "extensions": { "mode": "default", "points": true, "lines": true, "polygons": true, "zones": true, "proximity": 1, "line_proximity": 1, "line_overlap": 0.7, "polygon_overlap": 0.7, "zone_overlap": 0.7 }
   },
 
   "rules": [
@@ -137,7 +137,7 @@ you meant:
 | `snap` | `mode`, `anchor`, `attributes`, `coincident`, `others`, `rules: [{name, type, proximity, anchor, attributes}]` | `{"mode": "off", "coincident": false, "rules": []}` |
 | `dedup` | `mode`, `rules: [{name, from, to, proximity, min_overlap, anchor}]` | `{"mode": "off", "rules": []}` |
 | `connect` | `mode`, `rules: [{name, from, to, operation, proximity, node_tags, edge_tags}]` | `{"mode": "off", "rules": []}` |
-| `extensions` | `mode`, `proximity`, `line_overlap`, `polygon_overlap`, `zone_overlap` | `{"mode": "off"}` |
+| `extensions` | `mode`, `points`, `lines`, `polygons`, `zones`, `proximity`, `line_proximity`, `line_overlap`, `polygon_overlap`, `zone_overlap` | `{"mode": "off"}` |
 
 **How values appear:**
 - **Rule defaults are copied in.** Section-level settings such as `anchor`,

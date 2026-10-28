@@ -23,6 +23,28 @@
     "ext:case": "E2",
     "ext:height": "1.2"
    }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0972178,
+      44.638118
+     ],
+     [
+      -123.0967119,
+      44.638118
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "2850002",
+    "barrier": "hedge",
+    "ext:case": "E5",
+    "ext:height": "0.8"
+   }
   }
  ]
 }
