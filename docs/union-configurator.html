@@ -83,10 +83,16 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 .terr.adv{color:#8a5a00}
 .tctx{font-size:12.5px;color:var(--muted);margin:0}
 .tnone{font-size:12.5px;color:var(--muted);margin:0}
+.tside{display:flex;flex-direction:column;gap:6px;border-left:3px solid var(--line);padding:4px 0 4px 10px}
+.tside.tnode{border-left-color:var(--brand)}
+.tside.tedge{border-left-color:var(--ds2)}
+.tside .tlabel code{font:500 11.5px var(--f-mono);color:var(--muted);margin-left:4px}
+.tdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px;background:var(--brand)}
+.tedge .tdot{border-radius:2px;width:12px;height:4px;background:var(--ds2)}
 .tprev{font-size:12.5px;color:var(--ink);margin:0;overflow-wrap:anywhere;display:flex;flex-direction:column;gap:2px}
 .tprev b{font-weight:600}
 .tprev .hint{color:var(--muted);margin-top:2px}
-@media (max-width:560px){.trow{grid-template-columns:minmax(0,1fr) 12px minmax(0,1fr) 28px}.terr{grid-column:1/-1}.thead{flex-direction:column;align-items:flex-start}}
+@media (max-width:560px){.trow{grid-template-columns:minmax(0,1.35fr) 10px minmax(0,1fr) 28px;gap:4px}.trow input{font-size:12px;padding:6px 5px}.tside{padding-left:8px}.terr{grid-column:1/-1}.thead{flex-direction:column;align-items:flex-start}}
 .head{display:flex;flex-direction:column;gap:14px}
 .head .top{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-between;align-items:flex-start}
 .head .l{display:flex;flex-direction:column;gap:6px;min-width:0}
@@ -439,9 +445,11 @@ const STEPS=[
 ];
 
 /* ═════════════ answers ═════════════ */
-const recAnswers=()=>{const a={trust:'ds1',s_attrs:'merge'}; STEPS.forEach(s=>{ if('rec' in s) a[s.id]=s.rec; if('ov' in s) a[s.id+'_ov']=s.ov; if(s.g==='link') a[s.id+'_tags']=[]; }); return a;};
+const recAnswers=()=>{const a={trust:'ds1',s_attrs:'merge'}; STEPS.forEach(s=>{ if('rec' in s) a[s.id]=s.rec; if('ov' in s) a[s.id+'_ov']=s.ov; if(s.g==='link'){ a[s.id+'_ntags']=[]; a[s.id+'_etags']=[]; } }); return a;};
 let A=recAnswers(), view='compact', collapsed={}, ds={one:'',two:''}; const names={ds1:'',ds2:''};
-try{const v=JSON.parse(localStorage.getItem('u5wiz')||'null'); if(v){ const o=v.A||{}; [['s_path',['s_footway','s_pedroad','s_steps']],['d_path',['d_sidewalk','d_footway','d_pedroad','d_steps']],['c_tee',['c_t_sidewalk','c_t_footway','c_t_pedroad','c_t_steps']]].forEach(([k,ks])=>{ if(o[k]!=null){ ks.forEach(x=>{ if(o[x]==null) o[x]=o[k]; }); delete o[k]; } }); if(o.kerb!=null){ if(o.kerb && !o.c_sidewalk_tags) o.c_sidewalk_tags=[['barrier','kerb'],['kerb','lowered']]; delete o.kerb; }
+try{const v=JSON.parse(localStorage.getItem('u5wiz')||'null'); if(v){ const o=v.A||{}; [['s_path',['s_footway','s_pedroad','s_steps']],['d_path',['d_sidewalk','d_footway','d_pedroad','d_steps']],['c_tee',['c_t_sidewalk','c_t_footway','c_t_pedroad','c_t_steps']]].forEach(([k,ks])=>{ if(o[k]!=null){ ks.forEach(x=>{ if(o[x]==null) o[x]=o[k]; }); delete o[k]; } }); if(o.kerb!=null){ if(o.kerb && !o.c_sidewalk_ntags && !o.c_sidewalk_tags) o.c_sidewalk_ntags=[['barrier','kerb'],['kerb','lowered']]; delete o.kerb; }
+  // one tag list per case became two (Node / connector Edge): split the old list by where OSW defines each key
+  Object.keys(o).filter(k=>/_tags$/.test(k)&&!/_(n|e)tags$/.test(k)).forEach(k=>{ const id=k.slice(0,-5), sp=splitTags(o[k]||[]); if(!o[id+'_ntags']) o[id+'_ntags']=sp.n; if(!o[id+'_etags']) o[id+'_etags']=sp.e; delete o[k]; });
   if(o.d_overlap!=null){ STEPS.filter(x=>'ov' in x).forEach(x=>{ if(o[x.id+'_ov']==null) o[x.id+'_ov']=o.d_overlap; }); delete o.d_overlap; } A=Object.assign(recAnswers(),o); if(v.view) view=v.view; if(v.collapsed) collapsed=v.collapsed; if(v.ds) ds=v.ds;}}catch(e){}
 const save=()=>{try{localStorage.setItem('u5wiz',JSON.stringify({A,view,collapsed,ds}));}catch(e){}};
 
@@ -480,17 +488,34 @@ const PRESETS={curb_ramp:['Curb Ramp',[['barrier','kerb'],['kerb','lowered']]],r
 /* What each connect case creates, so the tag editor offers only what fits there.
    node: the new Node the rule adds; edge: the connector Edge (it copies the approaching Edge's highway/footway). */
 const CASE_TAGS={
-  c_sidewalk:{node:'a new Node on the Sidewalk where the Crossing meets it, which OSW maps as a Curb Node',edge:'a connector Edge tagged as a Crossing',keys:['barrier','kerb','tactile_paving','crossing:markings','surface','description'],presets:['curb_ramp','raised','flush','rolled','generic','tactile']},
-  c_road:{node:'a new Node where the Crossing meets the street centerline (a Bare Node in OSW: no curb there)',edge:'a connector Edge tagged as a Crossing, only when the Crossing stops short of the street',keys:['crossing:markings','surface','description'],presets:['marked','unmarked','zebra']},
-  c_living:{node:'a new Node on the Living Street where the Crossing meets it',edge:'a connector Edge tagged as a Crossing',keys:['barrier','kerb','tactile_paving','crossing:markings','surface','description'],presets:['flush','curb_ramp','tactile']},
-  c_crossing:{node:'a new Node on the other Crossing, usually at the street centerline or a Traffic Island',edge:'a connector Edge tagged as a Crossing',keys:['crossing:markings','surface','description'],presets:['marked','unmarked']},
-  c_t_sidewalk:{node:'a new Bare Node where the Sidewalk meets the other Edge',edge:'a connector Edge tagged as a Sidewalk',keys:['surface','width','incline','foot','description'],presets:[]},
-  c_t_footway:{node:'a new Bare Node where the Footway meets the other Edge',edge:'a connector Edge tagged as a Footway',keys:['surface','width','incline','foot','description'],presets:[]},
-  c_t_pedroad:{node:'a new Bare Node where the Pedestrian Road meets the other Edge',edge:'a connector Edge tagged as a Pedestrian Road',keys:['surface','width','incline','foot','description'],presets:[]},
-  c_t_steps:{node:'a new Node where the Steps meet the other Edge, at the top or bottom of the flight',edge:'a connector Edge tagged as Steps',keys:['tactile_paving','surface','width','incline','step_count','climb','foot','description'],presets:['tactile']},
-  c_t_living:{node:'a new Bare Node on the other Living Street',edge:'a connector Edge tagged as a Living Street',keys:['surface','width','foot','description'],presets:[]}
+  c_sidewalk:{node:{what:'The new Node sits on the Sidewalk where the Crossing meets it. OSW maps this point as a Curb Node',keys:['barrier','kerb','tactile_paving'],presets:['curb_ramp','raised','flush','rolled','generic','tactile']},
+              edge:{what:'The connector Edge spans the gap and copies the Crossing’s highway=footway and footway=crossing',keys:['crossing:markings','surface','width','description'],presets:['marked','unmarked','zebra']}},
+  c_road:{node:{what:'The new Node sits where the Crossing meets the street centerline. OSW maps this as a Bare Node, so it usually needs no tags',keys:[],presets:[]},
+          edge:{what:'A connector Edge is added only when the Crossing stops short of the street; it copies the Crossing’s highway and footway',keys:['crossing:markings','surface','description'],presets:['marked','unmarked','zebra']}},
+  c_living:{node:{what:'The new Node sits on the Living Street where the Crossing meets it, often a curb point',keys:['barrier','kerb','tactile_paving'],presets:['flush','curb_ramp','tactile']},
+            edge:{what:'The connector Edge spans the gap and copies the Crossing’s highway and footway',keys:['crossing:markings','surface','description'],presets:['marked','unmarked']}},
+  c_crossing:{node:{what:'The new Node sits on the other Crossing, usually at the street centerline or a Traffic Island',keys:['tactile_paving'],presets:['tactile']},
+              edge:{what:'The connector Edge spans the gap and copies the Crossing’s highway and footway',keys:['crossing:markings','surface','description'],presets:['marked','unmarked']}},
+  c_t_sidewalk:{node:{what:'The new Node is a Bare Node where the Sidewalk meets the other Edge, so it usually needs no tags',keys:[],presets:[]},
+                edge:{what:'The connector Edge copies the Sidewalk’s highway=footway and footway=sidewalk',keys:['surface','width','incline','foot','description'],presets:[]}},
+  c_t_footway:{node:{what:'The new Node is a Bare Node where the Footway meets the other Edge, so it usually needs no tags',keys:[],presets:[]},
+               edge:{what:'The connector Edge copies the Footway’s highway and footway tags',keys:['surface','width','incline','foot','description'],presets:[]}},
+  c_t_pedroad:{node:{what:'The new Node is a Bare Node where the Pedestrian Road meets the other Edge, so it usually needs no tags',keys:[],presets:[]},
+               edge:{what:'The connector Edge copies the Pedestrian Road’s highway=pedestrian',keys:['surface','width','incline','foot','description'],presets:[]}},
+  c_t_steps:{node:{what:'The new Node is at the top or bottom of the flight, where tactile paving is often mapped',keys:['tactile_paving'],presets:['tactile']},
+             edge:{what:'The connector Edge copies the Steps’ highway=steps',keys:['surface','width','incline','step_count','climb','foot','description'],presets:[]}},
+  c_t_living:{node:{what:'The new Node is a Bare Node on the other Living Street, so it usually needs no tags',keys:[],presets:[]},
+              edge:{what:'The connector Edge copies the Living Street’s highway=living_street',keys:['surface','width','foot','description'],presets:[]}}
 };
-const tagRows=id=>A[id+'_tags']||(A[id+'_tags']=[]);
+/* A tag list is one side of one case: "<case id>--n" (node_tags, on the new Node) or "<case id>--e"
+   (edge_tags, on the connector Edge). Each set is written only where it is named. */
+const LS=(id,side)=>id+'--'+side, lcase=L=>L.slice(0,-3), lside=L=>L.slice(-1);
+const sideCtx=L=>{ const c=CASE_TAGS[lcase(L)]; return (c&&c[lside(L)==='n'?'node':'edge'])||{what:'',keys:[],presets:[]}; };
+// An old single list, split by where OSW defines each key (anything OSW doesn't define goes on the Node).
+// (declared as a function with its own key list: saved answers are migrated before the constants above exist)
+function splitTags(rows){ const node=['barrier','kerb','tactile_paving'], edge=['highway','footway','name','description','surface','width','incline','length','foot','service','crossing:markings','step_count','climb','building','opening_hours'];
+  const n=[],e=[]; rows.forEach(r=>{ const k=(r[0]||'').trim(); (edge.includes(k)&&!node.includes(k)?e:n).push([r[0],r[1]]); }); return {n,e}; }
+const tagRows=L=>{ const k=lcase(L)+'_'+lside(L)+'tags'; return A[k]||(A[k]=[]); };
 function tagIssue(id,i){
   const rows=tagRows(id), [k0,v0]=rows[i]||['',''], k=(k0||'').trim(), v=(v0||'').trim();
   if(!k && !v) return '';
@@ -507,27 +532,32 @@ function tagAdvice(id,i){
   if(KEY_VALUES[k] && !KEY_VALUES[k].includes(v)) return `Not an OSW 0.3 value for ${k}. It is still written as you typed it.`;
   if(['width','incline','length'].includes(k) && isNaN(+v)) return `OSW 0.3 expects a number for ${k}.`;
   if(k==='step_count' && !/^\d+$/.test(v)) return 'OSW 0.3 expects a whole number for step_count.';
-  if(!(CASE_TAGS[id]&&CASE_TAGS[id].keys.includes(k)) && !k.startsWith('ext:') && !NODE_KEYS.includes(k) && !EDGE_KEYS.includes(k)) return `OSW 0.3 doesn’t define ${k}, so it is written as ext:${k}.`;
+  const node=lside(id)==='n', mine=node?NODE_KEYS:EDGE_KEYS, other=node?EDGE_KEYS:NODE_KEYS;
+  if(!node && (k==='highway'||k==='footway')) return `Replaces the ${k} the connector copies from the approaching Edge.`;
+  if(!k.startsWith('ext:') && !mine.includes(k)) return other.includes(k)
+      ? `${k} is an OSW ${node?'Edge':'Node'} field, not a${node?' Node':'n Edge'} field, so here it is written as ext:${k}.`
+      : `OSW 0.3 doesn’t define ${k} on a${node?' Node':'n Edge'}, so it is written as ext:${k}.`;
   return '';
 }
 function validTags(id){ const o={}; tagRows(id).forEach(([k,v],i)=>{ if((k||'').trim() && !tagIssue(id,i)) o[k.trim()]=v.trim(); }); return o; }
-const tagKey=id=>JSON.stringify(Object.entries(validTags(id)).sort());
 const onNode=k=> NODE_KEYS.includes(k)||k.startsWith('ext:') ? k : 'ext:'+k;
 const onEdge=k=> EDGE_KEYS.includes(k)||k.startsWith('ext:') ? k : 'ext:'+k;
 function tagPlacement(id){
-  const t=Object.entries(validTags(id)); if(!t.length) return null;
-  return {node:t.map(([k,v])=>`${onNode(k)}=${v}`), edge:t.map(([k,v])=>`${onEdge(k)}=${v}`)};
+  const n=Object.entries(validTags(LS(id,'n'))), e=Object.entries(validTags(LS(id,'e'))); if(!n.length && !e.length) return null;
+  return {node:n.map(([k,v])=>`${onNode(k)}=${v}`), edge:e.map(([k,v])=>`${onEdge(k)}=${v}`)};
 }
+// Both sets are always written, {} when empty, so the rule says exactly what it adds.
+const tagsFor=id=>({node_tags:validTags(LS(id,'n')), edge_tags:validTags(LS(id,'e'))});
 let OWNER={};                               // case id -> {rule, keep} for the last configuration built
 function famRules(stage,a){
-  const v=t=>+a[FAMID[stage](t)]||0, ov=t=>stage==='dedup'?+a[FAMID.dedup(t)+'_ov']: stage==='connect'? tagKey(FAMID.connect(t)) : null, pre={snap:'snap_node_',dedup:'dedup_edge_',connect:'connect_tjunction_'}[stage];
+  const v=t=>+a[FAMID[stage](t)]||0, ov=t=>stage==='dedup'?+a[FAMID.dedup(t)+'_ov']: stage==='connect'? FAMID.connect(t) : null, pre={snap:'snap_node_',dedup:'dedup_edge_',connect:'connect_tjunction_'}[stage];
   // one rule per OSW type, so each rule acts only between Edges (or Nodes) of that type
   const groups=FAM.filter(t=>v(t)>0).map(t=>({val:v(t),ov:ov(t),types:[t]}));
   const out=[], fwg=groups.find(g=>g.types.includes('footway'));
   // two groups of the same types would get the same name; a suffix keeps names unique
   const used={}, uniq=n=>{ used[n]=(used[n]||0)+1; return used[n]>1? n+'_'+used[n] : n; };
   const mk=(types,spec,val,o)=>{ const name=uniq(pre+types.map(t=>FAMTOK[t]).join('_'));
-    const r= stage==='snap'?{name,type:spec,proximity:val}: stage==='dedup'?{name,from:spec,to:spec,proximity:val,min_overlap:o}:Object.assign({name,from:spec,to:'pedestrian',operation:'geometry',proximity:val}, o&&o!=='[]'?{tags:Object.fromEntries(JSON.parse(o))}:{});
+    const r= stage==='snap'?{name,type:spec,proximity:val}: stage==='dedup'?{name,from:spec,to:spec,proximity:val,min_overlap:o}:Object.assign({name,from:spec,to:'pedestrian',operation:'geometry',proximity:val}, tagsFor(o));
     types.forEach(t=>OWNER[FAMID[stage](t)]={rule:r}); return r; };
   const exact=types=> types.length===1? FAMSPEC[types[0]] : types.map(t=>FAMSPEC[t]);
   groups.filter(g=>g!==fwg).forEach(g=>out.push(mk(g.types,exact(g.types),g.val,g.ov)));
@@ -566,7 +596,7 @@ function buildConfig(a=A){
   if(a.d_other>0) dr.push((OWNER.d_other={rule:{name:RULE.d_other,from:'other',to:'other',proximity:a.d_other,min_overlap:a.d_other_ov}}).rule);
   c.dedup= dr.some(r=>!r.name.startsWith('keep_')) ? Object.assign({mode:'custom'},anch,{rules:dr}) : {mode:'off'};
   const cr=[];
-  const withTags=(id,r)=>{ const t=validTags(id); if(Object.keys(t).length) r.tags=t; OWNER[id]={rule:r}; return r; };
+  const withTags=(id,r)=>{ Object.assign(r,tagsFor(id)); OWNER[id]={rule:r}; return r; };
   if(a.c_road>0) cr.push(withTags('c_road',{name:RULE.c_road,from:'crossing',to:'road',operation:'point',proximity:a.c_road}));
   if(a.c_sidewalk>0) cr.push(withTags('c_sidewalk',{name:RULE.c_sidewalk,from:'crossing',to:'sidewalk',operation:'geometry',proximity:a.c_sidewalk}));
   if(a.c_living>0) cr.push(withTags('c_living',{name:RULE.c_living,from:'crossing',to:'living_street',operation:'geometry',proximity:a.c_living}));
@@ -788,7 +818,8 @@ function doesText(s){
   if(!(v>0)) return 'Off: left exactly as mapped in both datasets.';
   if(s.g==='join') return `A ${ot} ${s.noun} Node up to ${mm(v)} from a ${an} ${s.noun} Node is snapped onto it. Its Edges move with it.`;
   if(s.g==='dup') return `A ${ot} ${s.noun} Edge is removed when it lies within ${mm(v)} of a ${an} ${s.noun} Edge and at least ${pc(A[s.id+'_ov'])} of its length runs alongside it.`;
-  if(s.g==='link'){ const base=linkText(s,v,mm), tp=tagPlacement(s.id); const n=tp?tp.node.length:0; return base+(n?` New Nodes and connector Edges get the ${n===1?'tag':n+' tags'} below.`:''); }
+  if(s.g==='link'){ const base=linkText(s,v,mm), tp=tagPlacement(s.id); const n=tp?tp.node.length:0, e=tp?tp.edge.length:0, t=x=>x===1?'1 tag':x+' tags';
+    return base+(n&&e?` New Nodes get ${t(n)} and connector Edges ${t(e)}, set below.`: n?` New Nodes get ${t(n)}, set below.`: e?` Connector Edges get ${t(e)}, set below.`:''); }
   if(s.id==='x_points') return `Two Points of the same type up to ${mm(v)} apart become one: the DS1 Point is kept and gains any fields only DS2 has. This distance is also the Line overlap buffer, and this switch also turns Line, Polygon and Zone merging on.`;
   return '';
 }
@@ -797,29 +828,34 @@ function infoHTML(s){
   const range= s.kind==='dist'?'0 to 5 m (0 turns it off)'+('ov' in s?', above 0 up to 100 % alongside':''): s.kind==='pct'?'above 0 up to 100 %':'';
   return `<b>${esc(s.title)}</b><span>${s.lead}</span>${s.osw?`<span class="oswref"><span class="osw-tag">OSW 0.3</span>${esc(s.osw)}</span>`:''}<span class="note">Recommended: ${recTxt}${range?` · Allowed: ${range}`:''}${s.sub?` · Applies to: ${esc(s.sub)}`:''}${OWNER[s.id]&&!OWNER[s.id].keep?` · Rule name in the run report: <code>${OWNER[s.id].rule.name}</code>`:''}</span>`;
 }
-function keyOptions(id,i){ const used=tagRows(id).map(([k],j)=>j!==i?(k||'').trim():'').filter(Boolean); return (CASE_TAGS[id]?CASE_TAGS[id].keys:[]).filter(k=>!used.includes(k)); }
+function keyOptions(L,i){ const used=tagRows(L).map(([k],j)=>j!==i?(k||'').trim():'').filter(Boolean); return sideCtx(L).keys.filter(k=>!used.includes(k)); }
 function valueOptions(k){ return KEY_VALUES[(k||'').trim()]||[]; }
-function tagsInner(s){
-  const id=s.id, rows=tagRows(id), ctx=CASE_TAGS[id]||{keys:[],presets:[]};
-  const rowHTML=([k,v],i)=>{ const err=tagIssue(id,i), adv=tagAdvice(id,i), vals=valueOptions(k);
-    return `<div class="trow"><input class="tk ${err&&/key/i.test(err)?'bad':''}" id="tk-${id}-${i}" data-tk="${id}" data-i="${i}" value="${esc(k||'')}" placeholder="key" list="dk-${id}-${i}" autocomplete="off" spellcheck="false" aria-label="Tag ${i+1} key">
-      <datalist id="dk-${id}-${i}">${keyOptions(id,i).map(o=>`<option value="${esc(o)}">`).join('')}</datalist>
+function tagListHTML(L){
+  const rows=tagRows(L), ctx=sideCtx(L), node=lside(L)==='n';
+  const rowHTML=([k,v],i)=>{ const err=tagIssue(L,i), adv=tagAdvice(L,i), vals=valueOptions(k), d=`${L}-${i}`, who=`${node?'Node':'Connector'} tag ${i+1}`;
+    return `<div class="trow"><input class="tk ${err&&/key/i.test(err)?'bad':''}" id="tk-${d}" data-tk="${L}" data-i="${i}" value="${esc(k||'')}" placeholder="key" list="dk-${d}" autocomplete="off" spellcheck="false" aria-label="${who} key">
+      <datalist id="dk-${d}">${keyOptions(L,i).map(o=>`<option value="${esc(o)}">`).join('')}</datalist>
       <span class="teq" aria-hidden="true">=</span>
-      <input class="tv ${err&&/value/i.test(err)?'bad':''}" id="tv-${id}-${i}" data-tv="${id}" data-i="${i}" value="${esc(v||'')}" placeholder="${esc(KEY_HINTS[(k||'').trim()]||(vals.length?'choose or type':'value'))}" ${vals.length?`list="dv-${id}-${i}"`:''} autocomplete="off" spellcheck="false" aria-label="Tag ${i+1} value">
-      <datalist id="dv-${id}-${i}">${vals.map(o=>`<option value="${esc(o)}">`).join('')}</datalist>
-      <button class="tdel" data-tdel="${id}" data-i="${i}" aria-label="Remove tag ${i+1}">✕</button>
-      <span class="terr ${err?'':'adv'}" id="te-${id}-${i}">${esc(err||adv)}</span></div>`; };
-  return `<div class="thead"><span class="tlabel">Tags on what this rule creates</span>
-      <span class="tadd"><button class="tchip" data-tadd="${id}">+ Add tag</button>${ctx.presets.map(pk=>`<button class="tchip" data-tpre="${id}" data-pk="${pk}">${PRESETS[pk][0]}</button>`).join('')}</span></div>
-    <p class="tctx">This rule adds ${esc(ctx.node||'a new Node')}, and ${esc(ctx.edge||'a connector Edge')} across any gap.${ctx.keys.length?` Fields that fit here: ${ctx.keys.join(', ')}.`:''}</p>
-    ${rows.length? `<div class="trows">${rows.map(rowHTML).join('')}</div>` : '<p class="tnone">No tags yet.</p>'}
-    <div class="tprev" id="tp-${id}">${tagPrevText(id)}</div>`;
+      <input class="tv ${err&&/value/i.test(err)?'bad':''}" id="tv-${d}" data-tv="${L}" data-i="${i}" value="${esc(v||'')}" placeholder="${esc(KEY_HINTS[(k||'').trim()]||(vals.length?'choose or type':'value'))}" ${vals.length?`list="dv-${d}"`:''} autocomplete="off" spellcheck="false" aria-label="${who} value">
+      <datalist id="dv-${d}">${vals.map(o=>`<option value="${esc(o)}">`).join('')}</datalist>
+      <button class="tdel" data-tdel="${L}" data-i="${i}" aria-label="Remove ${who.toLowerCase()}">✕</button>
+      <span class="terr ${err?'':'adv'}" id="te-${d}">${esc(err||adv)}</span></div>`; };
+  return `<div class="tside ${node?'tnode':'tedge'}"><div class="thead"><span class="tlabel"><span class="tdot" aria-hidden="true"></span>${node?'On the new Node':'On the connector Edge'} <code>${node?'node_tags':'edge_tags'}</code></span>
+      <span class="tadd"><button class="tchip" data-tadd="${L}">+ Add tag</button>${ctx.presets.map(pk=>`<button class="tchip" data-tpre="${L}" data-pk="${pk}">${PRESETS[pk][0]}</button>`).join('')}</span></div>
+    <p class="tctx">${esc(ctx.what)}.${ctx.keys.length?` Fields that fit here: ${ctx.keys.join(', ')}.`:''}</p>
+    ${rows.length? `<div class="trows">${rows.map(rowHTML).join('')}</div>` : '<p class="tnone">No tags.</p>'}</div>`;
+}
+function tagsInner(s){
+  return `<div class="thead"><span class="tlabel">Tags on what this rule creates</span></div>
+    <p class="tctx">Set the new Node’s tags and the connector Edge’s tags separately. Each set is written only where it is named: Node tags never reach the connector, and connector tags never reach the Node.</p>
+    ${tagListHTML(LS(s.id,'n'))}${tagListHTML(LS(s.id,'e'))}
+    <div class="tprev" id="tp-${s.id}">${tagPrevText(s.id)}</div>`;
 }
 function tagPrevText(id){
   const tp=tagPlacement(id);
-  if(!tp) return '<span class="hint">Connector Edges always copy the approaching Edge’s highway and footway tags. New Nodes and connectors always carry ext:union_rule and ext:union_confidence.</span>';
-  return `<span><b>New Node:</b> ${esc(tp.node.join(', '))}</span><span><b>Connector Edge:</b> ${esc(tp.edge.join(', '))}</span>
-    <span class="hint">OSW Node keys (barrier, kerb, tactile_paving) stay as given on the Node and OSW Edge keys on the connector; any other key is written as ext:&lt;key&gt;. A Node that already exists keeps its own values and records differing ones as ext:union_audit_&lt;key&gt;.</span>`;
+  if(!tp) return '<span class="hint">No tags set. Connector Edges always copy the approaching Edge’s highway and footway tags. New Nodes and connectors always carry ext:union_rule and ext:union_confidence.</span>';
+  return `<span><b>New Node:</b> ${tp.node.length?esc(tp.node.join(', ')):'no rule tags'}</span><span><b>Connector Edge:</b> highway and footway copied from the approaching Edge${tp.edge.length?', then '+esc(tp.edge.join(', ')):''}</span>
+    <span class="hint">OSW Node keys (barrier, kerb, tactile_paving) are written as given on the Node, and OSW Edge keys as given on the connector; any other key is written as ext:&lt;key&gt;. A Node that already exists keeps its own values and records differing ones as ext:union_audit_&lt;key&gt;.</span>`;
 }
 function refreshTags(id){
   tagRows(id).forEach(([k],i)=>{ const err=tagIssue(id,i), adv=tagAdvice(id,i), te=$('te-'+id+'-'+i), tk=$('tk-'+id+'-'+i), tv=$('tv-'+id+'-'+i);
@@ -830,7 +866,7 @@ function refreshTags(id){
     if(dv) dv.innerHTML=vals.map(o=>`<option value="${esc(o)}">`).join('');
     if(dk) dk.innerHTML=keyOptions(id,i).map(o=>`<option value="${esc(o)}">`).join('');
     if(tv){ if(vals.length) tv.setAttribute('list','dv-'+id+'-'+i); else tv.removeAttribute('list'); tv.placeholder=KEY_HINTS[(k||'').trim()]||(vals.length?'choose or type':'value'); } });
-  const tp=$('tp-'+id); if(tp) tp.innerHTML=tagPrevText(id);
+  const tp=$('tp-'+lcase(id)); if(tp) tp.innerHTML=tagPrevText(lcase(id));
 }
 function itemCfgText(s){ const c=stepConfig(s); return c? JSON.stringify(c,null,2) : 'Nothing — these features are left exactly as mapped.'; }
 function itemHTML(s,i){
@@ -1004,8 +1040,11 @@ function readConfig(text){
     if(cn.mode==='default'){ const p=dist(stagePx(cn),'connect'); Object.assign(a,{c_road:p,c_sidewalk:p,c_living:p,c_t_living:p,c_crossing:p}); FAM.forEach(t=>a['c_t_'+t]=p); }
     else { const claimed=new Set(); (cn.rules||[]).forEach((r,i)=>{ const w=`connect rule ${i+1}${r.name?` “${r.name}”`:''}`;
       const p= dist(r.proximity!=null?r.proximity:stagePx(cn), w), key=`${typeTxt(r.from)}→${typeTxt(r.to)}:${r.operation}`;
-      const tags=r.tags&&typeof r.tags==='object'?r.tags:{}, rows=Object.entries(tags).map(([k,v])=>[k,String(v)]);
-      const set=id=>{ a[id]=p; a[id+'_tags']=rows.map(x=>x.slice()); };
+      const rowsOf=t=>t&&typeof t==='object'&&!Array.isArray(t)? Object.entries(t).map(([k,v])=>[k,String(v)]) : [];
+      let nRows=rowsOf(r.node_tags), eRows=rowsOf(r.edge_tags);
+      if(r.tags!=null){ const sp=splitTags(rowsOf(r.tags)); nRows=nRows.concat(sp.n.filter(([k])=>!nRows.some(x=>x[0]===k))); eRows=eRows.concat(sp.e.filter(([k])=>!eRows.some(x=>x[0]===k)));
+        notes.push(`${w}: union 5.0 no longer accepts tags. Its keys were split: ${sp.n.length?sp.n.map(x=>x[0]).join(', ')+' on the new Node':''}${sp.n.length&&sp.e.length?'; ':''}${sp.e.length?sp.e.map(x=>x[0]).join(', ')+' on the connector Edge':''}${!sp.n.length&&!sp.e.length?'it was empty':''}. Check them below.`); }
+      const set=id=>{ a[id]=p; a[id+'_ntags']=nRows.map(x=>x.slice()); a[id+'_etags']=eRows.map(x=>x.slice()); };
       if(key==='crossing→road:point') set('c_road');
       else if(key==='crossing→sidewalk:geometry') set('c_sidewalk');
       else if(key==='crossing→living_street:geometry') set('c_living');
@@ -1050,7 +1089,7 @@ document.addEventListener('input',e=>{
   if(d.num){ const st=STEPS.find(x=>x.id===d.num); let v=parseFloat(e.target.value); if(isNaN(v)) return;
     if(st.kind==='pct'){ if(!(v>0)) return; v=Math.min(100,v)/100; } else v=Math.min(5,Math.max(0,Math.round(v*10)/10));
     A[d.num]=v; refreshReview(d.num); refreshLead(); return; }
-  if(d.tk||d.tv){ const id=d.tk||d.tv, i=+d.i, rows=tagRows(id); rows[i]=rows[i]||['','']; rows[i][d.tk?0:1]=e.target.value; refreshTags(id); refreshReview(id); return; }
+  if(d.tk||d.tv){ const L=d.tk||d.tv, i=+d.i, rows=tagRows(L); rows[i]=rows[i]||['','']; rows[i][d.tk?0:1]=e.target.value; refreshTags(L); refreshReview(lcase(L)); return; }
   if(d.ov){ let v=parseFloat(e.target.value); if(isNaN(v)) return; if(!(v>0)) return; A[d.ov+'_ov']=Math.min(100,v)/100; refreshReview(d.ov); return; }
   if(d.ds){ ds[d.ds]=e.target.value; $('barsum').innerHTML=barSum(); refreshDatasets(); save();
     document.dispatchEvent(new CustomEvent('tdei-dataset-search',{detail:{dataset:d.ds==='one'?'DS1':'DS2',query:e.target.value}})); }
@@ -1071,11 +1110,12 @@ document.addEventListener('click',e=>{
   if(b.dataset.view){ view=b.dataset.view; render(); save(); return; }
   if(b.dataset.info){ const box=$('ib-'+b.dataset.info), open=box.hidden; box.hidden=!open; b.setAttribute('aria-expanded',String(open)); return; }
   if(b.dataset.copyitem){ const id=b.dataset.copyitem; return copy($('cf-'+id),'t-'+id); }
-  if(b.dataset.tadd){ const id=b.dataset.tadd; tagRows(id).push(['','']); $('tg-'+id).innerHTML=tagsInner(STEPS.find(x=>x.id===id)); const n=tagRows(id).length-1; const k=$('tk-'+id+'-'+n); if(k) k.focus(); refreshReview(id); return; }
-  if(b.dataset.tpre){ const id=b.dataset.tpre, rows=tagRows(id); PRESETS[b.dataset.pk][1].forEach(([k,v])=>{ const r=rows.find(x=>(x[0]||'').trim()===k); r? r[1]=v : rows.push([k,v]); });
+  const retag=L=>{ const id=lcase(L); $('tg-'+id).innerHTML=tagsInner(STEPS.find(x=>x.id===id)); refreshReview(id); };
+  if(b.dataset.tadd){ const L=b.dataset.tadd; tagRows(L).push(['','']); retag(L); const k=$('tk-'+L+'-'+(tagRows(L).length-1)); if(k) k.focus(); return; }
+  if(b.dataset.tpre){ const L=b.dataset.tpre, rows=tagRows(L); PRESETS[b.dataset.pk][1].forEach(([k,v])=>{ const r=rows.find(x=>(x[0]||'').trim()===k); r? r[1]=v : rows.push([k,v]); });
     for(let i=rows.length-1;i>=0;i--) if(!(rows[i][0]||'').trim()&&!(rows[i][1]||'').trim()) rows.splice(i,1);
-    $('tg-'+id).innerHTML=tagsInner(STEPS.find(x=>x.id===id)); refreshReview(id); return; }
-  if(b.dataset.tdel){ const id=b.dataset.tdel; tagRows(id).splice(+b.dataset.i,1); $('tg-'+id).innerHTML=tagsInner(STEPS.find(x=>x.id===id)); refreshReview(id); return; }
+    retag(L); return; }
+  if(b.dataset.tdel){ const L=b.dataset.tdel; tagRows(L).splice(+b.dataset.i,1); retag(L); return; }
   if(b.dataset.qattr){ A.s_attrs=b.dataset.qattr; refreshReview(); return; }
   if(b.dataset.qtrust){ A.trust=b.dataset.qtrust; refreshReview(); return; }
   if(b.dataset.sw){ const st=STEPS.find(x=>x.id===b.dataset.sw); A._last=A._last||{};
