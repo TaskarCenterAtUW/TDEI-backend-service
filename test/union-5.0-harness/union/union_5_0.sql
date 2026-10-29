@@ -12,6 +12,8 @@
 --   snap       join a DS1 node and a DS2 node of the same type within a
 --              distance; the non-anchor node moves onto the anchor node.
 --   dedup      remove an edge that duplicates an edge of the anchor dataset.
+--              A rule's max_angle (degrees, default 30) is how far the edge's
+--              direction may differ from the anchor edge's.
 --   connect    make junctions between two kinds of way, in rule order:
 --              operation 'point'    — lines that cross get a node and both are
 --                                     split there; an end that stops short gets
@@ -307,7 +309,7 @@ END $$;
 --   snap    coincident on; then crossing, pedestrian, living_street, road,
 --           other — each to its own type at `proximity`, anchor ds1, merge
 --   dedup   crossing, pedestrian, living_street, road, other — each against its
---           own type, buffer `proximity`, min_overlap 0.8, anchor ds1
+--           own type, buffer `proximity`, min_overlap 0.8, max_angle 30, anchor ds1
 --   connect road-crossing (crossing → road, point); crossing-sidewalk,
 --           crossing-living-street, pedestrian-pedestrian,
 --           living-street-living-street, crossing-crossing (geometry) — all at
@@ -319,7 +321,7 @@ RETURNS jsonb LANGUAGE plpgsql IMMUTABLE AS $$
 DECLARE
     c jsonb := COALESCE(config, '{}'::jsonb);
     st jsonb; r jsonb; i int; md text; path text; nm text;
-    prox float8; anchor text; attrs text; min_ov float8; coincident boolean;
+    prox float8; anchor text; attrs text; min_ov float8; max_ang float8; coincident boolean;
     rules jsonb; eff jsonb := '{}'::jsonb; names text[]; g text;
     groups CONSTANT text[] := ARRAY['crossing', 'pedestrian', 'living_street', 'road', 'other'];
     max_rules CONSTANT int := 50;
@@ -398,16 +400,18 @@ BEGIN
             eff := eff || jsonb_build_object('dedup', jsonb_build_object('mode', 'off', 'rules', '[]'::jsonb));
         ELSE
             PERFORM content.union5_cfg_keys(st, 'dedup', CASE WHEN md = 'default'
-                THEN ARRAY['mode', 'proximity', 'min_overlap', 'anchor']
-                ELSE ARRAY['mode', 'proximity', 'min_overlap', 'anchor', 'rules'] END);
+                THEN ARRAY['mode', 'proximity', 'min_overlap', 'max_angle', 'anchor']
+                ELSE ARRAY['mode', 'proximity', 'min_overlap', 'max_angle', 'anchor', 'rules'] END);
             prox   := content.union5_cfg_num(st->'proximity', 'dedup.proximity', 0, false, 5, 0.5);
             min_ov := content.union5_cfg_num(st->'min_overlap', 'dedup.min_overlap', 0, false, 1, 0.8);
+            -- max_angle: degrees between the edge and the anchor edge (above 0, at most 90)
+            max_ang := content.union5_cfg_num(st->'max_angle', 'dedup.max_angle', 0, false, 90, 30);
             anchor := content.union5_cfg_enum(st->'anchor', 'dedup.anchor', ARRAY['ds1', 'ds2'], 'ds1');
             rules := '[]'::jsonb;
             IF md = 'default' THEN
                 FOREACH g IN ARRAY groups LOOP
                     rules := rules || jsonb_build_array(jsonb_build_object(
-                        'name', g, 'from', g, 'to', g, 'proximity', prox, 'min_overlap', min_ov, 'anchor', anchor));
+                        'name', g, 'from', g, 'to', g, 'proximity', prox, 'min_overlap', min_ov, 'max_angle', max_ang, 'anchor', anchor));
                 END LOOP;
             ELSE
                 IF jsonb_typeof(st->'rules') IS DISTINCT FROM 'array' OR jsonb_array_length(st->'rules') = 0 THEN
@@ -419,7 +423,7 @@ BEGIN
                 names := ARRAY[]::text[];
                 FOR i IN 0 .. jsonb_array_length(st->'rules') - 1 LOOP
                     r := st->'rules'->i; path := format('dedup.rules[%s]', i + 1);
-                    PERFORM content.union5_cfg_keys(r, path, ARRAY['name', 'from', 'to', 'proximity', 'min_overlap', 'anchor']);
+                    PERFORM content.union5_cfg_keys(r, path, ARRAY['name', 'from', 'to', 'proximity', 'min_overlap', 'max_angle', 'anchor']);
                     nm := content.union5_cfg_name(r->'name', path || '.name', 'dedup-' || (i + 1));
                     IF nm = ANY(names) THEN RAISE EXCEPTION 'config.%.name: "%" is used by an earlier dedup rule', path, nm USING ERRCODE = '22023'; END IF;
                     names := names || nm;
@@ -429,6 +433,7 @@ BEGIN
                         'name', nm, 'from', r->'from', 'to', r->'to',
                         'proximity', content.union5_cfg_num(r->'proximity', path || '.proximity', 0, false, 5, prox),
                         'min_overlap', content.union5_cfg_num(r->'min_overlap', path || '.min_overlap', 0, false, 1, min_ov),
+                        'max_angle', content.union5_cfg_num(r->'max_angle', path || '.max_angle', 0, false, 90, max_ang),
                         'anchor', content.union5_cfg_enum(r->'anchor', path || '.anchor', ARRAY['ds1', 'ds2'], anchor)));
                 END LOOP;
             END IF;
@@ -698,7 +703,7 @@ BEGIN
 
     DROP TABLE IF EXISTS u5_dedup_rules;
     CREATE TEMP TABLE u5_dedup_rules (seq int, name text, from_tid int, to_tid int, prox float8, buf_deg float8,
-                                      min_ov float8, anchor smallint) ON COMMIT DROP;
+                                      min_ov float8, anchor smallint, cos_ang float8) ON COMMIT DROP;
     FOR v_i IN 0 .. jsonb_array_length(v_cfg->'dedup'->'rules') - 1 LOOP
         v_rule := v_cfg->'dedup'->'rules'->v_i;
         v_norm := content.union5_normalize_type(v_rule->'from', 'dedup');
@@ -708,7 +713,8 @@ BEGIN
         INSERT INTO u5_types (clauses) VALUES (v_norm) ON CONFLICT (clauses) DO NOTHING;
         SELECT tid INTO v_tid2 FROM u5_types WHERE clauses = v_norm;
         INSERT INTO u5_dedup_rules VALUES (v_i + 1, v_rule->>'name', v_tid, v_tid2, (v_rule->>'proximity')::float8,
-            NULL, (v_rule->>'min_overlap')::float8, CASE WHEN v_rule->>'anchor' = 'ds2' THEN 2 ELSE 1 END);
+            NULL, (v_rule->>'min_overlap')::float8, CASE WHEN v_rule->>'anchor' = 'ds2' THEN 2 ELSE 1 END,
+            cos(radians(COALESCE((v_rule->>'max_angle')::float8, 30))));
     END LOOP;
 
     DROP TABLE IF EXISTS u5_connect_rules;
@@ -1055,7 +1061,7 @@ BEGIN
     -- dataset (whole edges only; first rule whose 'from' the edge matches).
     --   duplicate = at least min_overlap of its length inside the buffer AND
     --     either it joins the same two nodes as a 'to' anchor edge, or it runs
-    --     within 30° of the anchor edge (angle guard) and — when its two ends are
+    --     within the rule's max_angle (30° by default) of the anchor edge (angle guard) and — when its two ends are
     --     both already on the anchor network — the anchor edges inside its buffer
     --     already join those two ends (connectivity guard).
     -- =========================================================================
@@ -1119,7 +1125,7 @@ BEGIN
                        CASE WHEN content.union5_dist_m(ST_StartPoint(c.geom), ST_EndPoint(c.geom), v_mlon) < 0.1 THEN true
                             ELSE abs(  ((ST_X(q.pb) - ST_X(q.pa)) * v_mlon) * ((ST_X(ST_EndPoint(c.geom)) - ST_X(ST_StartPoint(c.geom))) * v_mlon)
                                      + ((ST_Y(q.pb) - ST_Y(q.pa)) * v_mlat) * ((ST_Y(ST_EndPoint(c.geom)) - ST_Y(ST_StartPoint(c.geom))) * v_mlat))
-                                 >= 0.866025 * content.union5_dist_m(q.pa, q.pb, v_mlon)
+                                 >= r.cos_ang * content.union5_dist_m(q.pa, q.pb, v_mlon)
                                              * content.union5_dist_m(ST_StartPoint(c.geom), ST_EndPoint(c.geom), v_mlon)
                        END AS along
                 FROM (SELECT b.root, b.geom, b.buf, ST_LineLocatePoint(b.geom, ST_LineInterpolatePoint(c.geom, 0.5)) AS f

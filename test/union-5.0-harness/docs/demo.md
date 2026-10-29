@@ -25,6 +25,8 @@ run shows the reference behaviour. Other ways to run it:
 ./run_demo.sh local my_config.json       # any config file            -> runs/demo_my_config/
 ./run_demo.sh local demo/examples/configurator_defaults.json
                                          # the configurator, untouched (custom rules, 0.5 m)
+./run_demo.sh local demo/examples/extensions_2m.json
+                                         # only extensions, at 2 m: see spots 13-20 change
 ./run_demo.sh local default_1m           # a harness profile          -> runs/demo_default_1m/
 ./run_demo.sh local off                  # nothing configured, for contrast
 ```
@@ -75,9 +77,9 @@ Whatever the config, every spot also says what **this run** did there, read
 from the output: which node snapped onto which and how far, which duplicate was
 removed, what was split, which rule made which connector or junction node, and
 which points and buildings merged. The configurator's untouched config (custom
-rules, 0.5 m) gives the same result as the defaults at 11 spots. It differs at
-two: the snap at spot 1 (0.57 m apart) and the T-junction at spot 10 (0.6 m
-short) are both beyond 0.5 m.
+rules, 0.5 m) gives the same result as the defaults at 18 of the 20 spots. It
+differs at two: the snap at spot 1 (0.57 m apart) and the T-junction at spot 10
+(0.6 m short) are both beyond 0.5 m.
 
 ## The picture (`runs/demo_<name>/demo.png`)
 
@@ -106,8 +108,8 @@ Reference copies in `docs/images/`:
 
 | Image | Config |
 |---|---|
-| `demo_default_1m.png` | the defaults at 1 m (what `demo/input.json` ships with): 13 PASS |
-| `demo_configurator_defaults.png` | the configurator, untouched: 11 = default, 2 ≠ default |
+| `demo_default_1m.png` | the defaults at 1 m (what `demo/input.json` ships with): 20 PASS |
+| `demo_configurator_defaults.png` | the configurator, untouched: 18 = default, 2 ≠ default |
 | `demo_off.png` | nothing configured: every duplicate stays and every gap stays open |
 
 `run_config.json` in the run folder records the config as given, as the union
@@ -125,15 +127,15 @@ Harbor Blvd (`highway=secondary`, east–west) crosses Oak St
 - **Market Alley** (`highway=service`) leaves Harbor Blvd to the south.
 - **Willow Lane** (`highway=living_street`), a shared street closed to traffic
   at Harbor Blvd, runs north.
-- **Extension features:** buildings, a bus stop with a bench, a fence, a street
-  lamp and a hydrant.
+- **Extension features:** buildings, a market square (a pedestrian zone), a
+  bus stop with a bench, street lamps, a fence and a hydrant.
 
 Two sources describe it:
 
 | | Holds |
 |---|---|
-| **DS1 — City GIS** | roads, every sidewalk, two of the four crossings (west and north) with their kerbs, Willow Lane, a park path, a bus stop path, a kerb ramp on Oak St with no crossing yet |
-| **DS2 — Field survey** | all four crossings with kerbs (the west one duplicates the city's), part of the south sidewalk and part of Harbor Blvd traced again a few decimetres off, a path from a shop door, a bench, a bin, a hydrant, a storey count for Harbor Hall, a new kiosk |
+| **DS1 — City GIS** | roads, every sidewalk, two of the four crossings (west and north) with their kerbs, Willow Lane, a park path, a bus stop path, a kerb ramp on Oak St with no crossing yet; eight buildings, Market Square, a bench, a street lamp, a fence |
+| **DS2 — Field survey** | all four crossings with kerbs (the west one duplicates the city's), part of the south sidewalk and part of Harbor Blvd traced again a few decimetres off, a path from a shop door; the bench again with its condition, a bin, a hydrant, the street lamp 1.4 m off, the fence again (wood), Harbor Hall again with its storey count, Corner Shops' back half with a new rear extension, a new kiosk, Market Square again 1.5 m east |
 
 ## What the default rules do, spot by spot
 
@@ -153,7 +155,14 @@ The numbers match the picture.
 | 10 | T-junction | shop path ends 0.6 m short of the sidewalk | `pedestrian-pedestrian`: node on the sidewalk, split, 0.6 m connector |
 | 11 | Living street | crossing ends 0.5 m short of Willow Lane, and crosses Harbor Blvd | `crossing-living-street` connector to Willow Lane's end; `road-crossing` node on the road; its south kerb splits the sidewalk |
 | 12 | Not joined | sidewalk passes over Market Alley | no rule joins a sidewalk to a road: untouched. The city's own park-path junction stays as it was |
-| 13 | Extensions | bench in both (0.36 m apart), survey bin, hydrant, storey count | bench merged (city position, `ext:condition` added); bin kept apart (other type); hydrant added; Harbor Hall gains `building:levels` |
+| 13 | Point in both | the bench in both, 0.36 m apart; a survey bin beside it | one bench at the city's position, `ext:condition` added and audited; the bin is another type, kept apart |
+| 14 | Points too far apart | the street lamp in both, 1.4 m apart | both kept; with extensions at 1.5 m or more they merge |
+| 15 | New point | a hydrant only in the survey | added as it is |
+| 16 | Line in both | the fence in both, 0.3–0.4 m apart; the survey says `material=wood` | at least 70 % of the survey's line within 1 m of the city's: one fence, the city's line, `material` added |
+| 17 | Building in both | Harbor Hall in both, outlines 0.5 m apart; the survey adds `building:levels` | the survey's outline covers more than 70 % of the city's: one building, the city's outline, `building:levels` added |
+| 18 | Building partly overlapping | the survey outlines Corner Shops' back half and its rear extension (48 % of the city's outline) | under 70 %: one building whose outline is both shapes together, city tags first, `building:levels` added |
+| 19 | New building | Willow Kiosk only in the survey | added as it is |
+| 20 | Zone in both | Market Square in both, the survey's 1.5 m east with `surface=paving_stones` | the survey's zone covers more than 70 % of the city's: the city's zone kept, the survey's dropped. Zones keep the city's tags only, so `surface` is not added |
 
 ## The raw files
 
@@ -176,13 +185,13 @@ east of the harness test grid.
 The scene is written in `demo/scene.py`, in metres around the intersection.
 - edges with their names and tags;
 - tagged nodes (kerbs);
-- extension features;
+- extension features (points, lines, buildings) and zones;
 - the numbered spots: their text, their checks, and their `look` boxes.
 
 The `look` boxes are where "This run" looks: anything that happens inside them
 (a node snapped, the middle of a removed or reshaped edge, a split point, the
-middle of a connector, a junction node, a point, a building's centre) is
-reported for that spot.
+middle of a connector, a junction node, a point, the middle of a line, a
+building's or zone's centre) is reported for that spot.
 
 After editing the scene:
 

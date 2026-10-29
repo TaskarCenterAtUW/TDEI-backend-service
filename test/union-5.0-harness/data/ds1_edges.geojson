@@ -1940,6 +1940,30 @@
     "highway": "footway",
     "footway": "sidewalk"
    }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.1,
+      44.63936
+     ],
+     [
+      -123.0994941,
+      44.63936
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1500081",
+    "_u_id": "1000164",
+    "_v_id": "1000165",
+    "name": "DA1: ds1 sidewalk",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
   }
  ]
 }

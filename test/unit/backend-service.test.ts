@@ -273,13 +273,13 @@ describe('BackendService', () => {
     it('should pass the config object to tdei_union_dataset', async () => {
       const config = {
         snap: { mode: 'default', proximity: 1 },
-        dedup: { mode: 'default', proximity: 1 },
+        dedup: { mode: 'default', proximity: 1, max_angle: 30 },
         connect: {
           mode: 'custom',
           rules: [{ name: 'kerbed-crossing', from: 'crossing', to: 'sidewalk', operation: 'geometry',
                     proximity: 1, node_tags: { barrier: 'kerb' }, edge_tags: { 'crossing:markings': 'zebra' } }]
         },
-        extensions: { mode: 'default' }
+        extensions: { mode: 'default', proximity: 1, line_proximity: 2.5, polygons: false }
       };
       const message = unionMessage({ config });
       const processSpy = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset').mockResolvedValueOnce(true);
@@ -353,6 +353,30 @@ describe('BackendService', () => {
       await expect(backendService.unionQueryService.executeUnionQuery(message)).rejects.toContain('config.connect.rules[1].operation');
 
       expect(publishMessageSpy).toHaveBeenCalledWith(message, false, 'config.connect.rules[1].operation: is required — one of point, geometry');
+    });
+
+    it.each([
+      ['a connect rule with tags', { connect: { mode: 'custom', rules: [{ name: 'x', from: 'crossing', to: 'road', operation: 'point', tags: { kerb: 'lowered' } }] } },
+        'config.connect.rules[1].tags: a connect rule takes node_tags (for the junction node) and edge_tags (for the connector edge) instead of tags'],
+      ['every extension type off', { extensions: { mode: 'default', points: false, lines: false, polygons: false, zones: false } },
+        'config.extensions: points, lines, polygons and zones are all off — use "mode": "off" instead'],
+      ['a dedup angle above 90', { dedup: { mode: 'default', max_angle: 120 } },
+        'config.dedup.max_angle: must be greater than 0 and at most 90 (got 120)'],
+    ])("should pass %s to the union and publish its message", async (_name, config, dbMessage) => {
+      const message = unionMessage({ config });
+      const publishMessageSpy = jest.spyOn(Utility, 'publishMessage').mockResolvedValue(undefined);
+      const dbError: any = new Error(dbMessage);
+      dbError.code = '22023';
+      const processSpy = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset').mockRejectedValueOnce(dbError);
+
+      await expect(backendService.unionQueryService.executeUnionQuery(message)).rejects.toBe(dbMessage);
+
+      expect(processSpy).toHaveBeenCalledWith(
+        'dataset-one', expect.any(Object), message,
+        expect.objectContaining({ values: ['dataset-one', 'dataset-two', JSON.stringify(config)] }),
+        expect.any(Object)
+      );
+      expect(publishMessageSpy).toHaveBeenCalledWith(message, false, dbMessage);
     });
 
     it('should handle error during query execution and publish error message', async () => {

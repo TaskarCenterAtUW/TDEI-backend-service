@@ -64,6 +64,17 @@ any types (SN6).
 Checks: the DS1 end moves onto DS2's node (AN1), `anchor_only` audits without
 adding (AN2), dedup anchored on DS2 removes the DS1 copy (AN3).
 
+### `custom_dedup_angle` — a dedup rule with its own angle
+
+```json
+{"dedup": {"mode": "custom", "rules": [
+   {"name": "sidewalk-45deg", "from": "sidewalk", "to": "sidewalk", "proximity": 1, "min_overlap": 0.8, "max_angle": 45}]}}
+```
+
+Only dedup runs. A short DS2 sidewalk at 40° to a DS1 sidewalk, wholly inside its
+buffer, is removed here but kept at the default 30° (DA1); one at 60° is kept
+under both (DA2).
+
 ### `custom_extensions` — Points and Lines each use their own distance
 
 ```json

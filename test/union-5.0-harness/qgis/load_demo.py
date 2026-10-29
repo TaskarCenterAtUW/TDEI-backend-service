@@ -155,8 +155,8 @@ for ds, title, col, style, width in (("ds2", "DS2 Field survey", ORANGE, "dash",
     if nl: style_nodes(nl, col)
     el = add(dg, os.path.join(DATA, f"{ds}_edges.geojson"), "edges")
     if el: el.setRenderer(QgsSingleSymbolRenderer(line(col, width, style)))
-    for kind, sym in (("polygons", fill(col, "25", col, style)), ("lines", line(col, "0.6", style)),
-                      ("points", marker("circle", col, "2.2"))):
+    for kind, sym in (("zones", fill(col, "15", col, style)), ("polygons", fill(col, "25", col, style)),
+                      ("lines", line(col, "0.6", style)), ("points", marker("circle", col, "2.2"))):
         lyr = add(dg, os.path.join(DATA, f"{ds}_{kind}.geojson"), kind, visible=False)
         if lyr: lyr.setRenderer(QgsSingleSymbolRenderer(sym))
     dg.setExpanded(False)

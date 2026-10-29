@@ -2129,6 +2129,32 @@
    "properties": {
     "_id": "1000163"
    }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.1,
+     44.63936
+    ]
+   },
+   "properties": {
+    "_id": "1000164"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0994941,
+     44.63936
+    ]
+   },
+   "properties": {
+    "_id": "1000165"
+   }
   }
  ]
 }

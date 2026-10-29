@@ -62,7 +62,7 @@ trimmed: `…` marks rules left out. It has seven keys:
     "dedup": {
       "mode": "default",
       "rules": [
-        { "name": "crossing", "from": "crossing", "to": "crossing", "proximity": 1, "min_overlap": 0.8, "anchor": "ds1" },
+        { "name": "crossing", "from": "crossing", "to": "crossing", "proximity": 1, "min_overlap": 0.8, "max_angle": 30, "anchor": "ds1" },
         …
       ]
     },
@@ -135,13 +135,13 @@ you meant:
 | Stage | When on | When off (or left out) |
 |---|---|---|
 | `snap` | `mode`, `anchor`, `attributes`, `coincident`, `others`, `rules: [{name, type, proximity, anchor, attributes}]` | `{"mode": "off", "coincident": false, "rules": []}` |
-| `dedup` | `mode`, `rules: [{name, from, to, proximity, min_overlap, anchor}]` | `{"mode": "off", "rules": []}` |
+| `dedup` | `mode`, `rules: [{name, from, to, proximity, min_overlap, max_angle, anchor}]` | `{"mode": "off", "rules": []}` |
 | `connect` | `mode`, `rules: [{name, from, to, operation, proximity, node_tags, edge_tags}]` | `{"mode": "off", "rules": []}` |
 | `extensions` | `mode`, `points`, `lines`, `polygons`, `zones`, `proximity`, `line_proximity`, `line_overlap`, `polygon_overlap`, `zone_overlap` | `{"mode": "off"}` |
 
 **How values appear:**
 - **Rule defaults are copied in.** Section-level settings such as `anchor`,
-  `attributes` and dedup's `min_overlap` appear on every rule, so each rule
+  `attributes` and dedup's `min_overlap` and `max_angle` appear on every rule, so each rule
   states exactly what it used.
 - **`others` expands.** Sent as a number (`"others": 0.5`), it becomes
   `{"proximity": 0.5, "anchor": …, "attributes": …}`. If it isn't set it is
@@ -188,7 +188,7 @@ within the rule's `proximity`.
 
 A line from the non-anchor dataset is removed when it duplicates an anchor line.
 It is removed when at least `min_overlap` of it lies within `proximity` of a
-`to` line, running the same way.
+`to` line, running within the rule's `max_angle` (30° unless set) of it.
 
 | Metric | Meaning |
 |---|---|

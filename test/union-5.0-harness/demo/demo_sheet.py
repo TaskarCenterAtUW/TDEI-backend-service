@@ -16,7 +16,7 @@ import argparse, json, os, sys, textwrap
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon, Circle
+from matplotlib.patches import Polygon, Circle, Patch
 from matplotlib.lines import Line2D
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -43,6 +43,7 @@ in_coords = {tuple(n["geometry"]["coordinates"]) for ds in inp for n in inp[ds][
 # ── colours ──
 BLOCK, ROADC, LIVINGC, WALKC = "#e4e2df", "#ffffff", "#f4eee2", "#eeece8"
 BLDG, BLDG_EDGE, LABEL = "#dcd2c9", "#c3b5a8", "#8d8279"
+ZONEC, ZONE_EDGE = "#efe7d3", "#a1887f"
 DS1C, DS2C = "#1f5fbf", "#f08c00"
 OUTC, CONNC, REMC = "#e0567c", "#6a1b9a", "#d62728"
 NODEC, KERBC, NEWC, SNAPC = "#3ddc84", "#7b2cbf", "#ffb300", "#1b5e20"
@@ -98,6 +99,15 @@ def draw_input(ax, scale=1.0, faint=False):
             pts = xy(e["geometry"]["coordinates"])
             ax.plot(*zip(*pts), color=col, ls=ls, lw=lw * scale, alpha=al, zorder=3 if ds == "ds1" else 3.2,
                     solid_capstyle="round")
+        if faint:      # close-ups: each source's buildings and zones as outlines over the output
+            for f in inp[ds]["polygons"] + inp[ds]["zones"]:
+                ax.add_patch(Polygon(xy(f["geometry"]["coordinates"][0]), closed=True, fc="none", ec=col,
+                                     ls=ls, lw=1.1 * scale, alpha=0.9, zorder=2.4))
+        else:
+            for z in inp[ds]["zones"]:
+                ax.add_patch(Polygon(xy(z["geometry"]["coordinates"][0]), closed=True, zorder=0.85,
+                                     fc=(col if ds == "ds1" else "none"), alpha=(0.12 if ds == "ds1" else 1.0),
+                                     ec=col, ls=ls, lw=1.2 * scale))
         for l in inp[ds]["lines"]:
             ax.plot(*zip(*xy(l["geometry"]["coordinates"])), color=col, ls=ls, lw=1.0 * scale, alpha=al, zorder=2)
         if faint:
@@ -127,6 +137,9 @@ def draw_output(ax, scale=1.0):
         conn = "ext:union_rule" in e["properties"]
         ax.plot(*zip(*xy(e["geometry"]["coordinates"])), color=CONNC if conn else OUTC,
                 lw=(3.2 if conn else 2.1) * scale, zorder=4 if conn else 3.5, solid_capstyle="round")
+    for z in out["zones"]:
+        ax.add_patch(Polygon(xy(z["geometry"]["coordinates"][0]), closed=True, fc=ZONEC, ec=ZONE_EDGE,
+                             lw=1.0 * scale, hatch="..", zorder=0.85))
     for l in out["lines"]:
         ax.plot(*zip(*xy(l["geometry"]["coordinates"])), color="#6d6d6d", lw=1.0 * scale, zorder=2)
     for n in out["nodes"]:
@@ -308,7 +321,7 @@ for i, s in enumerate(scene.SCENARIOS):
     draw_input(ax, scale=1.7, faint=True)
     draw_output(ax, scale=1.7)
     frame(ax, cx - hx, cx + hx, cy - hy, cy + hy)
-    bar = 1 if size <= 5 else 2 if size <= 8 else 5
+    bar = 1 if size <= 5 else 2 if size <= 8 else 5 if size <= 30 else 10
     scale_bar(ax, bar, f"{bar} m", cx - hx, cx + hx, cy - hy, cy + hy)
     st = status.get(s["n"], {}).get("status")
     word, col = STATUS_LOOK.get(st, ("", "#757575"))
@@ -333,6 +346,7 @@ handles = [
     Line2D([], [], color=OUTC, lw=2.1, label="output edge"),
     Line2D([], [], color=CONNC, lw=3.2, label="connector (made by a rule)"),
     Line2D([], [], color=REMC, lw=6.5, alpha=0.22, label="removed duplicate"),
+    Patch(fc=ZONEC, ec=ZONE_EDGE, hatch="..", label="pedestrian zone (output)"),
     Line2D([], [], marker="o", ls="", ms=6, mfc=NODEC, mec="#1e7a46", label="node"),
     Line2D([], [], marker="s", ls="", ms=7, mfc="white", mec=KERBC, mew=1.6, label="kerb (never moves)"),
     Line2D([], [], marker="s", ls="", ms=6, mfc="none", mec=DS2C, mew=1.1, label="input kerb (close-ups)"),

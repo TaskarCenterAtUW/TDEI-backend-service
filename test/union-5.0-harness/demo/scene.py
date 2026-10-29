@@ -6,7 +6,8 @@ at once, instead of one tiny case per box.
     Sidewalks run along both sides of both streets, crossings cross every arm of
     the intersection, Market Alley (service) leaves Harbor Blvd to the south and
     Willow Lane, a living street closed to traffic at Harbor Blvd, runs north.
-    Buildings, a bus stop with a bench, a fence and a hydrant complete it.
+    Buildings, a market square, a bus stop with a bench, street lamps, a fence
+    and a hydrant complete it.
 
 Two sources describe it, as in a real TDEI union:
 
@@ -40,7 +41,7 @@ def M(lon, lat):
     return ((lon - LON0) * MLON, (lat - LAT0) * MLAT)
 
 DATASETS = {"ds1": "City GIS", "ds2": "Field survey"}
-EXTENT = (-80, 135, -62, 62)           # x0, x1, y0, y1 of the scene, metres
+EXTENT = (-80, 135, -64, 62)           # x0, x1, y0, y1 of the scene, metres
 
 ROAD = {"highway": "secondary"}
 STREET = {"highway": "residential"}
@@ -133,18 +134,28 @@ POLYGONS = {
          ({"building": "yes", "name": "Depot"}, rect(78, -22, 96, -42)),
          ({"building": "yes", "name": "Harbor Market"}, rect(108, -20, 132, -46))],
  "ds2": [({"building": "yes", "name": "Harbor Hall", "building:levels": "2"}, rect(16.6, 18.5, 60.5, 50.4)),
-         ({"building": "yes", "name": "Willow Kiosk"}, rect(121, 18, 132, 32))],
+         ({"building": "yes", "name": "Willow Kiosk"}, rect(121, 18, 132, 32)),
+         # Corner Shops' back half and its new rear extension: 48 % of the city's outline
+         ({"building": "retail", "name": "Corner Shops", "building:levels": "1"}, rect(16, -52, 62, -32))],
 }
 POINTS = {
  "ds1": [({"amenity": "bench"}, (102, -14.5)),
          ({"highway": "street_lamp"}, (-13, 14))],
  "ds2": [({"amenity": "bench", "ext:condition": "good"}, (102.3, -14.7)),
          ({"amenity": "waste_basket"}, (101.5, -15)),
-         ({"emergency": "fire_hydrant"}, (12, -14))],
+         ({"emergency": "fire_hydrant"}, (12, -14)),
+         ({"highway": "street_lamp"}, (-11.6, 14))],                # the city's lamp, 1.4 m off
 }
 LINES = {
  "ds1": [({"barrier": "fence"}, [(-76, -54), (-20, -54)])],
  "ds2": [({"barrier": "fence", "material": "wood"}, [(-76, -54.4), (-20, -54.3)])],
+}
+
+# zones (OSW Zone: a pedestrian area whose ring corners are nodes, listed in _w_id)
+ZONES = {
+ "ds1": [({"highway": "pedestrian", "name": "Market Square"}, rect(76, -58, 104, -47))],
+ "ds2": [({"highway": "pedestrian", "name": "Market Square", "surface": "paving_stones"},
+          rect(77.5, -58, 105.5, -47))],                                  # 1.5 m east
 }
 
 # ── the basemap: carriageway half-widths (metres) for drawing ──
@@ -167,6 +178,12 @@ ROAD_WIDTH = {"secondary": 7, "residential": 5, "service": 3, "living_street": 3
 #   ("points", (x, y), r, n)         n output extension points within r m of (x, y)
 #   ("point", (x, y), {key: value})  the output point nearest (x, y) carries these values
 #   ("polygon", name, {key: value})  the output polygon with this name carries these values
+#   ("polygons", name, n)            n output polygons have this name
+#   ("polygon_covers", name, (x, y)) the output polygon with this name contains (x, y)
+#   ("lines", (x, y), r, n)          n output extension lines have their middle within r m of (x, y)
+#   ("line", (x, y), {key: value})   the output line whose middle is nearest (x, y) carries these values
+#   ("zones", (x, y), r, n)          n output zones have their centre within r m of (x, y)
+#   ("zone", (x, y), {key: value})   the output zone whose centre is nearest (x, y) carries these values
 ABSENT = "<absent>"
 SCENARIOS = [
  dict(n=1, title="Snap", at=(-8, -10), badge=(-24, -19), zoom=(-9, -10.5, 7),
@@ -246,11 +263,54 @@ SCENARIOS = [
       result="No default rule joins a sidewalk to a road, so neither is split there. The park path "
              "the city already joined to the north sidewalk stays as it was.",
       checks=[("no_node", (70, -10)), ("node", (-50, 10), {"ext:union_rule": ABSENT})]),
- dict(n=13, title="Bench, bin, hydrant, building", at=(102, -14.7), badge=(104, -28), zoom=(101.9, -14.8, 3),
-      look=[(101, 103, -15.5, -14), (11.5, 12.5, -14.5, -13.5), (30, 46, 26, 42)],
-      input="Both have the bench (0.36 m apart); the survey adds a bin, a hydrant, a storey count.",
-      result="Same-type points within 1 m merge (city position, ext:condition added); the bin stays "
-             "apart (other type); the hydrant is added; Harbor Hall gains building:levels.",
-      checks=[("points", (102, -14.7), 1.2, 2), ("point", (102, -14.5), {"amenity": "bench", "ext:condition": "good"}),
-              ("points", (12, -14), 0.5, 1), ("polygon", "Harbor Hall", {"building:levels": "2"})]),
+# extensions: points, lines, buildings and zones (the 'extensions' stage)
+ dict(n=13, title="Bench in both: merged", at=(102, -14.7), badge=(104, -28), zoom=(101.9, -14.8, 3),
+      look=[(101, 103, -15.5, -14)],
+      input="Both have the bench, 0.36 m apart; the survey also has a bin beside it.",
+      result="Same type within 1 m: one bench at the city's position, the survey's ext:condition added "
+             "and its values audited. The bin is another type, so it stays apart.",
+      checks=[("points", (102, -14.7), 1.2, 2), ("point", (102, -14.5), {"amenity": "bench", "ext:condition": "good"})]),
+ dict(n=14, title="Street lamps 1.4 m apart", at=(-12.3, 14), badge=(-29, 14), zoom=(-12.3, 14, 3),
+      look=[(-13.5, -11, 13, 15)],
+      input="Both have the street lamp at the corner; the survey's is 1.4 m from the city's.",
+      result="Same type, but more than 1 m apart: both lamps are kept. With extensions at 1.5 m or "
+             "more they merge.",
+      checks=[("points", (-12.3, 14), 1.0, 2)]),
+ dict(n=15, title="Hydrant only in the survey", at=(12, -14), badge=(14, -23), zoom=(12, -14, 3),
+      look=[(11.5, 12.5, -14.5, -13.5)],
+      input="Only the survey has the fire hydrant.",
+      result="Nothing of its type nearby to merge with: it is added as it is.",
+      checks=[("points", (12, -14), 0.5, 1)]),
+ dict(n=16, title="Fence traced twice: merged", at=(-48, -54.2), badge=(-36, -59), zoom=(-48, -54.2, 4),
+      look=[(-50, -46, -55, -53)],
+      input="Both have the fence south of Bayview Offices; the survey's is 0.3-0.4 m off and says it is wood.",
+      result="At least 70 % of the survey's line lies within 1 m of the city's: one fence, the city's "
+             "line, with material=wood added.",
+      checks=[("lines", (-48, -54.2), 1.0, 1), ("line", (-48, -54), {"barrier": "fence", "material": "wood"})]),
+ dict(n=17, title="Harbor Hall in both: merged", at=(38, 34), badge=(50, 43), zoom=(38, 34, 50),
+      look=[(30, 46, 26, 42)],
+      input="Both have Harbor Hall; the survey's outline is about 0.5 m off and adds a storey count.",
+      result="The survey's outline covers more than 70 % of the city's: one building, the city's "
+             "outline, with building:levels=2 added.",
+      checks=[("polygons", "Harbor Hall", 1), ("polygon", "Harbor Hall", {"building:levels": "2"})]),
+ dict(n=18, title="Corner Shops: outlines joined", at=(39, -48.5), badge=(52, -58), zoom=(39, -35, 54),
+      look=[(30, 48, -46, -28)],
+      input="The survey outlined Corner Shops' back half and its new rear extension: 48 % of the "
+            "city's outline.",
+      result="Overlapping, but under 70 %: one building whose outline is both shapes together, the "
+             "city's tags first, building:levels added.",
+      checks=[("polygons", "Corner Shops", 1), ("polygon_covers", "Corner Shops", (39, -50)),
+              ("polygon", "Corner Shops", {"building": "retail", "building:levels": "1"})]),
+ dict(n=19, title="Kiosk only in the survey", at=(126.5, 25), badge=(126.5, 40), zoom=(126.5, 25, 16),
+      look=[(120, 133, 17, 33)],
+      input="Only the survey has Willow Kiosk.",
+      result="It overlaps no city building: added as it is.",
+      checks=[("polygons", "Willow Kiosk", 1)]),
+ dict(n=20, title="Market Square (zone) in both", at=(90, -52.5), badge=(98, -61), zoom=(90.75, -52.5, 34),
+      look=[(84, 98, -56, -49)],
+      input="Both map the square as a pedestrian zone; the survey's is 1.5 m east and adds "
+            "surface=paving_stones.",
+      result="The survey's zone covers more than 70 % of the city's: the city's zone is kept and the "
+             "survey's dropped. A zone keeps the city's tags only, so surface is not added.",
+      checks=[("zones", (90, -52.5), 3, 1), ("zone", (90, -52.5), {"name": "Market Square"})]),
 ]

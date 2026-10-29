@@ -22,7 +22,7 @@ sys.path.insert(0, HERE)
 import scene
 from scene import M
 
-KINDS = ("nodes", "edges", "points", "lines", "polygons")
+KINDS = ("nodes", "edges", "zones", "points", "lines", "polygons")
 SOURCE = {"ds1": scene.DATASETS["ds1"], "ds2": scene.DATASETS["ds2"], "DS1": scene.DATASETS["ds1"],
           "DS2": scene.DATASETS["ds2"]}
 NOTHING = "Nothing changed here: both sources' features pass through as they are."
@@ -53,11 +53,26 @@ def _midpoint(pts):
         run += d
     return pts[0]
 
+def _centroid(ring):
+    r = ring[:-1] if len(ring) > 1 and ring[0] == ring[-1] else ring
+    return (sum(p[0] for p in r) / len(r), sum(p[1] for p in r) / len(r))
+
+def _area(ring):
+    return abs(sum(p[0] * q[1] - q[0] * p[1] for p, q in zip(ring, ring[1:] + ring[:1]))) / 2
+
+def _contains(ring, p):
+    """Point in polygon ring (ray casting)."""
+    x, y, inside = p[0], p[1], False
+    for (x1, y1), (x2, y2) in zip(ring, ring[1:] + ring[:1]):
+        if (y1 > y) != (y2 > y) and x < x1 + (y - y1) * (x2 - x1) / (y2 - y1):
+            inside = not inside
+    return inside
+
 def _inside(p, boxes):
     return any(x0 <= p[0] <= x1 and y0 <= p[1] <= y1 for x0, x1, y0, y1 in boxes)
 
 def _tags(props):
-    return {k: v for k, v in props.items() if k != "_id" and not k.startswith("ext:union_")}
+    return {k: v for k, v in props.items() if k not in ("_id", "_w_id") and not k.startswith("ext:union_")}
 
 def _kind(tags):
     v = tags.get("amenity") or tags.get("emergency") or tags.get("highway") or "point"
@@ -268,32 +283,84 @@ def spot_events(run, look):
     if kept:
         ev.append((6, f"Points kept as they are: {_by_source(kept)}."))
 
-    # extensions: buildings and other polygons, by name
-    def centroid(f):
-        r = _xy(f["geometry"]["coordinates"][0])[:-1]
-        return (sum(p[0] for p in r) / len(r), sum(p[1] for p in r) / len(r))
+    # extensions: lines (by kind), buildings and other polygons (by name), zones (by name)
+    def ring_of(f):
+        return _xy(f["geometry"]["coordinates"][0])
+    def same_shape(a, b):
+        def pts(f):
+            g = f["geometry"]
+            return g["coordinates"][0] if g["type"] == "Polygon" else g["coordinates"]
+        return {_key(c) for c in pts(a)} == {_key(c) for c in pts(b)}
+    def added_tags(out_f, base_f):
+        base = _tags(base_f["properties"])
+        return [f"{k}={v} added" for k, v in _tags(out_f["properties"]).items() if k not in base]
+
+    lines_in = [(ds, f) for ds in ("ds1", "ds2") for f in run.inp[ds]["lines"]
+                if _inside(_midpoint(_xy(f["geometry"]["coordinates"])), look)]
+    lines_out = [f for f in run.out["lines"] if _inside(_midpoint(_xy(f["geometry"]["coordinates"])), look)]
+    if lines_in:
+        kind = next((v for k in ("barrier", "man_made", "natural", "highway")
+                     for v in [lines_in[0][1]["properties"].get(k)] if v), "line").replace("_", " ")
+        srcs = {ds for ds, _ in lines_in}
+        if len(srcs) == 2 and len(lines_out) == 1:
+            base = next((f for ds, f in lines_in if ds == "ds1" and same_shape(f, lines_out[0])), None)
+            gained = added_tags(lines_out[0], base) if base else []
+            ev.append((7, f"Extensions: the two {kind}s merged into the "
+                          f"{'City GIS line' if base else 'one line'}" + ("; " + "; ".join(gained) if gained else "") + "."))
+        elif len(srcs) == 2 and len(lines_out) >= 2:
+            ev.append((7, f"Both {kind}s kept (not merged)."))
+        elif not lines_out:
+            ev.append((7, f"The {kind} is not in the output."))
+        else:
+            ev.append((7, f"The {SOURCE[lines_in[0][0]]} {kind} kept as it is."))
+
     names = {}
     for ds in ("ds1", "ds2"):
         for f in run.inp[ds]["polygons"]:
-            if _inside(centroid(f), look) and f["properties"].get("name"):
+            if _inside(_centroid(ring_of(f)), look) and f["properties"].get("name"):
                 names.setdefault(f["properties"]["name"], []).append((ds, f))
     for name, srcs in sorted(names.items()):
         outs = [f for f in run.out["polygons"] if f["properties"].get("name") == name]
         if len({ds for ds, _ in srcs}) < 2:
-            if not outs:
-                ev.append((7, f"'{name}' is not in the output."))
+            ev.append((8, f"'{name}' ({SOURCE[srcs[0][0]]} only) " + ("kept as it is." if outs else "is not in the output.")))
             continue
         if len(outs) >= 2:
-            ev.append((7, f"'{name}': both outlines kept (not merged)."))
+            ev.append((8, f"'{name}': both outlines kept (not merged)."))
         elif len(outs) == 1:
-            ring = outs[0]["geometry"]["coordinates"][0]
-            base = next(((ds, f) for ds, f in srcs if _key(f["geometry"]["coordinates"][0][0]) == _key(ring[0])), srcs[0])
-            added = [f"{k}={v} added" for k, v in _tags(outs[0]["properties"]).items()
-                     if k not in _tags(base[1]["properties"])]
-            ev.append((7, f"Extensions: the two '{name}' outlines merged into the {SOURCE[base[0]]} one"
-                          + ("; " + "; ".join(added) if added else "") + "."))
+            ds1f = next((f for ds, f in srcs if ds == "ds1"), srcs[0][1])
+            ds2f = next((f for ds, f in srcs if ds == "ds2"), srcs[-1][1])
+            gained = added_tags(outs[0], ds1f)
+            if same_shape(outs[0], ds1f):
+                text = f"Extensions: the two '{name}' outlines merged into the City GIS one"
+            else:
+                text = (f"Extensions: the two '{name}' outlines overlap only partly, so they are joined into one "
+                        f"shape: {_area(ring_of(ds1f)):.0f} m² (City GIS) and {_area(ring_of(ds2f)):.0f} m² "
+                        f"(Field survey) become {_area(ring_of(outs[0])):.0f} m²")
+            ev.append((8, text + ("; " + "; ".join(gained) if gained else "") + "."))
         else:
-            ev.append((7, f"'{name}' is not in the output."))
+            ev.append((8, f"'{name}' is not in the output."))
+
+    znames = {}
+    for ds in ("ds1", "ds2"):
+        for f in run.inp[ds]["zones"]:
+            if _inside(_centroid(ring_of(f)), look):
+                znames.setdefault(f["properties"].get("name") or "zone", []).append((ds, f))
+    for name, srcs in sorted(znames.items()):
+        outs = [f for f in run.out["zones"] if _inside(_centroid(ring_of(f)), look)]
+        if len({ds for ds, _ in srcs}) < 2:
+            ev.append((9, f"Zone '{name}' ({SOURCE[srcs[0][0]]} only) " + ("kept." if outs else "is not in the output.")))
+            continue
+        if len(outs) >= 2:
+            ev.append((9, f"Zone '{name}': both kept (not merged)."))
+        elif len(outs) == 1:
+            ds1f = next((f for ds, f in srcs if ds == "ds1"), srcs[0][1])
+            ds2f = next((f for ds, f in srcs if ds == "ds2"), srcs[-1][1])
+            kept = "City GIS" if same_shape(outs[0], ds1f) else "Field survey" if same_shape(outs[0], ds2f) else "one"
+            lost = [f"{k}={v}" for k, v in _tags(ds2f["properties"]).items() if k not in _tags(outs[0]["properties"])]
+            ev.append((9, f"Extensions: zone '{name}' in both: the {kept} zone kept, the other dropped"
+                          + (f"; the survey's {_and(lost)} not carried over" if lost else "") + "."))
+        else:
+            ev.append((9, f"Zone '{name}' is not in the output."))
 
     ev.sort(key=lambda e: e[0])
     return [t for _, t in ev] or [NOTHING]
@@ -376,10 +443,15 @@ def config_columns(run):
         cols.append(("EXTENSIONS", "off", ["Points, lines, buildings and zones from both sources are all kept.",
                                            f"in → out: {io}" if io else ""]))
     else:
-        cols.append(("EXTENSIONS", f"default within {_p(st.get('proximity'))}", [
-            "same-type points within reach merge; lines, buildings and zones merge when they overlap",
-            f"overlap ≥ line {st.get('line_overlap', 0.7) * 100:.0f} %, polygon "
-            f"{st.get('polygon_overlap', 0.7) * 100:.0f} %, zone {st.get('zone_overlap', 0.7) * 100:.0f} %",
+        pct = lambda k: f"{st.get(k, 0.7) * 100:.0f} %"
+        off = "off: both copies kept"
+        cols.append(("EXTENSIONS", "default", [
+            "points: " + (f"same type within {_p(st.get('proximity'))} merge" if st.get("points", True) else off),
+            "lines: " + (f"merge when ≥ {pct('line_overlap')} lies within {_p(st.get('line_proximity', st.get('proximity')))} "
+                         f"of a DS1 line" if st.get("lines", True) else off),
+            "buildings: " + (f"one when DS2's covers > {pct('polygon_overlap')} of DS1's; a smaller overlap joins "
+                             f"the shapes" if st.get("polygons", True) else off),
+            "zones: " + (f"DS1's kept when DS2's covers > {pct('zone_overlap')} of it" if st.get("zones", True) else off),
             f"in → out: {io}" if io else ""]))
     return [(s, h, [l for l in ls if l]) for s, h, ls in cols]
 

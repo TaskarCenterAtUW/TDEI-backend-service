@@ -17,7 +17,11 @@ import {
  * Parameters: tdei_dataset_id_one, tdei_dataset_id_two (required) and an
  * optional `config` object (see utility/union-config.ts and docs/union-FAQs.md).
  * The output zip holds the six OSW files plus union_report.json, the union's
- * run report (effective config, per-rule counts, warnings, totals).
+ * run report: effective config, per-rule counts, totals, warnings and seconds
+ * per stage (docs/union-report.md).
+ *
+ * The database rejects a bad config with SQLSTATE 22023 before reading any
+ * data; that message is published as the job's error, unchanged.
  */
 export class UnionQueryService extends AbstractOSWBackendRequest {
 

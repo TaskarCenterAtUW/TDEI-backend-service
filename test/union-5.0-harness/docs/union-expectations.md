@@ -17,7 +17,7 @@ snap  →  dedup  →  snap topology  →  connect  →  stranding guard  →  z
 | Stage | Rules, in order (all at the stage `proximity`, 0.5 m if not given) |
 |---|---|
 | snap | `coincident` on; then `crossing`, `pedestrian`, `living_street`, `road`, `other` — each to its own type, anchor DS1, `merge` |
-| dedup | `crossing`, `pedestrian`, `living_street`, `road`, `other` — each against its own type, `min_overlap` 0.8, anchor DS1 |
+| dedup | `crossing`, `pedestrian`, `living_street`, `road`, `other` — each against its own type, `min_overlap` 0.8, `max_angle` 30°, anchor DS1 |
 | connect | `road-crossing` (crossing → road, point); `crossing-sidewalk`, `crossing-living-street`, `pedestrian-pedestrian`, `living-street-living-street`, `crossing-crossing` (geometry) |
 | extensions | 4.3.2 merging: points same type within `proximity`; lines ≥ 70 % in a `line_proximity` buffer (defaults to `proximity`); polygons and zones by 70 % of DS1's area |
 
@@ -47,7 +47,7 @@ it lies on.
 | # | The union must… | Checked by |
 |---|---|---|
 | D1 | Remove an edge joining the **same two nodes** as a `to` anchor edge when at least `min_overlap` of it lies in the buffer, whatever its angle | A, K, M, V |
-| D2 | Remove a **near duplicate**: at least `min_overlap` in the buffer and within 30° of the anchor edge | B, F, P, R, D (3 m), AN3 |
+| D2 | Remove a **near duplicate**: at least `min_overlap` in the buffer and within the rule's `max_angle` of the anchor edge (30° unless set; above 0, at most 90) | B, F, P, R, D (3 m), AN3, DA1, DA2 |
 | D3 | Keep a short **T-stub** (angle guard) | G |
 | D4 | Remove **whole edges only**; below `min_overlap` the edge is kept whole | U |
 | D5 | **Connectivity guard:** an edge whose two ends are both on the anchor network is removed only if the anchor edges inside its buffer already join those ends (or it joins the same two nodes as an anchor edge) — spec D1 | DG2 |

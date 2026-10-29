@@ -23,6 +23,24 @@ describe('parseUnionConfig', () => {
         expect(parseUnionConfig(config)).toEqual(config);
     });
 
+    it('passes every current setting through unchanged', () => {
+        const config = {
+            snap: { mode: 'custom', anchor: 'ds2', attributes: 'anchor_only',
+                    rules: [{ name: 'sidewalks', type: { highway: 'footway', footway: 'sidewalk' }, proximity: 3 }] },
+            dedup: { mode: 'custom', max_angle: 45,
+                     rules: [{ name: 'steps', from: [{ highway: 'steps' }], to: [{ highway: 'steps' }],
+                               proximity: 1, min_overlap: 0.7, max_angle: 20 }] },
+            connect: { mode: 'custom',
+                       rules: [{ name: 'kerbed-crossing', from: 'crossing', to: 'sidewalk', operation: 'geometry',
+                                 proximity: 1, node_tags: { barrier: 'kerb', kerb: 'lowered' },
+                                 edge_tags: { 'crossing:markings': 'zebra' } }] },
+            extensions: { mode: 'default', points: true, lines: true, polygons: false, zones: false,
+                          proximity: 1, line_proximity: 2.5, line_overlap: 0.7, polygon_overlap: 0.7, zone_overlap: 0.7 },
+        };
+        expect(parseUnionConfig(config)).toEqual(config);
+        expect(parseUnionConfig(JSON.stringify(config))).toEqual(config);
+    });
+
     it('parses a JSON string', () => {
         expect(parseUnionConfig('{"snap":{"mode":"default"}}')).toEqual({ snap: { mode: 'default' } });
     });
@@ -30,6 +48,10 @@ describe('parseUnionConfig', () => {
     it('leaves the rules to the database', () => {
         // an unknown mode is the union's to reject (content.union5_validate_config)
         expect(parseUnionConfig({ snap: { mode: 'sometimes' } })).toEqual({ snap: { mode: 'sometimes' } });
+        // so is a setting the union no longer takes (a connect rule's single `tags`)
+        const oldTags = { connect: { mode: 'custom', rules: [{ name: 'x', from: 'crossing', to: 'road',
+                                                               operation: 'point', tags: { kerb: 'lowered' } }] } };
+        expect(parseUnionConfig(oldTags)).toEqual(oldTags);
     });
 
     it.each([

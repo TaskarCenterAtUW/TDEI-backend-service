@@ -4,22 +4,35 @@ import { InputException } from "../exceptions/http/http-exceptions";
  * Union 5.0 — the job's `config` parameter.
  *
  * content.tdei_union_dataset(src_one, src_two, config jsonb) takes one config
- * object with up to four sections, each with a mode of off / default / custom
- * (a section left out is off; no config at all = the two datasets combined,
- * unchanged):
+ * object with up to four sections (a section left out is off; no config at all
+ * = the two datasets combined, unchanged):
+ *
+ *   section      modes                    settings
+ *   snap         off | default | custom   proximity, anchor, attributes, coincident, others, rules
+ *   dedup        off | default | custom   proximity, min_overlap, max_angle, anchor, rules
+ *   connect      off | default | custom   proximity, rules (name, from, to, operation, proximity,
+ *                                         node_tags, edge_tags)
+ *   extensions   off | default            points, lines, polygons, zones (each true/false),
+ *                                         proximity, line_proximity, line_overlap,
+ *                                         polygon_overlap, zone_overlap
  *
  *   {
  *     "snap":       { "mode": "default", "proximity": 1 },
- *     "dedup":      { "mode": "default", "proximity": 1 },
- *     "connect":    { "mode": "custom", "rules": [ ... ] },
- *     "extensions": { "mode": "default" }
+ *     "dedup":      { "mode": "default", "proximity": 1, "max_angle": 30 },
+ *     "connect":    { "mode": "custom", "rules": [ { "name": "kerbed-crossing", "from": "crossing",
+ *                     "to": "sidewalk", "operation": "geometry", "proximity": 1,
+ *                     "node_tags": { "barrier": "kerb" } } ] },
+ *     "extensions": { "mode": "default", "proximity": 1, "polygons": false }
  *   }
  *
- * The rules themselves are validated by the database
+ * The settings inside a section are validated by the database
  * (content.union5_validate_config, run first inside the union), which rejects
  * an invalid config with a message naming the stage, rule and field. This
  * module only checks the envelope: valid JSON, an object, known sections, a
- * sane size — so a malformed request fails fast without opening a transaction.
+ * sane size — so a malformed request fails fast without opening a transaction,
+ * and a setting added to the union needs no change here.
+ *
+ * Every setting: docs/union-FAQs.md. The run report: docs/union-report.md.
  */
 export const UNION_CONFIG_SECTIONS = ["snap", "dedup", "connect", "extensions"] as const;
 

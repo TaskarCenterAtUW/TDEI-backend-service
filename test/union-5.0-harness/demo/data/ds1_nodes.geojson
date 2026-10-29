@@ -31,5 +31,9 @@
 {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0867353, 44.63391]}, "properties": {"_id": "3000030"}},
 {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0862926, 44.63391]}, "properties": {"_id": "3000031"}},
 {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0886324, 44.634468]}, "properties": {"_id": "3000032"}},
-{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0867353, 44.633865]}, "properties": {"_id": "3000033"}}
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0867353, 44.633865]}, "properties": {"_id": "3000033"}},
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0870388, 44.633478]}, "properties": {"_id": "3000034"}},
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0866847, 44.633478]}, "properties": {"_id": "3000035"}},
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0866847, 44.633577]}, "properties": {"_id": "3000036"}},
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0870388, 44.633577]}, "properties": {"_id": "3000037"}}
 ]}

@@ -1,5 +1,6 @@
 {"type": "FeatureCollection", "$schema": "https://sidewalks.washington.edu/opensidewalks/0.3/schema.json", "features": [
 {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0867062, 44.6338677]}, "properties": {"_id": "4800001", "amenity": "bench", "ext:condition": "good"}},
 {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0867163, 44.633865]}, "properties": {"_id": "4800002", "amenity": "waste_basket"}},
-{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0878482, 44.633874]}, "properties": {"_id": "4800003", "emergency": "fire_hydrant"}}
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0878482, 44.633874]}, "properties": {"_id": "4800003", "emergency": "fire_hydrant"}},
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0881467, 44.634126]}, "properties": {"_id": "4800004", "highway": "street_lamp"}}
 ]}

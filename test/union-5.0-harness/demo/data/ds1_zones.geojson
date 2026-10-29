@@ -1,2 +1,3 @@
 {"type": "FeatureCollection", "$schema": "https://sidewalks.washington.edu/opensidewalks/0.3/schema.json", "features": [
+{"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[-123.0870388, 44.633478], [-123.0866847, 44.633478], [-123.0866847, 44.633577], [-123.0870388, 44.633577], [-123.0870388, 44.633478]]]}, "properties": {"_id": "3950001", "highway": "pedestrian", "name": "Market Square", "_w_id": ["3000034", "3000035", "3000036", "3000037", "3000034"]}}
 ]}

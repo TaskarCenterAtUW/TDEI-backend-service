@@ -7,6 +7,12 @@ precise rules are in the requirement spec ("Union 5.0 — Configurable Operation
 Requirement Spec") and are checked by the test harness in
 [`test/union-5.0-harness`](../test/union-5.0-harness/README.md).
 
+Related pages:
+- [union-configurator.html](union-configurator.html) builds a config without writing JSON.
+- [union-report.md](union-report.md) explains the run report each union returns.
+- The harness demo ([demo.md](../test/union-5.0-harness/docs/demo.md)) shows what a config
+  does on a sample neighbourhood.
+
 ---
 
 ## The big picture
@@ -88,6 +94,20 @@ A zip with the union's output and its run report:
 | `osw.nodes.geojson`, `osw.edges.geojson`, `osw.zones.geojson`, `osw.points.geojson`, `osw.lines.geojson`, `osw.polygons.geojson` | The combined dataset, OpenSidewalks 0.3 |
 | `union_report.json` | What the union did: the effective config, per-rule counts, warnings and totals ([union-report.md](union-report.md)) |
 
+### Can I build a config without writing JSON?
+
+Yes. Open [union-configurator.html](union-configurator.html) in a browser:
+- it walks through each case (two sidewalk ends close together, a duplicate crossing, a
+  crossing that stops short of a sidewalk, and so on), and you choose a distance or turn the
+  case off;
+- **Copy configuration** gives the finished `config`, ready for the job;
+- **Load configuration** takes an existing config, or a whole union request, so you can edit it.
+
+To see what a config does before running it on real data, paste it into the harness demo's
+`demo/input.json` and run `./run_demo.sh local`. The picture shows, for 20 numbered spots on
+a sample neighbourhood, what the config did and what the default rules would do
+([demo.md](../test/union-5.0-harness/docs/demo.md)).
+
 ---
 
 ## The configuration
@@ -109,9 +129,9 @@ Up to four sections. Each has a `mode`:
 | Stage | Default rules, in order |
 |---|---|
 | snap | Points at exactly the same spot join, whatever their type; then crossing, pedestrian, living street, road and other points each join their own kind |
-| dedup | Crossing, pedestrian, living street, road and other lines: a line is a duplicate of one of its own kind when at least 80 % of it lies within `proximity` |
+| dedup | Crossing, pedestrian, living street, road and other lines: a line is a duplicate of one of its own kind when at least 80 % of it lies within `proximity` of it and its direction is within 30° of it (`max_angle`) |
 | connect | `road-crossing` (where a crossing crosses or nearly meets a road), `crossing-sidewalk`, `crossing-living-street`, `pedestrian-pedestrian`, `living-street-living-street`, `crossing-crossing` |
-| extensions | Same-type points within `proximity` merge; lines with `line_overlap` (70 %) of their length within `line_proximity` of a first-dataset line merge (`line_proximity` defaults to `proximity`; points never use it). `points`, `lines`, `polygons` and `zones` (all `true` by default) switch each type on or off: a type that is off keeps both datasets' copies; polygons and zones covering more than 70 % of the first dataset's area merge |
+| extensions | Points of the same type within `proximity` merge. A line merges into a first-dataset line when 70 % of it (`line_overlap`) lies within `line_proximity` of it (`line_proximity` defaults to `proximity`). A building or other polygon covering more than 70 % (`polygon_overlap`) of a first-dataset one merges into it; one that overlaps less is joined with it into one shape. A zone covering more than 70 % (`zone_overlap`) of a first-dataset zone is dropped. `points`, `lines`, `polygons` and `zones` (all `true`) switch each type on or off — see [How do I set up extensions?](#how-do-i-set-up-extensions) |
 
 Nothing else is joined: no default rule joins a road and a sidewalk, a sidewalk and a living
 street, or a crossing and a plain footway. Add a custom rule if you want one.
@@ -148,7 +168,7 @@ matches both a crossing and a sidewalk rule; listed first, the crossing rule dec
 "dedup": {
   "mode": "custom",
   "rules": [
-    { "name": "sidewalks", "from": "sidewalk", "to": "sidewalk", "proximity": 1, "min_overlap": 0.8 }
+    { "name": "sidewalks", "from": "sidewalk", "to": "sidewalk", "proximity": 1, "min_overlap": 0.8, "max_angle": 30 }
   ]
 }
 ```
@@ -159,6 +179,7 @@ matches both a crossing and a sidewalk rule; listed first, the crossing rule dec
 | `to` | required | The kind of anchor line it duplicates (may differ from `from`) |
 | `proximity` | section's, else 0.5 m | Width of the corridor around the `to` line (above 0, at most 5 m) |
 | `min_overlap` | 0.8 | Share of the line's length that must lie inside the corridor |
+| `max_angle` | section's, else 30 | How many degrees the line's direction may differ from the anchor line's (above 0, at most 90). A line joining the same two nodes as an anchor line is a duplicate at any angle |
 | `anchor` | `ds1` | Which dataset's line survives |
 
 Whole lines only: a line is kept whole or removed whole, never trimmed.
@@ -199,6 +220,37 @@ Whole lines only: a line is kept whole or removed whole, never trimmed.
 broad rule listed early can hide a narrower one completely — the report warns when that
 happens.
 
+### How do I set up extensions?
+
+Extensions are the features around the network: points (benches, hydrants, lamps), lines
+(fences, walls), polygons (buildings) and zones (pedestrian areas). They have `off` and
+`default` modes and no custom rules; the first dataset's feature is always the one kept.
+
+```json
+"extensions": {
+  "mode": "default",
+  "proximity": 1,
+  "line_proximity": 2.5,
+  "polygons": false
+}
+```
+
+| Field | Default | Meaning |
+|---|---|---|
+| `points` | `true` | A second-dataset point joins a first-dataset point of the same type within `proximity`. Same type means the same tags, ignoring `ext:*` keys; a point with no other tags matches any type |
+| `lines` | `true` | A second-dataset line joins a first-dataset line when `line_overlap` of it lies within `line_proximity` of it |
+| `polygons` | `true` | A second-dataset polygon covering more than `polygon_overlap` of a first-dataset polygon's area merges into it, keeping the first one's outline. One that overlaps less is joined with it into one shape |
+| `zones` | `true` | A second-dataset zone covering more than `zone_overlap` of a first-dataset zone's area is dropped; the first dataset's zone is kept |
+| `proximity` | 0.5 m | How far apart two points may be (above 0, at most 5 m) |
+| `line_proximity` | `proximity` | Width of the corridor around a first-dataset line (above 0, at most 5 m) |
+| `line_overlap` | 0.7 | Share of the second dataset's line that must lie inside the corridor |
+| `polygon_overlap` | 0.7 | Share of the first dataset's polygon area the second's must cover |
+| `zone_overlap` | 0.7 | Share of the first dataset's zone area the second's must cover |
+
+A type that is `false` keeps both datasets' copies of it. Switching all four off is
+rejected: use `"mode": "off"` instead. What happens to the tags is under
+[Properties and provenance](#what-happens-to-the-tags-of-merged-extension-features).
+
 ### How do I name a type?
 
 The same way in every rule (`type`, `from`, `to`):
@@ -220,10 +272,18 @@ secondary, tertiary, residential, service, unclassified, trunk or motorway), **o
 
 ### What are the limits?
 
-Proximity 0 to 5 m for snap, above 0 and at most 5 m elsewhere; `min_overlap` above 0 and at
-most 1; at most 50 rules per stage; connect rule names unique and without commas; tag values
-plain strings, numbers or booleans; `_id`-style keys and `ext:union_*` keys can't be set by a
-rule; the whole config at most 64 KB.
+| Setting | Allowed |
+|---|---|
+| Snap `proximity` and `others` | 0 to 5 m (0 = the same spot only) |
+| Every other distance: dedup and connect `proximity`, extensions `proximity` and `line_proximity` | above 0, at most 5 m |
+| `min_overlap`, `line_overlap`, `polygon_overlap`, `zone_overlap` | above 0, at most 1 |
+| `max_angle` | above 0, at most 90 degrees |
+| Rules | at most 50 per stage |
+| Rule names | 1–64 characters, no commas, unique within a stage. Connect rules need one; snap and dedup rules left unnamed are called `snap-1`, `dedup-1`, … |
+| `node_tags`, `edge_tags` | values are plain strings, numbers or booleans; `_id`, `_u_id`, `_v_id`, `_w_id` and `ext:union_*` keys can't be set |
+| A section in `off` mode | takes no other settings |
+| `extensions` | at least one of `points`, `lines`, `polygons`, `zones` on |
+| The whole config | at most 64 KB |
 
 ---
 
@@ -264,16 +324,31 @@ The joined point also carries `ext:union_absorbed` (the original ids that joined
 
 A junction node gets the rule's `node_tags`; a connector gets the rule's `edge_tags`. Each set
 goes only where it is named: `kerb=lowered` in `node_tags` never reaches the connector, and
-`crossing:markings=zebra` in `edge_tags` never reaches the node. Standard OpenSidewalks keys
-are written as given (`barrier`, `kerb`, `tactile_paving` on a node; `surface`, `width`,
-`crossing:markings` and the other line keys on a connector); anything else becomes
-`ext:<key>` (`survey_batch` becomes `ext:survey_batch`; `barrier` in `edge_tags` becomes
-`ext:barrier`, because barrier is not a line key). A node that already has a key keeps its own
-value; a different value from the rule is recorded as `ext:union_audit_<key>`. Both kinds also
-get `ext:union_rule` (the rule's name) and `ext:union_confidence`. The older single `tags`
-setting is rejected with a message pointing to `node_tags` and `edge_tags`. A connector also copies A's `highway` and `footway`. A node
-several rules used lists them all in `ext:union_rule`, in rule order. Pieces of a split line
-keep their own tags and gain nothing.
+`crossing:markings=zebra` in `edge_tags` never reaches the node.
+
+- **Keys.** Standard OpenSidewalks keys are written as given (`barrier`, `kerb`,
+  `tactile_paving` on a node; `surface`, `width`, `crossing:markings` and the other line keys
+  on a connector). Anything else becomes `ext:<key>`: `survey_batch` becomes
+  `ext:survey_batch`, and `barrier` in `edge_tags` becomes `ext:barrier`, because barrier is
+  not a line key.
+- **Existing nodes.** A node that already has a key keeps its own value; a different value
+  from the rule is recorded as `ext:union_audit_<key>`.
+- **Provenance.** Both kinds get `ext:union_rule` (the rule's name) and
+  `ext:union_confidence`. A node several rules used lists them all in `ext:union_rule`, in
+  rule order.
+- **Connectors** also copy line A's `highway` and `footway`.
+- **Split lines.** The pieces keep their own tags and gain nothing.
+
+The single `tags` setting of earlier drafts is rejected, with a message pointing to
+`node_tags` and `edge_tags`.
+
+### What happens to the tags of merged extension features?
+
+| Kind | Tags of the merged feature |
+|---|---|
+| Points | As for joined nodes with `merge`: the first dataset's values win, keys only the second point has are added, and every second-dataset value is kept in `ext:union_audit_<key>` |
+| Lines, polygons | The first dataset's values win and keys only the second has are added |
+| Zones | The first dataset's zone is kept as it is; the second zone's tags are not added |
 
 ---
 
@@ -284,13 +359,15 @@ keep their own tags and gain nothing.
 ```json
 {
   "union_version": "5.0",
+  "datasets": { "ds1": "<dataset id one>", "ds2": "<dataset id two>" },
   "effective_config": { "...": "your config with every default filled in" },
   "rules": [
     { "stage": "connect", "rule": "kerbed-crossing",
       "metrics": { "junctions": 17, "connectors": 10, "nodes_created": 7, "skipped_taken": 0 } }
   ],
   "warnings": [ "connect rule \"duplicate-of-rule-1\" matched 12 location(s), all taken by earlier rules — it made no junction" ],
-  "counts": { "input": { "...": "..." }, "output": { "...": "..." } }
+  "counts": { "input": { "...": "..." }, "output": { "...": "..." }, "nodes_snapped": 5, "edges_removed": 5 },
+  "timings_s": { "load": 0.04, "snap": 0.01, "dedup": 0.03, "connect": 0.09, "...": "..." }
 }
 ```
 
@@ -320,8 +397,14 @@ field:
 | a connect rule without `operation` | `config.connect.rules[1].operation: is required — one of point, geometry` |
 | `"from": "sidewalks"` | `config.dedup.rules[1].from: unknown type name "sidewalks" — use a tag match such as {"highway": "footway"} or one of crossing, sidewalk, pedestrian, living_street, road, other` |
 | `"proximity": 9` on a rule | `config.connect.rules[1].proximity: must be greater than 0 and at most 5 (got 9)` |
+| `"tags"` on a connect rule | `config.connect.rules[1].tags: a connect rule takes node_tags (for the junction node) and edge_tags (for the connector edge) instead of tags` |
+| `"max_angle": 120` | `config.dedup.max_angle: must be greater than 0 and at most 90 (got 120)` |
+| `extensions` with all four types `false` | `config.extensions: points, lines, polygons and zones are all off — use "mode": "off" instead` |
+| a setting next to `"mode": "off"` | `config.snap: mode off takes no other settings (got "proximity")` |
 | `"proximity": 0.5` at the top level (4.x style) | `'proximity' is no longer supported: union 5.0 takes its settings in 'config' (sections snap, dedup, connect, extensions)` |
 | the same dataset twice | `tdei_dataset_id_one and tdei_dataset_id_two must be different datasets` |
+
+`rules[1]` is the first rule of the stage.
 
 ---
 
@@ -349,6 +432,23 @@ merge; too small, and genuine matches don't. Start small (0.5–1 m) and raise i
 where you know the data differs more — for example `sidewalks` at 3 m and `crossings` at 1.5 m.
 The report's counts show the effect of each change.
 
+### How large can the datasets be?
+
+Millions of features each. Every step's time grows in proportion to the data: about a quarter
+of a millisecond per input edge, with every stage on its default rules. Measured on a small
+2-vCPU test machine:
+
+| Edges (both datasets) | Nodes | Time |
+|---|---|---|
+| 650 thousand | 419 thousand | 2.5 minutes |
+| 1.85 million | 1.19 million | 6.9 minutes |
+| 3.66 million | 2.36 million | 15.9 minutes |
+
+The database needs about 2 GB of temporary space per million edges, and no time limit
+shorter than the job (`statement_timeout`, `idle_in_transaction_session_timeout`). The
+details, and how to run the scale tests, are in the harness's
+[performance.md](../test/union-5.0-harness/docs/performance.md).
+
 ### How do I migrate a 4.x request?
 
 | 4.x | 5.0 |
@@ -366,8 +466,9 @@ named rule you can see in the report.
 
 ### How do we know the union really behaves this way?
 
-The 5.0 test harness runs the union under seven configurations ("profiles") against 71
-small hand-built cases, plus 48 configs checking validation. It also checks every output
+The 5.0 test harness runs the union under 11 configurations ("profiles") against 75
+small hand-built cases, plus 67 configs checking validation. It also checks every output
 for structure (every line end on its node, no missing or duplicate ids) and that nothing
-connected in an input is disconnected. See
+connected in an input is disconnected. Its demo runs any config on one realistic
+neighbourhood and checks 20 numbered spots against the default rules. See
 [`test/union-5.0-harness`](../test/union-5.0-harness/README.md).

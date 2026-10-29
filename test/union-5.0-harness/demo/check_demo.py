@@ -35,6 +35,10 @@ a = ap.parse_args()
 
 run = describe.Run(a.run_dir, a.data_dir)
 nodes, edges, points, polys = run.out["nodes"], run.out["edges"], run.out["points"], run.out["polygons"]
+out_lines, zones = run.out["lines"], run.out["zones"]
+def line_mid(f): return describe._midpoint(describe._xy(f["geometry"]["coordinates"]))
+def ring(f): return describe._xy(f["geometry"]["coordinates"][0])
+def zone_mid(f): return describe._centroid(ring(f))
 rc_path = os.path.join(a.run_dir, "run_config.json")
 run_config = json.load(open(rc_path)) if os.path.exists(rc_path) else {}
 is_default = bool(run.effective) and run.effective == run_config.get("default_1m_effective")
@@ -96,6 +100,27 @@ def run_check(c):
     if kind == "polygon":
         f = [p for p in polys if p["properties"].get("name") == c[1]]
         return [f"no polygon '{c[1]}'"] if not f else [f"{c[1]}: {b}" for b in has(f[0]["properties"], c[2])]
+    if kind == "polygons":
+        n = sum(1 for p in polys if p["properties"].get("name") == c[1])
+        return [] if n == c[2] else [f"{n} polygons named '{c[1]}' (want {c[2]})"]
+    if kind == "polygon_covers":
+        f = [p for p in polys if p["properties"].get("name") == c[1]]
+        return [f"no polygon '{c[1]}'"] if not f else [] if describe._contains(ring(f[0]), c[2]) \
+            else [f"'{c[1]}' does not reach {c[2]}"]
+    if kind == "lines":
+        n = sum(1 for f in out_lines if dist(line_mid(f), c[1]) <= c[2])
+        return [] if n == c[3] else [f"{n} lines within {c[2]} m of {c[1]} (want {c[3]})"]
+    if kind == "line":
+        if not out_lines: return ["no output lines"]
+        f = min(out_lines, key=lambda f: dist(line_mid(f), c[1]))
+        return [f"line near {c[1]}: {b}" for b in has(f["properties"], c[2])]
+    if kind == "zones":
+        n = sum(1 for f in zones if dist(zone_mid(f), c[1]) <= c[2])
+        return [] if n == c[3] else [f"{n} zones within {c[2]} m of {c[1]} (want {c[3]})"]
+    if kind == "zone":
+        if not zones: return ["no output zones"]
+        f = min(zones, key=lambda f: dist(zone_mid(f), c[1]))
+        return [f"zone near {c[1]}: {b}" for b in has(f["properties"], c[2])]
     raise ValueError(kind)
 
 source = run_config.get("source", a.run_dir)

@@ -10,7 +10,7 @@
 #   ./run_harness.sh list                           # list the profiles
 #
 # A PROFILE is one union config (harness/profiles.py): off, default_1m,
-# default_3m, custom_snap, custom_anchor, connect_only, custom_extensions,
+# default_3m, custom_snap, custom_anchor, connect_only, custom_dedup_angle, custom_extensions,
 # ext_lines_polygons, ext_points_zones, custom_connect. Each profile runs the
 # union once and writes runs/<profile>/: the six OSW files, report.json, the
 # union's NOTICE log, check_report.txt, the PASS/FAIL map layers and

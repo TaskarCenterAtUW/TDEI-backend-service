@@ -55,6 +55,12 @@ PROFILES = {
         title="Connect on its default rules (1 m) with snap and dedup off: stages are independent",
         config={"connect": {"mode": "default", "proximity": 1}},
         proximity=1.0, coincident=False, routability="preserve"),
+    "custom_dedup_angle": dict(
+        title="Dedup only, sidewalks at 1 m with max_angle 45° (default 30°)",
+        config={"dedup": {"mode": "custom", "rules": [
+                    {"name": "sidewalk-45deg", "from": "sidewalk", "to": "sidewalk", "proximity": 1,
+                     "min_overlap": 0.8, "max_angle": 45}]}},
+        proximity=1.0, coincident=False, routability="preserve"),
     "custom_extensions": dict(
         title="Extensions only: Points join within 0.5 m, Lines use their own 2.5 m buffer",
         config={"extensions": {"mode": "default", "proximity": 0.5, "line_proximity": 2.5}},

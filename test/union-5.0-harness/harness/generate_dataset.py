@@ -530,6 +530,14 @@ ds2.line([C(220,902), C(260,902)], barrier="hedge", **{"ext:case": "E5", "ext:he
 ds1.point(C(290,900),   amenity="waste_basket", **{"ext:case": "E6"})
 ds2.point(C(291.5,900), amenity="waste_basket", **{"ext:case": "E6", "ext:color": "black"})
 
+# ── Dedup angle (max_angle): short DS2 sidewalks lying wholly inside a DS1
+#    sidewalk's 1 m buffer, one at 40° and one at 60° to it ─────────────────────
+# DA1 — 40°: kept at the default 30°, removed when max_angle is 45°.
+ds1.edge([C(0,1040), C(40,1040)], name="DA1: ds1 sidewalk", **SIDEWALK)
+ds2.edge([C(15.000,1040.100), C(15.919,1040.871)], name="DA1: ds2 sidewalk 40deg", **SIDEWALK)
+# DA2 — 60°: kept even when max_angle is 45°.
+ds2.edge([C(25.000,1040.100), C(25.450,1040.879)], name="DA2: ds2 sidewalk 60deg", **SIDEWALK)
+
 # ── Node attributes, so property merge + ext:union_audit_* is exercised ──────
 # Case A: coincident sidewalk endpoints carrying DIFFERENT values for the same
 # key, plus a DS2-only key. DS1 wins the shared key; DS2's value is audited;

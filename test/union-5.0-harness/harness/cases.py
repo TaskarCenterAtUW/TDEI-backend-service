@@ -533,6 +533,19 @@ CASES = [
       asserts={"default": [("count", "DG2: ds1 sidewalk", 2), ("count", "DG2: ds2 sidewalk", 0),
                            ("junction", (120, 960), 2, ["DG2: ds1 sidewalk"])]}),
 
+ # ── dedup max_angle ────────────────────────────────────────────────────────
+ dict(id="DA1", title="max_angle: a copy at 40° to the anchor edge",
+      setup="A 1.2 m DS2 sidewalk lies wholly inside a DS1 sidewalk's 1 m buffer, at 40° to it.",
+      expected="Kept at the default 30° (it is not a copy, whatever its overlap); removed when max_angle is 45°.",
+      asserts={"default": [("count", "DA1: ds2 sidewalk 40deg", 1)],
+               "custom_dedup_angle": [("count", "DA1: ds2 sidewalk 40deg", 0)],
+               "off": [("count", "DA1: ds2 sidewalk 40deg", 1)]}),
+ dict(id="DA2", title="max_angle: a copy at 60° to the anchor edge",
+      setup="A 0.9 m DS2 sidewalk lies wholly inside the same 1 m buffer, at 60° to it.",
+      expected="Kept at the default 30° and at max_angle 45°: it turns away more than either allows.",
+      asserts={"default": [("count", "DA2: ds2 sidewalk 60deg", 1)],
+               "custom_dedup_angle": [("count", "DA2: ds2 sidewalk 60deg", 1)]}),
+
  # ── Zones and extension features ('extensions': default keeps 4.3.2 merging; ─
  #    points / lines / polygons / zones switch each type on or off) ─────────────
  dict(id="E1", title="Points: same type merges, other types do not",

@@ -13,7 +13,7 @@ Synthetic but schema-valid OSW data built to exercise `content.tdei_union_datase
 - **Ids** are numeric (TDEI stores `_id` as `bigint`). DS1 starts at nodes `1000001`, edges `1500001`, zones `1700001`, points `1800001`, lines `1850001`, polygons `1900001`; DS2 the same with a leading 2.
 - **Profiles:** a case is checked only under the profiles listed for it ([profiles.md](profiles.md)); "default" means both `default_1m` and `default_3m`.
 
-Reference sheets (inputs and what each profile expects, one panel per case): [off](images/reference_off.png), [default_1m](images/reference_default_1m.png), [default_3m](images/reference_default_3m.png), [custom_snap](images/reference_custom_snap.png), [custom_anchor](images/reference_custom_anchor.png), [connect_only](images/reference_connect_only.png), [custom_extensions](images/reference_custom_extensions.png), [ext_lines_polygons](images/reference_ext_lines_polygons.png), [ext_points_zones](images/reference_ext_points_zones.png), [custom_connect](images/reference_custom_connect.png).
+Reference sheets (inputs and what each profile expects, one panel per case): [off](images/reference_off.png), [default_1m](images/reference_default_1m.png), [default_3m](images/reference_default_3m.png), [custom_snap](images/reference_custom_snap.png), [custom_anchor](images/reference_custom_anchor.png), [connect_only](images/reference_connect_only.png), [custom_dedup_angle](images/reference_custom_dedup_angle.png), [custom_extensions](images/reference_custom_extensions.png), [ext_lines_polygons](images/reference_ext_lines_polygons.png), [ext_points_zones](images/reference_ext_points_zones.png), [custom_connect](images/reference_custom_connect.png).
 
 ![default_1m reference sheet](images/reference_default_1m.png)
 
@@ -146,3 +146,9 @@ The `extensions` section: `default` keeps 4.3.2's merging.
 | **E5** Lines use their own distance (line_proximity) | The same hedge in both datasets, 2 m apart; DS2 adds ext:height. | Merged only when line_proximity reaches 2 m: kept apart at 1 m (line_proximity follows proximity), one Line at 3 m and under custom_extensions (Points 0.5 m, Lines 2.5 m). | `default_1m`, `default_3m`, `custom_extensions`, `ext_lines_polygons`, `ext_points_zones`, `off` |
 | **E6** Points use proximity only | A waste basket in both datasets, 1.5 m apart. | Kept apart at 1 m, merged at 3 m; under custom_extensions the larger line_proximity (2.5 m) does not reach Points, which stay apart at proximity 0.5 m. | `default_1m`, `default_3m`, `custom_extensions`, `ext_lines_polygons`, `ext_points_zones`, `off` |
 
+## Other cases
+
+| Case | Setup | Expected | Checked under |
+|---|---|---|---|
+| **DA1** max_angle: a copy at 40° to the anchor edge | A 1.2 m DS2 sidewalk lies wholly inside a DS1 sidewalk's 1 m buffer, at 40° to it. | Kept at the default 30° (it is not a copy, whatever its overlap); removed when max_angle is 45°. | default (1 m, 3 m), `custom_dedup_angle`, `off` |
+| **DA2** max_angle: a copy at 60° to the anchor edge | A 0.9 m DS2 sidewalk lies wholly inside the same 1 m buffer, at 60° to it. | Kept at the default 30° and at max_angle 45°: it turns away more than either allows. | default (1 m, 3 m), `custom_dedup_angle` |

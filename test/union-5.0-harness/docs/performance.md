@@ -24,9 +24,8 @@ reading the output cursors on the server adds under 1 %.
 | 270 × 270 | 1.85M (0.96M + 0.89M) | 1.19M | 464k | — | 414 s (6.9 min) | 3.7 GB | 633 MB |
 | 380 × 380 | 3.66M (1.89M + 1.77M) | 2.36M | 918k | — | 952 s (15.9 min) | 7.3 GB | 1.26 GB |
 
-"Before" is the build this review started from. Its time grew much faster
-than the data, because a few steps compared items pairwise (see *What
-changed*). Each 4× more data took about 10× longer, and at 650k edges 14 of
+"Before" is the union before the changes under *What changed*. Its time grew much faster
+than the data, because a few steps compared items pairwise. Each 4× more data took about 10× longer, and at 650k edges 14 of
 its 19 minutes went on merging extension features. On that trend the
 1.85M-edge city would have taken hours. "After" grows linearly: about
 **0.22 ms per input edge** from 160k to 1.85M edges. At 3.66M edges it was
@@ -100,8 +99,8 @@ durations.
 
 ## What changed
 
-The review looked at every statement in the union for how its cost grows with
-the data, then timed each stage on cities of 10k to 3.66M edges.
+Every statement in the union was checked for how its cost grows with the data,
+and each stage was timed on cities of 10k to 3.66M edges.
 
 **Pairwise comparisons, now index lookups** (these made the old build's time
 grow much faster than the data):

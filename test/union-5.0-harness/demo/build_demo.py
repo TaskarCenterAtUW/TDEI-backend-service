@@ -10,7 +10,7 @@ demo/data/scenarios.geojson: the numbered spots, with their explanations.
 
 Then checks them as harness/validate_dataset.py does: numeric unique ids, every
 edge end exactly at its _u_id / _v_id node, coordinates at 7 dp, no zero-length
-segment. Exit code 0 when valid.
+segment, every zone corner exactly at its _w_id node. Exit code 0 when valid.
 """
 import json, os, sys
 from collections import Counter
@@ -22,8 +22,10 @@ from scene import C
 
 OUT = os.path.join(HERE, "data")
 SCHEMA = "https://sidewalks.washington.edu/opensidewalks/0.3/schema.json"
-FIRST_ID = {"ds1": {"nodes": 3000001, "edges": 3500001, "points": 3800001, "lines": 3850001, "polygons": 3900001},
-            "ds2": {"nodes": 4000001, "edges": 4500001, "points": 4800001, "lines": 4850001, "polygons": 4900001}}
+FIRST_ID = {"ds1": {"nodes": 3000001, "edges": 3500001, "points": 3800001, "lines": 3850001, "polygons": 3900001,
+                    "zones": 3950001},
+            "ds2": {"nodes": 4000001, "edges": 4500001, "points": 4800001, "lines": 4850001, "polygons": 4900001,
+                    "zones": 4950001}}
 
 def feature(geom_type, coords, props):
     return {"type": "Feature", "geometry": {"type": geom_type, "coordinates": coords}, "properties": props}
@@ -52,12 +54,17 @@ def build(ds):
                              {"_id": next_id("edges"), "_u_id": u, "_v_id": v, "name": name, **tags}))
     for p in scene.NODE_TAGS[ds]:
         assert p in nodes, f"{ds}: tagged node {p} is not an edge end"
+    # a zone's ring corners are nodes too (after the edge nodes, so edge node ids stay put)
+    zones = []
+    for tags, ring in scene.ZONES[ds]:
+        w = [node(p) for p in ring]
+        zones.append(feature("Polygon", [[C(*p) for p in ring]], {"_id": next_id("zones"), **tags, "_w_id": w}))
     points = [feature("Point", C(*p), {"_id": next_id("points"), **tags}) for tags, p in scene.POINTS[ds]]
     lines = [feature("LineString", [C(*p) for p in pts], {"_id": next_id("lines"), **tags})
              for tags, pts in scene.LINES[ds]]
     polys = [feature("Polygon", [[C(*p) for p in ring]], {"_id": next_id("polygons"), **tags})
              for tags, ring in scene.POLYGONS[ds]]
-    return {"nodes": list(nodes.values()), "edges": edges, "zones": [], "points": points,
+    return {"nodes": list(nodes.values()), "edges": edges, "zones": zones, "points": points,
             "lines": lines, "polygons": polys}
 
 def validate(ds, f):
@@ -73,6 +80,10 @@ def validate(ds, f):
             bad.append(f"edge {p['_id']}: an end is not exactly at its node")
         if any(a == b for a, b in zip(c, c[1:])):
             bad.append(f"edge {p['_id']}: zero-length segment")
+    for z in f["zones"]:
+        ring, w = z["geometry"]["coordinates"][0], z["properties"]["_w_id"]
+        if len(ring) != len(w) or any(at.get(i) != c for i, c in zip(w, ring)):
+            bad.append(f"zone {z['properties']['_id']}: a ring corner is not exactly at its _w_id node")
     for k, feats in f.items():
         for x in feats:
             g = x["geometry"]

@@ -1,4 +1,5 @@
 {"type": "FeatureCollection", "$schema": "https://sidewalks.washington.edu/opensidewalks/0.3/schema.json", "features": [
 {"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[-123.0877901, 44.6341665], [-123.0872348, 44.6341665], [-123.0872348, 44.6344536], [-123.0877901, 44.6344536], [-123.0877901, 44.6341665]]]}, "properties": {"_id": "4900001", "building": "yes", "name": "Harbor Hall", "building:levels": "2"}},
-{"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[-123.0864697, 44.634162], [-123.0863305, 44.634162], [-123.0863305, 44.634288], [-123.0864697, 44.634288], [-123.0864697, 44.634162]]]}, "properties": {"_id": "4900002", "building": "yes", "name": "Willow Kiosk"}}
+{"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[-123.0864697, 44.634162], [-123.0863305, 44.634162], [-123.0863305, 44.634288], [-123.0864697, 44.634288], [-123.0864697, 44.634162]]]}, "properties": {"_id": "4900002", "building": "yes", "name": "Willow Kiosk"}},
+{"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[-123.0877976, 44.633532], [-123.0872159, 44.633532], [-123.0872159, 44.633712], [-123.0877976, 44.633712], [-123.0877976, 44.633532]]]}, "properties": {"_id": "4900003", "building": "retail", "name": "Corner Shops", "building:levels": "1"}}
 ]}

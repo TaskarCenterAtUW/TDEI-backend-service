@@ -2069,6 +2069,54 @@
     "highway": "footway",
     "footway": "sidewalk"
    }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0998103,
+      44.6393609
+     ],
+     [
+      -123.0997987,
+      44.6393678
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "2500086",
+    "_u_id": "2000171",
+    "_v_id": "2000172",
+    "name": "DA1: ds2 sidewalk 40deg",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0996838,
+      44.6393609
+     ],
+     [
+      -123.0996781,
+      44.6393679
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "2500087",
+    "_u_id": "2000173",
+    "_v_id": "2000174",
+    "name": "DA2: ds2 sidewalk 60deg",
+    "highway": "footway",
+    "footway": "sidewalk"
+   }
   }
  ]
 }
