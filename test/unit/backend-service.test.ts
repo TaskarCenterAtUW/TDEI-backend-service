@@ -279,7 +279,7 @@ describe('BackendService', () => {
           rules: [{ name: 'kerbed-crossing', from: 'crossing', to: 'sidewalk', operation: 'geometry',
                     proximity: 1, node_tags: { barrier: 'kerb' }, edge_tags: { 'crossing:markings': 'zebra' } }]
         },
-        extensions: { mode: 'default', proximity: 1, line_proximity: 2.5, polygons: false }
+        extensions: { mode: 'default', points: { proximity: 1 }, lines: { proximity: 2.5 }, polygons: { enabled: false } }
       };
       const message = unionMessage({ config });
       const processSpy = jest.spyOn(backendService.unionQueryService, 'process_upload_dataset').mockResolvedValueOnce(true);

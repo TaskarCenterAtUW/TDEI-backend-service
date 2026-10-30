@@ -23,7 +23,7 @@ def _default(p):
     return {"snap":       {"mode": "default", "proximity": p},
             "dedup":      {"mode": "default", "proximity": p},
             "connect":    {"mode": "default", "proximity": p},
-            "extensions": {"mode": "default", "proximity": p}}
+            "extensions": {"mode": "default", "points": {"proximity": p}, "lines": {"proximity": p}}}
 
 PROFILES = {
     "off": dict(
@@ -63,17 +63,19 @@ PROFILES = {
         proximity=1.0, coincident=False, routability="preserve"),
     "custom_extensions": dict(
         title="Extensions only: Points join within 0.5 m, Lines use their own 2.5 m buffer",
-        config={"extensions": {"mode": "default", "proximity": 0.5, "line_proximity": 2.5}},
+        config={"extensions": {"mode": "default", "points": {"proximity": 0.5}, "lines": {"proximity": 2.5}}},
         proximity=0.5, coincident=False, routability="preserve"),
     "ext_lines_polygons": dict(
         title="Extensions at 3 m with only Lines and Polygons on (points and zones off)",
-        config={"extensions": {"mode": "default", "proximity": 3, "points": False, "lines": True,
-                               "polygons": True, "zones": False}},
+        config={"extensions": {"mode": "default", "points": {"enabled": False},
+                               "lines": {"enabled": True, "proximity": 3}, "polygons": {"enabled": True},
+                               "zones": {"enabled": False}}},
         proximity=3.0, coincident=False, routability="preserve"),
     "ext_points_zones": dict(
         title="Extensions at 3 m with only Points and Zones on (lines and polygons off)",
-        config={"extensions": {"mode": "default", "proximity": 3, "points": True, "lines": False,
-                               "polygons": False, "zones": True}},
+        config={"extensions": {"mode": "default", "points": {"enabled": True, "proximity": 3},
+                               "lines": {"enabled": False}, "polygons": {"enabled": False},
+                               "zones": {"enabled": True}}},
         proximity=3.0, coincident=False, routability="preserve"),
     "custom_connect": dict(
         title="Ordered connect rules with node_tags / edge_tags; snap and dedup on their defaults at 0.5 m",

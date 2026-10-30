@@ -1,7 +1,7 @@
 # Union 5.0 test harness
 
 Checks `content.tdei_union_dataset` **5.0** (configurable operations) against
-75 small, hand-built cases and reports, case by case and profile by profile,
+69 small, hand-built cases and reports, case by case and profile by profile,
 whether the union did what its configuration asked.
 
 ```
@@ -23,11 +23,11 @@ what it expects under each profile it is checked under.
 | `custom_anchor` | DS2 as the anchor; `anchor_only` attributes | anchors, audit |
 | `connect_only` | connect on its defaults, snap and dedup off | stages are independent |
 | `custom_dedup_angle` | dedup only, sidewalks with `max_angle` 45° | the dedup angle is per rule |
-| `custom_extensions` | extensions only: Points 0.5 m, Lines `line_proximity` 2.5 m | Points and Lines use separate distances |
+| `custom_extensions` | extensions only: `points.proximity` 0.5 m, `lines.proximity` 2.5 m | Points and Lines use separate distances |
 | `ext_lines_polygons`, `ext_points_zones` | extensions only, two types on and two off | each type has its own switch |
 | `custom_connect` | five ordered connect rules with node_tags / edge_tags | O1–O3, W1–W5, G1, G3, tags |
 
-A separate suite (`harness/config_cases.py`, 67 configs) checks that invalid
+A separate suite (`harness/config_cases.py`, 48 configs) checks that invalid
 configs are rejected with the right message and valid ones expand as specified.
 
 ## Demo
@@ -35,12 +35,12 @@ configs are rejected with the right message and valid ones expand as specified.
 `./run_demo.sh local` runs the union on one realistic neighbourhood described
 by two sources (a city GIS and a field survey), with the config in
 `demo/input.json`. Paste a config from the configurator
-(`docs/union-configurator.html`, "Copy configuration") into that file and run
+(`union-configurator/dist/union-configurator.html`, "Copy configuration") into that file and run
 it again to see what that config does. The scene has sidewalks, four crossings,
-kerbs, T-junctions, a living street, duplicates, and extension points, lines,
-buildings and a zone. The picture shows the applied config with what each rule
-did, input and output of the whole scene, and a close-up of each of 20 numbered
-spots saying what this run did there. See [docs/demo.md](docs/demo.md).
+kerbs, T-junctions, a living street, duplicates and extension features. The
+picture shows the applied config with what each rule did, input and output of
+the whole scene, and a close-up of each of 13 numbered spots saying what this
+run did there. See [docs/demo.md](docs/demo.md).
 
 ## Quick start
 

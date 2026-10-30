@@ -443,15 +443,17 @@ def config_columns(run):
         cols.append(("EXTENSIONS", "off", ["Points, lines, buildings and zones from both sources are all kept.",
                                            f"in → out: {io}" if io else ""]))
     else:
-        pct = lambda k: f"{st.get(k, 0.7) * 100:.0f} %"
+        t = lambda k: st.get(k) or {}
+        on = lambda k: t(k).get("enabled", True)
+        pct = lambda k: f"{t(k).get('min_overlap', 0.7) * 100:.0f} %"
         off = "off: both copies kept"
         cols.append(("EXTENSIONS", "default", [
-            "points: " + (f"same type within {_p(st.get('proximity'))} merge" if st.get("points", True) else off),
-            "lines: " + (f"merge when ≥ {pct('line_overlap')} lies within {_p(st.get('line_proximity', st.get('proximity')))} "
-                         f"of a DS1 line" if st.get("lines", True) else off),
-            "buildings: " + (f"one when DS2's covers > {pct('polygon_overlap')} of DS1's; a smaller overlap joins "
-                             f"the shapes" if st.get("polygons", True) else off),
-            "zones: " + (f"DS1's kept when DS2's covers > {pct('zone_overlap')} of it" if st.get("zones", True) else off),
+            "points: " + (f"same type within {_p(t('points').get('proximity', 0.5))} merge" if on("points") else off),
+            "lines: " + (f"merge when ≥ {pct('lines')} lies within {_p(t('lines').get('proximity', 0.5))} "
+                         f"of a DS1 line" if on("lines") else off),
+            "buildings: " + (f"one when DS2's covers > {pct('polygons')} of DS1's; a smaller overlap joins "
+                             f"the shapes" if on("polygons") else off),
+            "zones: " + (f"DS1's kept when DS2's covers > {pct('zones')} of it" if on("zones") else off),
             f"in → out: {io}" if io else ""]))
     return [(s, h, [l for l in ls if l]) for s, h, ls in cols]
 

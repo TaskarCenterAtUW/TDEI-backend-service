@@ -32,7 +32,8 @@ means for them (e.g. SN6: two nodes at one coordinate stay apart).
 
 ```json
 {"snap": {"mode": "default", "proximity": 1}, "dedup": {"mode": "default", "proximity": 1},
- "connect": {"mode": "default", "proximity": 1}, "extensions": {"mode": "default", "proximity": 1}}
+ "connect": {"mode": "default", "proximity": 1},
+ "extensions": {"mode": "default", "points": {"proximity": 1}, "lines": {"proximity": 1}}}
 ```
 
 (and the same at 3 m). Every network case is checked here, with full
@@ -78,19 +79,21 @@ under both (DA2).
 ### `custom_extensions` — Points and Lines each use their own distance
 
 ```json
-{"extensions": {"mode": "default", "proximity": 0.5, "line_proximity": 2.5}}
+{"extensions": {"mode": "default", "points": {"proximity": 0.5}, "lines": {"proximity": 2.5}}}
 ```
 
-Only the extensions stage runs. Points join within `proximity` (0.5 m) and a DS2
-Line merges when `line_overlap` of it lies within `line_proximity` (2.5 m) of a
-DS1 Line. Checks that the 2 m hedge merges (E5) while the 1.5 m waste baskets
+Only the extensions stage runs. Points join within `points.proximity` (0.5 m) and
+a DS2 Line merges when `lines.min_overlap` of it lies within `lines.proximity`
+(2.5 m) of a DS1 Line. Checks that the 2 m hedge merges (E5) while the 1.5 m waste baskets
 stay apart (E6): the Lines' distance never reaches Points.
 
 ### `ext_lines_polygons` and `ext_points_zones` — each type has its own switch
 
 ```json
-{"extensions": {"mode": "default", "proximity": 3, "points": false, "lines": true, "polygons": true, "zones": false}}
-{"extensions": {"mode": "default", "proximity": 3, "points": true, "lines": false, "polygons": false, "zones": true}}
+{"extensions": {"mode": "default", "points": {"enabled": false}, "lines": {"enabled": true, "proximity": 3},
+                "polygons": {"enabled": true}, "zones": {"enabled": false}}}
+{"extensions": {"mode": "default", "points": {"enabled": true, "proximity": 3}, "lines": {"enabled": false},
+                "polygons": {"enabled": false}, "zones": {"enabled": true}}}
 ```
 
 Only the extensions stage runs, at 3 m, with two types on and two off. A type

@@ -9,7 +9,7 @@ for your own example.
 
 ## Try a config
 
-1. Open `docs/union-configurator.html`, set it up, press **Copy configuration**.
+1. Open `union-configurator/dist/union-configurator.html`, set it up, press **Copy configuration**.
 2. Paste it into `demo/input.json`, replacing the value of `"config"` (or the
    whole file).
 3. Run the demo and open the picture:

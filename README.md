@@ -77,7 +77,7 @@ combined, unchanged.
 | `snap` | off / default / custom | joins a node to a nearby node of the same kind in the other dataset | `proximity`, `anchor`, `attributes`, `coincident`, `others`, `rules` |
 | `dedup` | off / default / custom | removes a line that duplicates an anchor line | `proximity`, `min_overlap`, `max_angle`, `anchor`, `rules` |
 | `connect` | off / default / custom | makes junctions between two kinds of way, in rule order | `proximity`, `rules` (each with `operation` `point` or `geometry`, `node_tags`, `edge_tags`) |
-| `extensions` | off / default | merges points, lines, buildings and zones | `points`, `lines`, `polygons`, `zones` (each on or off), `proximity`, `line_proximity`, `line_overlap`, `polygon_overlap`, `zone_overlap` |
+| `extensions` | off / default | merges points, lines, buildings and zones | one block per type: `points` {`enabled`, `proximity`}, `lines` {`enabled`, `proximity`, `min_overlap`}, `polygons` {`enabled`, `min_overlap`}, `zones` {`enabled`, `min_overlap`} |
 
 A section left out is off. The 4.x parameters `proximity` and `entity_filters` are rejected.
 
@@ -91,7 +91,7 @@ A section left out is off. The 4.x parameters `proximity` and `entity_filters` a
     "connect":    { "mode": "custom", "rules": [
                     { "name": "kerbed-crossing", "from": "crossing", "to": "sidewalk", "operation": "geometry",
                       "proximity": 1, "node_tags": { "barrier": "kerb", "kerb": "lowered" } } ] },
-    "extensions": { "mode": "default", "proximity": 1 }
+    "extensions": { "mode": "default", "points": { "proximity": 1 }, "lines": { "proximity": 1 } }
   }
 }
 ```
@@ -119,7 +119,7 @@ longest job. At about 0.25 ms per input edge, 3.66 million edges take about 16 m
 |---|---|
 | [docs/union-FAQs.md](./docs/union-FAQs.md) | every setting, the default rule sets, limits, error messages, migrating a 4.x request |
 | [docs/union-report.md](./docs/union-report.md) | the run report, key by key, and how to read one |
-| [docs/union-configurator.html](./docs/union-configurator.html) | building a config without writing JSON (open it in a browser) |
+| [union-configurator/dist/union-configurator.html](./union-configurator/dist/union-configurator.html) | building a config without writing JSON (open it in a browser) |
 | [test/union-5.0-harness](./test/union-5.0-harness/README.md) | the test harness, the demo (run any config on a sample neighbourhood) and performance at scale |
 
 ## Subscription 

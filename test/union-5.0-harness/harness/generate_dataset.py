@@ -523,7 +523,7 @@ ds1.zone([C(160,890), C(180,890), C(180,910), C(160,910)], highway="pedestrian",
 ds2.zone([C(160.2,890), C(180.2,890), C(180.2,910), C(160.2,910)], highway="pedestrian", **{"ext:case": "E4"})
 
 # E5 — the same hedge in both datasets, 2 m apart: merges only when the Lines'
-#      own distance (line_proximity) reaches 2 m.
+#      own distance (lines.proximity) reaches 2 m.
 ds1.line([C(220,900), C(260,900)], barrier="hedge", **{"ext:case": "E5"})
 ds2.line([C(220,902), C(260,902)], barrier="hedge", **{"ext:case": "E5", "ext:height": "0.8"})
 # E6 — a waste basket in both datasets, 1.5 m apart: Points use proximity only.

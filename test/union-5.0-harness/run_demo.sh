@@ -10,7 +10,7 @@
 #   ./run_demo.sh "<psql connection>" ...    # any database (a dev DB, not production)
 #   BUILD=1 ./run_demo.sh local              # rebuild demo/data/*.geojson from demo/scene.py first
 #
-# Try a config: open docs/union-configurator.html, set it up, press "Copy
+# Try a config: open union-configurator/dist/union-configurator.html, set it up, press "Copy
 # configuration", paste it into demo/input.json (replace the "config" value, or
 # the whole file), run ./run_demo.sh local and open runs/demo_input/demo.png.
 # A bare config, {"config": {...}} or a whole union request body all work.

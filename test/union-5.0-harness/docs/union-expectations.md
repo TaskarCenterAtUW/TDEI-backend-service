@@ -19,7 +19,7 @@ snap  →  dedup  →  snap topology  →  connect  →  stranding guard  →  z
 | snap | `coincident` on; then `crossing`, `pedestrian`, `living_street`, `road`, `other` — each to its own type, anchor DS1, `merge` |
 | dedup | `crossing`, `pedestrian`, `living_street`, `road`, `other` — each against its own type, `min_overlap` 0.8, `max_angle` 30°, anchor DS1 |
 | connect | `road-crossing` (crossing → road, point); `crossing-sidewalk`, `crossing-living-street`, `pedestrian-pedestrian`, `living-street-living-street`, `crossing-crossing` (geometry) |
-| extensions | 4.3.2 merging: points same type within `proximity`; lines ≥ 70 % in a `line_proximity` buffer (defaults to `proximity`); polygons and zones by 70 % of DS1's area |
+| extensions | 4.3.2 merging, each type in its own block: `points` same type within `proximity`; `lines` ≥ `min_overlap` (70 %) within `proximity`; `polygons` and `zones` by `min_overlap` (70 %) of DS1's area; every type enabled, proximities 0.5 m |
 
 Built-in types: **crossing** = `highway=footway` + `footway` in (crossing,
 traffic_island); **sidewalk** = `highway=footway` + `footway=sidewalk`;
@@ -85,7 +85,7 @@ connector edge joins A's end to it.
 
 | # | The union must… | Checked by |
 |---|---|---|
-| E | `default`: merge same-type points within proximity (DS1 position, DS2-only keys added, every DS2 value audited); lines with ≥ `line_overlap` of their length within `line_proximity` of a DS1 line (DS1 geometry, DS2-only keys added; `line_proximity` defaults to `proximity`, and Points never use it); polygons covering > 70 % of DS1's area (DS1 geometry) or the union of both below that; zones by > 70 % of DS1's area. `points`, `lines`, `polygons`, `zones` (all on by default) switch each type: a type that is off keeps both copies. `off`: pass everything through | E1–E6 |
+| E | `default`: merge same-type points within proximity (DS1 position, DS2-only keys added, every DS2 value audited); lines with ≥ `lines.min_overlap` of their length within `lines.proximity` of a DS1 line (DS1 geometry, DS2-only keys added; Points use only `points.proximity`); polygons covering > `polygons.min_overlap` of DS1's area (DS1 geometry) or the union of both below that; zones by > `zones.min_overlap` of DS1's area. Each type's `enabled` (default true) switches it: a type that is not enabled keeps both copies. `off`: pass everything through | E1–E6 |
 | Z | Zone rings reference the final nodes (`_w_id`), following any snap | integrity (*zone `_w_id` references a missing node*) |
 
 ## Always

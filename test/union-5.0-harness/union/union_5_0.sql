@@ -28,12 +28,17 @@
 --              edge_tags (written on the connector edges it adds). Each set is
 --              written only where it is named.
 --   extensions zones and extension points/lines/polygons: off, or default =
---              the 4.3.2 merging (no custom mode). In default mode `points`,
---              `lines`, `polygons` and `zones` (all true by default) switch each
---              type's merge on or off; a type that is off keeps both copies.
---              Points join within `proximity`; a DS2 Line merges when
---              `line_overlap` of it lies within `line_proximity` of a DS1 Line
---              (line_proximity defaults to proximity).
+--              the 4.3.2 merging (no custom mode). In default mode each type
+--              has its own block, every key optional:
+--                points   {enabled, proximity}     same-type Points within proximity
+--                lines    {enabled, proximity, min_overlap}
+--                                                  a DS2 Line with min_overlap of its
+--                                                  length within proximity of a DS1 Line
+--                polygons {enabled, min_overlap}   covering more than min_overlap of a
+--                                                  DS1 Polygon's area
+--                zones    {enabled, min_overlap}   likewise for Zones
+--              enabled defaults to true, proximity to 0.5, min_overlap to 0.7. A
+--              type that is not enabled keeps both datasets' copies.
 --
 -- Stage order is fixed: snap → dedup → (snap topology) → connect → stranding
 -- guard → zones and extensions → output and report.
@@ -297,6 +302,30 @@ BEGIN
     RETURN v;
 END $$;
 
+-- One extensions type block ({enabled, proximity?, min_overlap?}) with its defaults filled in.
+CREATE OR REPLACE FUNCTION content.union5_cfg_ext(v jsonb, path text, has_prox boolean, has_ov boolean)
+RETURNS jsonb LANGUAGE plpgsql IMMUTABLE AS $$
+DECLARE out jsonb;
+BEGIN
+    IF v IS NULL THEN v := '{}'::jsonb; END IF;
+    IF jsonb_typeof(v) <> 'object' THEN
+        RAISE EXCEPTION 'config.%: must be an object, e.g. {"enabled": true%}', path,
+            CASE WHEN has_prox THEN ', "proximity": 0.5' ELSE '' END || CASE WHEN has_ov THEN ', "min_overlap": 0.7' ELSE '' END
+            USING ERRCODE = '22023';
+    END IF;
+    PERFORM content.union5_cfg_keys(v, path, ARRAY['enabled']
+        || CASE WHEN has_prox THEN ARRAY['proximity'] ELSE ARRAY[]::text[] END
+        || CASE WHEN has_ov THEN ARRAY['min_overlap'] ELSE ARRAY[]::text[] END);
+    out := jsonb_build_object('enabled', content.union5_cfg_bool(v->'enabled', path || '.enabled', true));
+    IF has_prox THEN
+        out := out || jsonb_build_object('proximity', content.union5_cfg_num(v->'proximity', path || '.proximity', 0, false, 5, 0.5));
+    END IF;
+    IF has_ov THEN
+        out := out || jsonb_build_object('min_overlap', content.union5_cfg_num(v->'min_overlap', path || '.min_overlap', 0, false, 1, 0.7));
+    END IF;
+    RETURN out;
+END $$;
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- content.union5_validate_config(config) → effective config
 --
@@ -505,26 +534,27 @@ BEGIN
             PERFORM content.union5_cfg_keys(st, 'extensions', ARRAY['mode']);
             eff := eff || jsonb_build_object('extensions', jsonb_build_object('mode', 'off'));
         ELSE
-            PERFORM content.union5_cfg_keys(st, 'extensions', ARRAY['mode', 'points', 'lines', 'polygons', 'zones',
-                                                                    'proximity', 'line_proximity', 'line_overlap', 'polygon_overlap', 'zone_overlap']);
-            -- each type can be switched off on its own (both copies kept); all four on by default
-            IF NOT (content.union5_cfg_bool(st->'points', 'extensions.points', true) OR content.union5_cfg_bool(st->'lines', 'extensions.lines', true)
-                    OR content.union5_cfg_bool(st->'polygons', 'extensions.polygons', true) OR content.union5_cfg_bool(st->'zones', 'extensions.zones', true)) THEN
-                RAISE EXCEPTION 'config.extensions: points, lines, polygons and zones are all off — use "mode": "off" instead' USING ERRCODE = '22023';
+            -- settings sit under each type; the earlier flat keys say where they went
+            FOREACH g IN ARRAY ARRAY['proximity', 'line_proximity', 'line_overlap', 'polygon_overlap', 'zone_overlap'] LOOP
+                IF st ? g THEN
+                    RAISE EXCEPTION 'config.extensions.%: each type has its own block now — use %', g,
+                        CASE g WHEN 'proximity' THEN 'extensions.points.proximity (and extensions.lines.proximity)'
+                               WHEN 'line_proximity' THEN 'extensions.lines.proximity'
+                               WHEN 'line_overlap' THEN 'extensions.lines.min_overlap'
+                               WHEN 'polygon_overlap' THEN 'extensions.polygons.min_overlap'
+                               ELSE 'extensions.zones.min_overlap' END USING ERRCODE = '22023';
+                END IF;
+            END LOOP;
+            PERFORM content.union5_cfg_keys(st, 'extensions', ARRAY['mode', 'points', 'lines', 'polygons', 'zones']);
+            rules := jsonb_build_object(
+                'points',   content.union5_cfg_ext(st->'points',   'extensions.points',   true,  false),
+                'lines',    content.union5_cfg_ext(st->'lines',    'extensions.lines',    true,  true),
+                'polygons', content.union5_cfg_ext(st->'polygons', 'extensions.polygons', false, true),
+                'zones',    content.union5_cfg_ext(st->'zones',    'extensions.zones',    false, true));
+            IF NOT EXISTS (SELECT 1 FROM jsonb_each(rules) t WHERE (t.value->>'enabled')::boolean) THEN
+                RAISE EXCEPTION 'config.extensions: points, lines, polygons and zones are all disabled — use "mode": "off" instead' USING ERRCODE = '22023';
             END IF;
-            -- proximity: how far apart two Points may be; line_proximity: the width of the
-            -- buffer around a DS1 Line (defaults to proximity)
-            prox := content.union5_cfg_num(st->'proximity', 'extensions.proximity', 0, false, 5, 0.5);
-            eff := eff || jsonb_build_object('extensions', jsonb_build_object('mode', 'default',
-                'points',          content.union5_cfg_bool(st->'points', 'extensions.points', true),
-                'lines',           content.union5_cfg_bool(st->'lines', 'extensions.lines', true),
-                'polygons',        content.union5_cfg_bool(st->'polygons', 'extensions.polygons', true),
-                'zones',           content.union5_cfg_bool(st->'zones', 'extensions.zones', true),
-                'proximity',       prox,
-                'line_proximity',  content.union5_cfg_num(st->'line_proximity', 'extensions.line_proximity', 0, false, 5, prox),
-                'line_overlap',    content.union5_cfg_num(st->'line_overlap', 'extensions.line_overlap', 0, false, 1, 0.7),
-                'polygon_overlap', content.union5_cfg_num(st->'polygon_overlap', 'extensions.polygon_overlap', 0, false, 1, 0.7),
-                'zone_overlap',    content.union5_cfg_num(st->'zone_overlap', 'extensions.zone_overlap', 0, false, 1, 0.7)));
+            eff := eff || jsonb_build_object('extensions', jsonb_build_object('mode', 'default') || rules);
         END IF;
     END IF;
     RETURN eff;
@@ -1551,9 +1581,9 @@ BEGIN
     -- default = the 4.3.2 merging). Zone rings reference the final nodes.
     -- =========================================================================
     RAISE NOTICE 'Phase 7: zones and extensions (%) at %', v_ext->>'mode', clock_timestamp();
-    v_ext_prox := COALESCE((v_ext->>'proximity')::float8, 0.5);
+    v_ext_prox := COALESCE((v_ext->'points'->>'proximity')::float8, 0.5);
     v_ext_deg  := v_ext_prox / v_mlon;
-    v_ext_ldeg := COALESCE((v_ext->>'line_proximity')::float8, v_ext_prox) / v_mlon;
+    v_ext_ldeg := COALESCE((v_ext->'lines'->>'proximity')::float8, 0.5) / v_mlon;
 
     -- zones: each ring vertex → its node (by _w_id position, else by coordinate) → final node
     DROP TABLE IF EXISTS u5_zones;
@@ -1613,15 +1643,15 @@ BEGIN
                        WHERE r2.zid = r1.zid ORDER BY r2.ring, u.o) AS ids
           FROM u5_zone_rings r1 GROUP BY r1.zid) rr ON rr.zid = z.zid
     WHERE ST_NPoints(rr.outer_ring) >= 4 AND ST_IsClosed(rr.outer_ring);
-    IF (v_ext->>'zones')::boolean THEN        -- default mode with zones on
-        -- a DS2 zone covering more than zone_overlap of a DS1 zone's area is the same zone (DS1's kept)
+    IF (v_ext->'zones'->>'enabled')::boolean THEN
+        -- a DS2 zone covering more than zones.min_overlap of a DS1 zone's area is the same zone (DS1's kept)
         CREATE INDEX ON u5_zone_out USING GIST (geom);
         ANALYZE u5_zone_out;
         DELETE FROM u5_zone_out zd USING (
             SELECT DISTINCT ON (z1.zid) z1.zid, z2.zid AS ds2_zid
             FROM u5_zone_out z1 JOIN u5_zone_out z2 ON z1.src = 1 AND z2.src = 2
                  AND ST_IsValid(z1.geom) AND ST_IsValid(z2.geom) AND ST_Intersects(z1.geom, z2.geom)
-                 AND ST_Area(ST_Intersection(z1.geom, z2.geom)) / NULLIF(ST_Area(z1.geom), 0) > (v_ext->>'zone_overlap')::float8
+                 AND ST_Area(ST_Intersection(z1.geom, z2.geom)) / NULLIF(ST_Area(z1.geom), 0) > (v_ext->'zones'->>'min_overlap')::float8
             ORDER BY z1.zid, ST_Area(ST_Intersection(z1.geom, z2.geom)) / NULLIF(ST_Area(z1.geom), 0) DESC, z2.zid) m
         WHERE zd.zid = m.ds2_zid;
     END IF;
@@ -1642,7 +1672,7 @@ BEGIN
     ANALYZE u5_pts;
     DROP TABLE IF EXISTS u5_pt_match;
     CREATE TEMP TABLE u5_pt_match (ds2_id bigint, ds1_id bigint) ON COMMIT DROP;
-    IF (v_ext->>'points')::boolean THEN        -- default mode with points on
+    IF (v_ext->'points'->>'enabled')::boolean THEN
         INSERT INTO u5_pt_match
         SELECT DISTINCT ON (p2.id) p2.id, p1.id
         FROM u5_pts p2 JOIN u5_pts p1 ON p1.src = 1 AND p2.src = 2
@@ -1674,8 +1704,8 @@ BEGIN
         SELECT p2.id, p2.geom, p2.props FROM u5_pts p2
         WHERE p2.src = 2 AND NOT EXISTS (SELECT 1 FROM u5_pt_match m WHERE m.ds2_id = p2.id)) x;
 
-    -- extension lines: a DS2 line with at least line_overlap of its length inside a
-    -- DS1 line's line_proximity buffer is the same line (DS1 geometry; DS2-only keys added)
+    -- extension lines: a DS2 line with at least lines.min_overlap of its length inside a
+    -- DS1 line's lines.proximity buffer is the same line (DS1 geometry; DS2-only keys added)
     DROP TABLE IF EXISTS u5_lines;
     CREATE TEMP TABLE u5_lines ON COMMIT DROP AS
     SELECT l.id, CASE WHEN l.tdei_dataset_id = v_ds1 THEN 1 ELSE 2 END::smallint AS src,
@@ -1685,7 +1715,7 @@ BEGIN
     ANALYZE u5_lines;
     DROP TABLE IF EXISTS u5_ln_match;
     CREATE TEMP TABLE u5_ln_match (ds2_id bigint, ds1_id bigint) ON COMMIT DROP;
-    IF (v_ext->>'lines')::boolean THEN        -- default mode with lines on
+    IF (v_ext->'lines'->>'enabled')::boolean THEN
         DROP TABLE IF EXISTS u5_ln_buf;
         CREATE TEMP TABLE u5_ln_buf ON COMMIT DROP AS
         SELECT id, ST_Buffer(geom, v_ext_ldeg) AS buf FROM u5_lines WHERE src = 1;
@@ -1695,7 +1725,7 @@ BEGIN
             SELECT l2.id AS ds2_id, b.id AS ds1_id,
                    ST_Length(ST_CollectionExtract(ST_Intersection(l2.geom, b.buf), 2)) / NULLIF(ST_Length(l2.geom), 0) AS ov
             FROM u5_lines l2 JOIN u5_ln_buf b ON l2.src = 2 AND ST_DWithin(l2.geom, b.buf, 0)) c
-        WHERE ov >= (v_ext->>'line_overlap')::float8
+        WHERE ov >= (v_ext->'lines'->>'min_overlap')::float8
         ORDER BY ds2_id, ov DESC, ds1_id;
     END IF;
     CREATE INDEX ON u5_ln_match (ds1_id);
@@ -1715,7 +1745,7 @@ BEGIN
         SELECT l2.id, l2.geom, l2.props FROM u5_lines l2
         WHERE l2.src = 2 AND NOT EXISTS (SELECT 1 FROM u5_ln_match m WHERE m.ds2_id = l2.id)) x;
 
-    -- extension polygons: a DS2 polygon covering more than polygon_overlap of a DS1
+    -- extension polygons: a DS2 polygon covering more than polygons.min_overlap of a DS1
     -- polygon's area → DS1 geometry + DS2-only keys; intersecting below that → the
     -- union of both; otherwise each is kept
     DROP TABLE IF EXISTS u5_polys;
@@ -1725,7 +1755,7 @@ BEGIN
     FROM content.extension_polygon p WHERE p.tdei_dataset_id IN (v_ds1, v_ds2);
     DROP TABLE IF EXISTS u5_poly_pairs;
     CREATE TEMP TABLE u5_poly_pairs (ds1_id bigint, ds2_id bigint, ov float8) ON COMMIT DROP;
-    IF (v_ext->>'polygons')::boolean THEN        -- default mode with polygons on
+    IF (v_ext->'polygons'->>'enabled')::boolean THEN
         CREATE INDEX ON u5_polys USING GIST (geom);  -- each DS1 polygon meets only the DS2 polygons it touches
         CREATE INDEX ON u5_polys (id);
         ANALYZE u5_polys;
@@ -1744,7 +1774,7 @@ BEGIN
                                     'properties', jsonb_build_object('_id', x.id::text) || x.props) AS feature
     FROM (
         SELECT p1.id,
-               CASE WHEN pp.ds1_id IS NULL OR pp.ov > (v_ext->>'polygon_overlap')::float8 THEN p1.geom
+               CASE WHEN pp.ds1_id IS NULL OR pp.ov > (v_ext->'polygons'->>'min_overlap')::float8 THEN p1.geom
                     ELSE ST_Union(p1.geom, p2.geom) END AS geom,
                p1.props || COALESCE((SELECT jsonb_object_agg(kv.key, kv.value) FROM jsonb_each(p2.props) kv
                                      WHERE NOT p1.props ? kv.key), '{}'::jsonb) AS props

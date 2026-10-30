@@ -12,9 +12,10 @@ import { InputException } from "../exceptions/http/http-exceptions";
  *   dedup        off | default | custom   proximity, min_overlap, max_angle, anchor, rules
  *   connect      off | default | custom   proximity, rules (name, from, to, operation, proximity,
  *                                         node_tags, edge_tags)
- *   extensions   off | default            points, lines, polygons, zones (each true/false),
- *                                         proximity, line_proximity, line_overlap,
- *                                         polygon_overlap, zone_overlap
+ *   extensions   off | default            one block per type: points {enabled, proximity},
+ *                                         lines {enabled, proximity, min_overlap},
+ *                                         polygons {enabled, min_overlap},
+ *                                         zones {enabled, min_overlap}
  *
  *   {
  *     "snap":       { "mode": "default", "proximity": 1 },
@@ -22,7 +23,8 @@ import { InputException } from "../exceptions/http/http-exceptions";
  *     "connect":    { "mode": "custom", "rules": [ { "name": "kerbed-crossing", "from": "crossing",
  *                     "to": "sidewalk", "operation": "geometry", "proximity": 1,
  *                     "node_tags": { "barrier": "kerb" } } ] },
- *     "extensions": { "mode": "default", "proximity": 1, "polygons": false }
+ *     "extensions": { "mode": "default", "points": { "proximity": 1 },
+ *                     "lines": { "proximity": 2.5 }, "polygons": { "enabled": false } }
  *   }
  *
  * The settings inside a section are validated by the database

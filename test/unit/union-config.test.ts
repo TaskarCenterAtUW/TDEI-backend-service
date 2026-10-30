@@ -34,8 +34,11 @@ describe('parseUnionConfig', () => {
                        rules: [{ name: 'kerbed-crossing', from: 'crossing', to: 'sidewalk', operation: 'geometry',
                                  proximity: 1, node_tags: { barrier: 'kerb', kerb: 'lowered' },
                                  edge_tags: { 'crossing:markings': 'zebra' } }] },
-            extensions: { mode: 'default', points: true, lines: true, polygons: false, zones: false,
-                          proximity: 1, line_proximity: 2.5, line_overlap: 0.7, polygon_overlap: 0.7, zone_overlap: 0.7 },
+            extensions: { mode: 'default',
+                          points: { enabled: true, proximity: 1 },
+                          lines: { enabled: true, proximity: 2.5, min_overlap: 0.7 },
+                          polygons: { enabled: false, min_overlap: 0.7 },
+                          zones: { enabled: false, min_overlap: 0.7 } },
         };
         expect(parseUnionConfig(config)).toEqual(config);
         expect(parseUnionConfig(JSON.stringify(config))).toEqual(config);

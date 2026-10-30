@@ -576,9 +576,9 @@ CASES = [
       asserts={"default": [("features", "zone", 1)], "custom_extensions": [("features", "zone", 1)],
                "ext_lines_polygons": [("features", "zone", 2)], "ext_points_zones": [("features", "zone", 1)],
                "off": [("features", "zone", 2)]}),
- dict(id="E5", title="Lines use their own distance (line_proximity)",
+ dict(id="E5", title="Lines use their own distance (lines.proximity)",
       setup="The same hedge in both datasets, 2 m apart; DS2 adds ext:height.",
-      expected="Merged only when line_proximity reaches 2 m: kept apart at 1 m (line_proximity follows proximity), "
+      expected="Merged only when lines.proximity reaches 2 m: kept apart at 1 m, "
                "one Line at 3 m and under custom_extensions (Points 0.5 m, Lines 2.5 m).",
       asserts={"default_1m": [("features", "line", 2)],
                "default_3m": [("features", "line", 1), ("feature_attr", "line", None, {"ext:height": "0.8"})],
@@ -587,7 +587,7 @@ CASES = [
                "off": [("features", "line", 2)]}),
  dict(id="E6", title="Points use proximity only",
       setup="A waste basket in both datasets, 1.5 m apart.",
-      expected="Kept apart at 1 m, merged at 3 m; under custom_extensions the larger line_proximity (2.5 m) does not "
+      expected="Kept apart at 1 m, merged at 3 m; under custom_extensions the larger lines.proximity (2.5 m) does not "
                "reach Points, which stay apart at proximity 0.5 m.",
       asserts={"default_1m": [("features", "point", 2)],
                "default_3m": [("features", "point", 1)],

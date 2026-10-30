@@ -8,7 +8,7 @@ Requirement Spec") and are checked by the test harness in
 [`test/union-5.0-harness`](../test/union-5.0-harness/README.md).
 
 Related pages:
-- [union-configurator.html](union-configurator.html) builds a config without writing JSON.
+- [union-configurator.html](../union-configurator/dist/union-configurator.html) builds a config without writing JSON.
 - [union-report.md](union-report.md) explains the run report each union returns.
 - The harness demo ([demo.md](../test/union-5.0-harness/docs/demo.md)) shows what a config
   does on a sample neighbourhood.
@@ -77,7 +77,7 @@ feature is the one kept. Connect rules work in both directions between the two d
     "snap":       { "mode": "default", "proximity": 1 },
     "dedup":      { "mode": "default", "proximity": 1 },
     "connect":    { "mode": "default", "proximity": 1 },
-    "extensions": { "mode": "default", "proximity": 1 }
+    "extensions": { "mode": "default", "points": { "proximity": 1 }, "lines": { "proximity": 1 } }
   }
 }
 ```
@@ -96,7 +96,7 @@ A zip with the union's output and its run report:
 
 ### Can I build a config without writing JSON?
 
-Yes. Open [union-configurator.html](union-configurator.html) in a browser:
+Yes. Open [union-configurator.html](../union-configurator/dist/union-configurator.html) in a browser:
 - it walks through each case (two sidewalk ends close together, a duplicate crossing, a
   crossing that stops short of a sidewalk, and so on), and you choose a distance or turn the
   case off;
@@ -131,7 +131,7 @@ Up to four sections. Each has a `mode`:
 | snap | Points at exactly the same spot join, whatever their type; then crossing, pedestrian, living street, road and other points each join their own kind |
 | dedup | Crossing, pedestrian, living street, road and other lines: a line is a duplicate of one of its own kind when at least 80 % of it lies within `proximity` of it and its direction is within 30° of it (`max_angle`) |
 | connect | `road-crossing` (where a crossing crosses or nearly meets a road), `crossing-sidewalk`, `crossing-living-street`, `pedestrian-pedestrian`, `living-street-living-street`, `crossing-crossing` |
-| extensions | Points of the same type within `proximity` merge. A line merges into a first-dataset line when 70 % of it (`line_overlap`) lies within `line_proximity` of it (`line_proximity` defaults to `proximity`). A building or other polygon covering more than 70 % (`polygon_overlap`) of a first-dataset one merges into it; one that overlaps less is joined with it into one shape. A zone covering more than 70 % (`zone_overlap`) of a first-dataset zone is dropped. `points`, `lines`, `polygons` and `zones` (all `true`) switch each type on or off — see [How do I set up extensions?](#how-do-i-set-up-extensions) |
+| extensions | Every type enabled. Points of the same type within `points.proximity` (0.5 m) merge. A line merges into a first-dataset line when 70 % of it (`lines.min_overlap`) lies within `lines.proximity` (0.5 m) of it. A building or other polygon covering more than 70 % (`polygons.min_overlap`) of a first-dataset one merges into it; one that overlaps less is joined with it into one shape. A zone covering more than 70 % (`zones.min_overlap`) of a first-dataset zone is dropped — see [How do I set up extensions?](#how-do-i-set-up-extensions) |
 
 Nothing else is joined: no default rule joins a road and a sidewalk, a sidewalk and a living
 street, or a crossing and a plain footway. Add a custom rule if you want one.
@@ -226,29 +226,29 @@ Extensions are the features around the network: points (benches, hydrants, lamps
 (fences, walls), polygons (buildings) and zones (pedestrian areas). They have `off` and
 `default` modes and no custom rules; the first dataset's feature is always the one kept.
 
+Each type has its own block. Every block and every key in it is optional:
+
 ```json
 "extensions": {
   "mode": "default",
-  "proximity": 1,
-  "line_proximity": 2.5,
-  "polygons": false
+  "points":   { "enabled": true,  "proximity": 1 },
+  "lines":    { "enabled": true,  "proximity": 2.5, "min_overlap": 0.7 },
+  "polygons": { "enabled": false },
+  "zones":    { "enabled": true,  "min_overlap": 0.7 }
 }
 ```
 
-| Field | Default | Meaning |
+| Type | Settings (default) | What happens when enabled |
 |---|---|---|
-| `points` | `true` | A second-dataset point joins a first-dataset point of the same type within `proximity`. Same type means the same tags, ignoring `ext:*` keys; a point with no other tags matches any type |
-| `lines` | `true` | A second-dataset line joins a first-dataset line when `line_overlap` of it lies within `line_proximity` of it |
-| `polygons` | `true` | A second-dataset polygon covering more than `polygon_overlap` of a first-dataset polygon's area merges into it, keeping the first one's outline. One that overlaps less is joined with it into one shape |
-| `zones` | `true` | A second-dataset zone covering more than `zone_overlap` of a first-dataset zone's area is dropped; the first dataset's zone is kept |
-| `proximity` | 0.5 m | How far apart two points may be (above 0, at most 5 m) |
-| `line_proximity` | `proximity` | Width of the corridor around a first-dataset line (above 0, at most 5 m) |
-| `line_overlap` | 0.7 | Share of the second dataset's line that must lie inside the corridor |
-| `polygon_overlap` | 0.7 | Share of the first dataset's polygon area the second's must cover |
-| `zone_overlap` | 0.7 | Share of the first dataset's zone area the second's must cover |
+| `points` | `enabled` (`true`), `proximity` (0.5 m) | A second-dataset point joins a first-dataset point of the same type within `proximity`. Same type means the same tags, ignoring `ext:*` keys; a point with no other tags matches any type |
+| `lines` | `enabled` (`true`), `proximity` (0.5 m), `min_overlap` (0.7) | A second-dataset line joins a first-dataset line when at least `min_overlap` of its length lies within `proximity` of it |
+| `polygons` | `enabled` (`true`), `min_overlap` (0.7) | A second-dataset polygon covering more than `min_overlap` of a first-dataset polygon's area merges into it, keeping the first one's outline. One that overlaps less is joined with it into one shape |
+| `zones` | `enabled` (`true`), `min_overlap` (0.7) | A second-dataset zone covering more than `min_overlap` of a first-dataset zone's area is dropped; the first dataset's zone is kept |
 
-A type that is `false` keeps both datasets' copies of it. Switching all four off is
-rejected: use `"mode": "off"` instead. What happens to the tags is under
+A type with `"enabled": false` keeps both datasets' copies of it. Disabling all four is
+rejected: use `"mode": "off"` instead. The settings used to be flat keys on `extensions`
+(`proximity`, `line_proximity`, `line_overlap`, `polygon_overlap`, `zone_overlap`); those
+are rejected with a message naming where each one moved. What happens to the tags is under
 [Properties and provenance](#what-happens-to-the-tags-of-merged-extension-features).
 
 ### How do I name a type?
@@ -275,14 +275,14 @@ secondary, tertiary, residential, service, unclassified, trunk or motorway), **o
 | Setting | Allowed |
 |---|---|
 | Snap `proximity` and `others` | 0 to 5 m (0 = the same spot only) |
-| Every other distance: dedup and connect `proximity`, extensions `proximity` and `line_proximity` | above 0, at most 5 m |
-| `min_overlap`, `line_overlap`, `polygon_overlap`, `zone_overlap` | above 0, at most 1 |
+| Every other distance: dedup and connect `proximity`, extensions `points.proximity` and `lines.proximity` | above 0, at most 5 m |
+| `min_overlap` (dedup, and the extensions `lines`, `polygons`, `zones` blocks) | above 0, at most 1 |
 | `max_angle` | above 0, at most 90 degrees |
 | Rules | at most 50 per stage |
 | Rule names | 1–64 characters, no commas, unique within a stage. Connect rules need one; snap and dedup rules left unnamed are called `snap-1`, `dedup-1`, … |
 | `node_tags`, `edge_tags` | values are plain strings, numbers or booleans; `_id`, `_u_id`, `_v_id`, `_w_id` and `ext:union_*` keys can't be set |
 | A section in `off` mode | takes no other settings |
-| `extensions` | at least one of `points`, `lines`, `polygons`, `zones` on |
+| `extensions` | at least one of `points`, `lines`, `polygons`, `zones` enabled |
 | The whole config | at most 64 KB |
 
 ---
@@ -453,12 +453,12 @@ details, and how to run the scale tests, are in the harness's
 
 | 4.x | 5.0 |
 |---|---|
-| `proximity: p` | `config` with `snap`, `dedup`, `connect` and `extensions` all `{"mode": "default", "proximity": p}` |
+| `proximity: p` | `config` with `snap`, `dedup` and `connect` all `{"mode": "default", "proximity": p}`, and `extensions` `{"mode": "default", "points": {"proximity": p}, "lines": {"proximity": p}}` |
 | `entity_filters` edge filters | Custom snap, dedup and connect rules naming those types |
 | `duplicate_buffer_width`, `duplicate_overlap_percentage` | A dedup rule's `proximity` and `min_overlap` (0–1, not 0–100) |
-| line / polygon / zone overlap | `extensions` `line_overlap`, `polygon_overlap`, `zone_overlap` (0–1) |
-| line buffer distance | `extensions` `line_proximity` (above 0, at most 5 m; defaults to `proximity`) |
-| merge one type but not another | `extensions` `points`, `lines`, `polygons`, `zones`: `true` / `false`, all `true` by default; a type that is off keeps both copies |
+| line / polygon / zone overlap | `extensions` `lines.min_overlap`, `polygons.min_overlap`, `zones.min_overlap` (0–1) |
+| line buffer distance | `extensions` `lines.proximity` (above 0, at most 5 m) |
+| merge one type but not another | `extensions` `points`, `lines`, `polygons`, `zones`: `{"enabled": false}` on the type to leave alone; a type that is not enabled keeps both copies |
 
 The defaults are close to 4.x, not identical: connect rules add connector lines instead of
 moving ends, and anything 4.x did implicitly (for example road × crossing nodes) is now a
