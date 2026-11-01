@@ -58,7 +58,7 @@ CASES = [
     ("custom snap needs a rule", {"snap": {"mode": "custom"}},                           ("error", "custom mode needs at least one rule")),
     ("custom dedup needs rules", {"dedup": {"mode": "custom", "rules": []}},             ("error", "config.dedup.rules: custom mode needs a non-empty list")),
     ("custom connect needs rules", {"connect": {"mode": "custom"}},                      ("error", "config.connect.rules: custom mode needs a non-empty list")),
-    ("at most 50 rules",         {"connect": {"mode": "custom", "rules": many(51)}},     ("error", "at most 50 rules per stage (got 51)")),
+    ("at most 15 rules",         {"connect": {"mode": "custom", "rules": many(16)}},     ("error", "at most 15 rules per stage (got 16)")),
     # ── ranges (V2) ─────────────────────────────────────────────────────────
     ("snap proximity above 5",   {"snap": {"mode": "default", "proximity": 6}},          ("error", "config.snap.proximity: must be at least 0 and at most 5")),
     ("snap proximity negative",  {"snap": {"mode": "default", "proximity": -1}},         ("error", "config.snap.proximity: must be at least 0")),
@@ -170,7 +170,7 @@ CASES = [
                                  ("ok", [("connect.rules[1].node_tags", "==", {}), ("connect.rules[1].edge_tags", "==", {})])),
     ("default connect: empty tag sets", {"connect": {"mode": "default"}},
                                  ("ok", [("connect.rules[2].node_tags", "==", {}), ("connect.rules[2].edge_tags", "==", {})])),
-    ("50 rules is the limit",    {"connect": {"mode": "custom", "rules": many(50)}},     ("ok", [("connect.rules", "len", 50)])),
+    ("15 rules is the limit",    {"connect": {"mode": "custom", "rules": many(15)}},     ("ok", [("connect.rules", "len", 15)])),
 ]
 
 

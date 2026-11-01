@@ -44,7 +44,7 @@ export const REMOVED_UNION_PARAMETERS = ["proximity", "entity_filters"] as const
 /** Output name of the union's `report` cursor inside the job's zip. */
 export const UNION_REPORT_FILE_NAME = "union_report.json";
 
-/** Largest config accepted (bytes of JSON). 50 rules per stage fit comfortably. */
+/** Largest config accepted (bytes of JSON). The union's limit of 15 rules per stage fits comfortably. */
 export const MAX_UNION_CONFIG_BYTES = 64 * 1024;
 
 const SECTION_SET = new Set<string>(UNION_CONFIG_SECTIONS);

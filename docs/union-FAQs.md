@@ -278,7 +278,7 @@ secondary, tertiary, residential, service, unclassified, trunk or motorway), **o
 | Every other distance: dedup and connect `proximity`, extensions `points.proximity` and `lines.proximity` | above 0, at most 5 m |
 | `min_overlap` (dedup, and the extensions `lines`, `polygons`, `zones` blocks) | above 0, at most 1 |
 | `max_angle` | above 0, at most 90 degrees |
-| Rules | at most 50 per stage |
+| Rules | at most 15 per stage (each rule is one more pass over the data it matches) |
 | Rule names | 1–64 characters, no commas, unique within a stage. Connect rules need one; snap and dedup rules left unnamed are called `snap-1`, `dedup-1`, … |
 | `node_tags`, `edge_tags` | values are plain strings, numbers or booleans; `_id`, `_u_id`, `_v_id`, `_w_id` and `ext:union_*` keys can't be set |
 | A section in `off` mode | takes no other settings |
