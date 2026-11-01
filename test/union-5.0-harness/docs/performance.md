@@ -85,11 +85,13 @@ the database server's disk (or in `temp_tablespaces`): about 2 GB per million
 input edges at the peak. They are dropped when the job's transaction ends,
 including when it fails.
 
-**Memory.** The union raises `work_mem` to 128 MB and `maintenance_work_mem` to
-512 MB for its own transaction (it never lowers a higher server setting) and
-switches JIT off. Peak backend memory in the 3.66M-edge run was
-about 0.8 GB. Raising `temp_buffers` gained only about 2 %, so no server
-setting needs to change.
+**Memory.** The union uses the server's own `work_mem` and
+`maintenance_work_mem`; it only switches JIT off for its transaction. With less
+working memory, large hashes and sorts spill to temp files, so a big union runs
+slower on a server with a small `work_mem`, with the same output. The timings
+above were measured with `work_mem` 128 MB and `maintenance_work_mem` 512 MB;
+peak backend memory in the 3.66M-edge run was about 0.8 GB. Raising
+`temp_buffers` gained only about 2 %.
 
 **Timeouts.** One job is one transaction that stays open while the backend
 reads the output. `statement_timeout` and `idle_in_transaction_session_timeout`
@@ -132,8 +134,8 @@ grow much faster than the data):
    index.
 8. **Smaller fixes.** Snap topology's OR join became two index joins. The
    zone-node chain follows only zone nodes, not every node. The output's
-   mixed-type check uses a hash instead of sorting every property. Working
-   memory and JIT are set per transaction. Staging tables are dropped once used,
+   mixed-type check uses a hash instead of sorting every property. JIT is
+   switched off per transaction. Staging tables are dropped once used,
    and loaded rows are no longer rewritten (30 % less temp space).
 
 **Determinism.** Four ties were broken arbitrarily, so the same input could

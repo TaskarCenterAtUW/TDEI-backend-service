@@ -46,46 +46,6 @@
 -- `default` modes run published, versioned rule sets (see
 -- content.union5_validate_config); the run report returns the rules actually
 -- used, per-rule counts and warnings.
---
--- Requirement: "Union 5.0 — Configurable Operations Requirement Spec".
--- Harness:     test/union-5.0-harness (profiles, cases, run_harness.sh).
---
--- PERFORMANCE (built for millions of features per dataset; every step's cost
--- grows linearly with the data — see the harness's docs/performance.md):
---   • every spatial search is a GIST index probe; no step compares all pairs.
---     Node identity is a hash join on exact coordinates; every lookup by id,
---     node or match is an index or hash join, never a scan per row.
---   • types are matched once per distinct tag signature, while loading.
---   • snap and dedup are one set-based pass per rule, connect one pass per
---     rule; the stranding guard re-checks only edges next to a restoration.
---   • working tables are temp tables, filled in one statement, indexed BEFORE
---     anything updates them (an index built after an update in the same
---     transaction is unusable until it ends), and analysed.
---   • dedup buffers only the anchor edges a candidate can reach, and settles
---     coverage with the nearest anchor edge's buffer when that suffices.
---   • work_mem / maintenance_work_mem are raised for this transaction only
---     (never lowered), JIT is off. The report gives seconds per stage
---     (timings_s). Ties are broken explicitly, so the output is deterministic.
---
--- GUARDS (always on; none of them creates a connection):
---   • anchors: in snap and dedup one side stays fixed (DS1 unless a rule says
---     ds2); a kerb never moves; nothing moves twice.
---   • connect acts on DS1 × DS2 pairs only; lines whose layer/level/bridge/
---     tunnel differ never join; elements a connect rule created are never
---     moved, split or removed by a later rule.
---   • connectivity guard: an edge whose two ends are both on the anchor network
---     is removed as a duplicate only when the anchor edges inside its buffer
---     already join those two ends (or it joins the same two nodes as one).
---   • stranding guard: a removed duplicate is restored when its removal left a
---     surviving edge hanging off a node that is not on the anchor network.
---   • exact node identity: edge ends are matched to nodes by exact coordinate.
---   • nodes the union left unreferenced are dropped; input orphans are kept.
---
--- IDS: existing nodes keep their database id as output _id (as 4.x); created
--- nodes get ids above the highest input node id; edges are renumbered. Audit
--- fields that name other features carry their ORIGINAL GeoJSON _id.
---
--- Deploying this drops the 4.x signatures (no backward compatibility).
 -- =============================================================================
 
 DROP FUNCTION IF EXISTS content.tdei_union_dataset(CHARACTER VARYING, CHARACTER VARYING, REAL, JSONB);
@@ -681,16 +641,9 @@ BEGIN
     RAISE NOTICE 'union 5.0: % + %', v_ds1, v_ds2;
     RAISE NOTICE 'effective config: %', v_cfg::text;
 
-    -- Working memory for this transaction only, so hashes and sorts over millions
-    -- of rows stay in memory and index builds are quick. A higher server setting
-    -- is kept. JIT is off: compiling each of the union's statements costs more
-    -- than it saves (the time is spent inside PostGIS functions).
-    IF pg_size_bytes(current_setting('work_mem')) < pg_size_bytes('128MB') THEN
-        PERFORM set_config('work_mem', '128MB', true);
-    END IF;
-    IF pg_size_bytes(current_setting('maintenance_work_mem')) < pg_size_bytes('512MB') THEN
-        PERFORM set_config('maintenance_work_mem', '512MB', true);
-    END IF;
+    -- JIT is off for this transaction: compiling each of the union's statements
+    -- costs more than it saves (the time is spent inside PostGIS functions).
+    -- Memory settings are left to the server's configuration.
     PERFORM set_config('jit', 'off', true);
 
     -- =========================================================================
