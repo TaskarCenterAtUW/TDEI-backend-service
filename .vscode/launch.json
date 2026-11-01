@@ -5,6 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "runtimeVersion": "24",
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
