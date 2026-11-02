@@ -1,0 +1,23 @@
+{
+  "name": "@tdei/union-configurator",
+  "version": "1.0.0",
+  "description": "Builds the config of a union 5.0 job (content.tdei_union_dataset)",
+  "type": "module",
+  "main": "dist/union-configurator.js",
+  "module": "dist/union-configurator.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./dist/union-configurator.js"
+    }
+  },
+  "files": [
+    "dist/union-configurator.js",
+    "index.d.ts"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "node build.mjs"
+  }
+}

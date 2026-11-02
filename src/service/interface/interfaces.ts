@@ -411,6 +411,10 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
         let join_condition_compiled = this.join_condition.replace(/geometry_target/g, meta.transform_geometry_target);
         join_condition_compiled = join_condition_compiled.replace(/geometry_source/g, meta.transform_geometry_source);
 
+        // Source id column, used as the tie-breaker wherever candidates are ranked by distance:
+        // equal distances must resolve the same way on every run, not by physical row order.
+        const source_id_column = this.source_dimension === 'extension' ? 'ext_id' : `${this.source_dimension}_id`;
+
         let querySteps: string[] = [];
 
         if (this.assignment_method === AssignmentMethod.EXCLUSIVE) {
@@ -425,7 +429,7 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
                    ST_Distance(${meta.transform_geometry_target}, ${meta.transform_geometry_source}) AS dist_m,
                    ROW_NUMBER() OVER (
                      PARTITION BY target.${this.target_dimension}_id
-                     ORDER BY ${meta.transform_geometry_target} <-> ${meta.transform_geometry_source}
+                     ORDER BY ${meta.transform_geometry_target} <-> ${meta.transform_geometry_source}, source.${source_id_column}
                    ) AS source_rank
             FROM ${meta.target_table}
             LEFT JOIN LATERAL (
@@ -435,7 +439,7 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
                 SOURCE.tdei_dataset_id = '${this.source_dataset_id}'
                 AND ${join_condition_compiled}
                 ${filter_source ? `AND (${filter_source})` : ''}
-                ORDER BY ${meta.transform_geometry_target} <-> ${meta.transform_geometry_source}
+                ORDER BY ${meta.transform_geometry_target} <-> ${meta.transform_geometry_source}, source.${source_id_column}
                 LIMIT ${MAX_KNN}
             ) source ON TRUE
             WHERE target.tdei_dataset_id = '${this.target_dataset_id}'
@@ -449,30 +453,39 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
                 /* 3. tmp_final_assign */
                 `
             CREATE TEMP TABLE tmp_final_assign ON COMMIT DROP AS
-            WITH Comp AS (
-                SELECT *,
-                       ROW_NUMBER() OVER (PARTITION BY s_id ORDER BY dist_m) AS target_priority
+            WITH FirstChoice AS (
+                /* round 1: only first choices compete; the closest target wins each source */
+                SELECT t_id, s_id,
+                       ROW_NUMBER() OVER (PARTITION BY s_id ORDER BY dist_m, t_id) AS target_priority
                 FROM tmp_candidates
+                WHERE source_rank = 1
+                  AND s_id IS NOT NULL
             ),
             Winners AS (
                 SELECT t_id, s_id
-                FROM Comp
-                WHERE source_rank = 1
-                  AND target_priority = 1
+                FROM FirstChoice
+                WHERE target_priority = 1
             ),
             Losers AS (
                 SELECT t_id
-                FROM Comp
-                WHERE source_rank = 1
-                  AND target_priority > 1
+                FROM FirstChoice
+                WHERE target_priority > 1
+            ),
+            Fallback AS (
+                /* round 2: losers fall back to their second choice, only if no winner holds it;
+                   the closest loser gets it */
+                SELECT tc.t_id, tc.s_id,
+                       ROW_NUMBER() OVER (PARTITION BY tc.s_id ORDER BY tc.dist_m, tc.t_id) AS fallback_priority
+                FROM tmp_candidates tc
+                JOIN Losers l
+                  ON l.t_id = tc.t_id
+                WHERE tc.source_rank = 2
+                  AND NOT EXISTS (SELECT 1 FROM Winners w WHERE w.s_id = tc.s_id)
             )
             SELECT t_id, s_id FROM Winners
             UNION ALL
-            SELECT l.t_id, tc.s_id
-            FROM Losers l
-            JOIN tmp_candidates tc
-              ON l.t_id = tc.t_id
-            WHERE tc.source_rank = 2
+            SELECT t_id, s_id FROM Fallback
+            WHERE fallback_priority = 1
             `,
 
                 /* 4. index */
@@ -525,7 +538,7 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
                     ) AS dist_m,
                     ROW_NUMBER() OVER (
                         PARTITION BY target.${this.target_dimension}_id
-                        ORDER BY ${meta.transform_geometry_target} <-> ${meta.transform_geometry_source}
+                        ORDER BY ${meta.transform_geometry_target} <-> ${meta.transform_geometry_source}, source.${source_id_column}
                     ) AS source_rank
                 FROM ${meta.target_table}
                 LEFT JOIN LATERAL (
@@ -534,7 +547,7 @@ export class SpatialJoinRequestParams extends AbstractDomainEntity {
                     WHERE source.tdei_dataset_id = '${this.source_dataset_id}'
                       AND ${join_condition_compiled}
                       ${filter_source ? `AND (${filter_source})` : ''}
-                    ORDER BY ${meta.transform_geometry_target} <-> ${meta.transform_geometry_source}
+                    ORDER BY ${meta.transform_geometry_target} <-> ${meta.transform_geometry_source}, source.${source_id_column}
                     LIMIT ${MAX_KNN}
                 ) source ON TRUE
                 WHERE target.tdei_dataset_id = '${this.target_dataset_id}'

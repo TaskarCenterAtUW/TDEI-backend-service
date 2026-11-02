@@ -1,0 +1,2703 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.629964
+      ],
+      [
+       -123.0991906,
+       44.629964
+      ],
+      [
+       -123.0991906,
+       44.630036
+      ],
+      [
+       -123.1000506,
+       44.630036
+      ],
+      [
+       -123.1000506,
+       44.629964
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "A",
+    "title": "Exact duplicate sidewalk",
+    "profiles": "off, default_1m, default_3m, connect_only",
+    "label": "A - Exact duplicate sidewalk",
+    "setup": "Identical sidewalk in both datasets; the DS1 and DS2 end nodes carry different tactile_paving values.",
+    "expected": "Coincident ends join; the DS2 copy is removed as a duplicate. The end node keeps DS1's tactile_paving=no, gains DS2-only ext:surface, and audits DS2's 'yes'."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.630144
+      ],
+      [
+       -123.0991906,
+       44.630144
+      ],
+      [
+       -123.0991906,
+       44.6302268
+      ],
+      [
+       -123.1000506,
+       44.6302268
+      ],
+      [
+       -123.1000506,
+       44.630144
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "B",
+    "title": "Drifting near-parallel sidewalk",
+    "profiles": "default_1m, default_3m",
+    "label": "B - Drifting near-parallel sidewalk",
+    "setup": "DS2 sidewalk 0.4-1.2 m off the DS1 sidewalk, not quite parallel.",
+    "expected": "Its ends snap onto the DS1 ends and it is removed as a duplicate."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0989756,
+       44.629784
+      ],
+      [
+       -123.098495,
+       44.629784
+      ],
+      [
+       -123.098495,
+       44.630756
+      ],
+      [
+       -123.0989756,
+       44.630756
+      ],
+      [
+       -123.0989756,
+       44.629784
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "C",
+    "title": "Road x crossing",
+    "profiles": "default_1m, default_3m",
+    "label": "C - Road x crossing",
+    "setup": "DS1 road crossed by a DS2 crossing, no node where they meet.",
+    "expected": "road-crossing (point) makes one node where they cross; road and crossing each split in two."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0983813,
+       44.630054
+      ],
+      [
+       -123.0981789,
+       44.630054
+      ],
+      [
+       -123.0981789,
+       44.6301485
+      ],
+      [
+       -123.0983813,
+       44.6301485
+      ],
+      [
+       -123.0983813,
+       44.630054
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "D",
+    "title": "Two kerbs 2.5 m apart",
+    "profiles": "default_1m, default_3m",
+    "label": "D - Two kerbs 2.5 m apart",
+    "setup": "Each dataset has a sidewalk ending in a kerb; the kerbs are 2.5 m apart.",
+    "expected": "Kerbs never merge with each other. At 1 m both sidewalks and kerbs remain. At 3 m the DS2 sidewalk is removed as a duplicate and its kerb goes with it (open design question)."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.630504
+      ],
+      [
+       -123.0991906,
+       44.630504
+      ],
+      [
+       -123.0991906,
+       44.6305895
+      ],
+      [
+       -123.1000506,
+       44.6305895
+      ],
+      [
+       -123.1000506,
+       44.630504
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "E",
+    "title": "Road and sidewalk 1.5 m apart",
+    "profiles": "default_1m, default_3m",
+    "label": "E - Road and sidewalk 1.5 m apart",
+    "setup": "DS1 road with a DS2 sidewalk running alongside, inside proximity.",
+    "expected": "Both kept and not connected: no default rule joins a road and a sidewalk."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.630774
+      ],
+      [
+       -123.0991906,
+       44.630774
+      ],
+      [
+       -123.0991906,
+       44.630873
+      ],
+      [
+       -123.1000506,
+       44.630873
+      ],
+      [
+       -123.1000506,
+       44.630774
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "F",
+    "title": "Living street vs sidewalk",
+    "profiles": "default_1m, default_3m",
+    "label": "F - Living street vs sidewalk",
+    "setup": "Two living streets 0.5 m apart, plus a DS2 sidewalk 3 m away.",
+    "expected": "The living streets merge into one; the sidewalk stays separate."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0980272,
+       44.629964
+      ],
+      [
+       -123.0979108,
+       44.629964
+      ],
+      [
+       -123.0979108,
+       44.630576
+      ],
+      [
+       -123.0980272,
+       44.630576
+      ],
+      [
+       -123.0980272,
+       44.629964
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "G",
+    "title": "Short T-stub onto a span",
+    "profiles": "default_1m, default_3m",
+    "label": "G - Short T-stub onto a span",
+    "setup": "1.2 m DS2 stub meeting the MIDDLE of a long DS1 sidewalk (no node there).",
+    "expected": "The angle guard keeps the stub (it crosses, it does not run alongside). pedestrian-pedestrian splits the DS1 sidewalk where the stub ends on it."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.631044
+      ],
+      [
+       -123.0989377,
+       44.631044
+      ],
+      [
+       -123.0989377,
+       44.6311178
+      ],
+      [
+       -123.1000506,
+       44.6311178
+      ],
+      [
+       -123.1000506,
+       44.631044
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "H",
+    "title": "Endpoints 0.36 m apart",
+    "profiles": "default_1m, default_3m",
+    "label": "H - Endpoints 0.36 m apart",
+    "setup": "DS2 sidewalk starts 0.36 m from the end of a DS1 sidewalk.",
+    "expected": "The DS2 end snaps onto the DS1 node; the node keeps DS1's attributes and gains DS2-only ones."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0975213,
+       44.629964
+      ],
+      [
+       -123.0974201,
+       44.629964
+      ],
+      [
+       -123.0974201,
+       44.630756
+      ],
+      [
+       -123.0975213,
+       44.630756
+      ],
+      [
+       -123.0975213,
+       44.629964
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "I",
+    "title": "Road only in DS2",
+    "profiles": "default_1m, default_3m",
+    "label": "I - Road only in DS2",
+    "setup": "Service road present only in DS2.",
+    "expected": "Kept unchanged \u2014 nothing to merge with."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.631134
+      ],
+      [
+       -123.0989377,
+       44.631134
+      ],
+      [
+       -123.0989377,
+       44.631386
+      ],
+      [
+       -123.1000506,
+       44.631386
+      ],
+      [
+       -123.1000506,
+       44.631134
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "J",
+    "title": "DS1 spur ends on a DS2 span",
+    "profiles": "default_1m, default_3m",
+    "label": "J - DS1 spur ends on a DS2 span",
+    "setup": "DS1 spur ends on the middle of a long DS2 sidewalk.",
+    "expected": "pedestrian-pedestrian splits the DS2 sidewalk at the spur's end; all three pieces meet there."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0975213,
+       44.631044
+      ],
+      [
+       -123.0966613,
+       44.631044
+      ],
+      [
+       -123.0966613,
+       44.6311196
+      ],
+      [
+       -123.0975213,
+       44.6311196
+      ],
+      [
+       -123.0975213,
+       44.631044
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "K",
+    "title": "Plain footway duplicate",
+    "profiles": "default_1m, default_3m",
+    "label": "K - Plain footway duplicate",
+    "setup": "Two plain footways (highway=footway, no subtype) 0.4 m apart.",
+    "expected": "Merged into one."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0972051,
+       44.629964
+      ],
+      [
+       -123.0969142,
+       44.629964
+      ],
+      [
+       -123.0969142,
+       44.630756
+      ],
+      [
+       -123.0972051,
+       44.630756
+      ],
+      [
+       -123.0972051,
+       44.629964
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "L",
+    "title": "Crossing ending on a road node",
+    "profiles": "default_1m, default_3m",
+    "label": "L - Crossing ending on a road node",
+    "setup": "DS2 crossing ends EXACTLY on an existing mid node of a DS1 road.",
+    "expected": "The coincident nodes join and the existing node is reused \u2014 no new node. The road is split there; the crossing joins it."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.631584
+      ],
+      [
+       -123.09957,
+       44.631584
+      ],
+      [
+       -123.09957,
+       44.631656
+      ],
+      [
+       -123.1000506,
+       44.631656
+      ],
+      [
+       -123.1000506,
+       44.631584
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "M",
+    "title": "Duplicate crossing",
+    "profiles": "default_1m, default_3m",
+    "label": "M - Duplicate crossing",
+    "setup": "Identical crossing in both datasets.",
+    "expected": "Merged into one."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.631854
+      ],
+      [
+       -123.0993171,
+       44.631854
+      ],
+      [
+       -123.0993171,
+       44.631926
+      ],
+      [
+       -123.1000506,
+       44.631926
+      ],
+      [
+       -123.1000506,
+       44.631854
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "N",
+    "title": "Sidewalk - footway - crossing chain",
+    "profiles": "off, default_1m, default_3m",
+    "label": "N - Sidewalk - footway - crossing chain",
+    "setup": "DS1 sidewalk and plain-footway connector; DS2 crossing continuing the chain at the same coordinate.",
+    "expected": "One continuous route: the coincident footway and crossing ends join (snap coincident)."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0960037,
+       44.629964
+      ],
+      [
+       -123.0953966,
+       44.629964
+      ],
+      [
+       -123.0953966,
+       44.630171
+      ],
+      [
+       -123.0960037,
+       44.630171
+      ],
+      [
+       -123.0960037,
+       44.629964
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "P",
+    "title": "Duplicate with a crossing attached",
+    "profiles": "default_1m, default_3m",
+    "label": "P - Duplicate with a crossing attached",
+    "setup": "DS2 duplicate sidewalk with a DS2 crossing hanging off its end.",
+    "expected": "The duplicate's ends snap onto the DS1 ends, taking the crossing along; the duplicate is removed and the crossing stays connected."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0960037,
+       44.630324
+      ],
+      [
+       -123.0946379,
+       44.630324
+      ],
+      [
+       -123.0946379,
+       44.6303969
+      ],
+      [
+       -123.0960037,
+       44.6303969
+      ],
+      [
+       -123.0960037,
+       44.630324
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "Q",
+    "title": "Three-segment chain between two DS1 ends",
+    "profiles": "default_1m, default_3m",
+    "label": "Q - Three-segment chain between two DS1 ends",
+    "setup": "DS2 chain of three sidewalk segments bridging two DS1 sidewalks.",
+    "expected": "One continuous route end to end; all four junctions connect."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0960037,
+       44.630684
+      ],
+      [
+       -123.0946379,
+       44.630684
+      ],
+      [
+       -123.0946379,
+       44.630891
+      ],
+      [
+       -123.0960037,
+       44.630891
+      ],
+      [
+       -123.0960037,
+       44.630684
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "R",
+    "title": "Mid-span duplicate with a spur",
+    "profiles": "default_1m, default_3m",
+    "label": "R - Mid-span duplicate with a spur",
+    "setup": "DS2 duplicate along the middle of a DS1 sidewalk, with a DS2 spur off its end.",
+    "expected": "The duplicate is removed; pedestrian-pedestrian then joins the spur's end to the DS1 sidewalk with a connector, so the stranding guard has nothing to restore."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0960037,
+       44.631044
+      ],
+      [
+       -123.0946379,
+       44.631044
+      ],
+      [
+       -123.0946379,
+       44.631251
+      ],
+      [
+       -123.0960037,
+       44.631251
+      ],
+      [
+       -123.0960037,
+       44.631044
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "S",
+    "title": "T onto a DS1 span",
+    "profiles": "default_1m, default_3m",
+    "label": "S - T onto a DS1 span",
+    "setup": "DS2 sidewalk ends 0.2 m from the middle of a DS1 sidewalk.",
+    "expected": "The DS1 sidewalk gets a node and is split there; a connector joins the DS2 end to it."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0967625,
+       44.631584
+      ],
+      [
+       -123.0953334,
+       44.631584
+      ],
+      [
+       -123.0953334,
+       44.631674
+      ],
+      [
+       -123.0967625,
+       44.631674
+      ],
+      [
+       -123.0967625,
+       44.631584
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "U",
+    "title": "Partial overlap",
+    "profiles": "default_1m, default_3m",
+    "label": "U - Partial overlap",
+    "setup": "DS2 sidewalk 2 m off a DS1 sidewalk, continuing 45 m past its end.",
+    "expected": "Kept whole and not connected at 1 m and 3 m: about 52% of it overlaps (below 80%), dedup never trims an edge, and the ends run alongside the other line, so no T junction (angle guard). Changed from 4.x, which split and half-removed it at 3 m."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.632124
+      ],
+      [
+       -123.0991906,
+       44.632124
+      ],
+      [
+       -123.0991906,
+       44.632196
+      ],
+      [
+       -123.1000506,
+       44.632196
+      ],
+      [
+       -123.1000506,
+       44.632124
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "V",
+    "title": "Duplicate, surfaces differ",
+    "profiles": "default_1m, default_3m",
+    "label": "V - Duplicate, surfaces differ",
+    "setup": "Identical sidewalk in both datasets; DS1 tagged surface=concrete, DS2 surface=asphalt.",
+    "expected": "One sidewalk: the DS2 copy is a duplicate whatever its tags."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0987859,
+       44.632124
+      ],
+      [
+       -123.0983054,
+       44.632124
+      ],
+      [
+       -123.0983054,
+       44.632376
+      ],
+      [
+       -123.0987859,
+       44.632376
+      ],
+      [
+       -123.0987859,
+       44.632124
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "W",
+    "title": "Coincident kerb, attributes differ",
+    "profiles": "off, default_1m, default_3m",
+    "label": "W - Coincident kerb, attributes differ",
+    "setup": "DS1 and DS2 sidewalks meet at a kerb node present in both; DS2's copy adds tactile_paving=yes.",
+    "expected": "The coincident kerbs join (kerbs only ever join when coincident): one node joining both sidewalks, keeping DS1's tags, gaining tactile_paving=yes and auditing it."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.632664
+      ],
+      [
+       -123.0994435,
+       44.632664
+      ],
+      [
+       -123.0994435,
+       44.633006
+      ],
+      [
+       -123.1000506,
+       44.633006
+      ],
+      [
+       -123.1000506,
+       44.632664
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "X1",
+    "title": "Crossing ends on a sidewalk, next to a corner",
+    "profiles": "default_1m, default_3m",
+    "label": "X1 - Crossing ends on a sidewalk, next to a corner",
+    "setup": "DS2 crossing ends on the span of a DS1 sidewalk, 0.6 m below the sidewalk's corner node.",
+    "expected": "crossing-sidewalk splits the sidewalk at the crossing end (gap 0, no connector); nothing moves and the corner stays as it is."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0992918,
+       44.632664
+      ],
+      [
+       -123.0986847,
+       44.632664
+      ],
+      [
+       -123.0986847,
+       44.633006
+      ],
+      [
+       -123.0992918,
+       44.633006
+      ],
+      [
+       -123.0992918,
+       44.632664
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "X2",
+    "title": "Same, datasets swapped",
+    "profiles": "default_1m, default_3m",
+    "label": "X2 - Same, datasets swapped",
+    "setup": "DS1 crossing ends on the span of a DS2 sidewalk, 0.6 m below the DS2 sidewalk's corner node.",
+    "expected": "The DS2 sidewalk is split at the DS1 crossing end; the DS2 corner stays as the corner."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0982801,
+       44.632664
+      ],
+      [
+       -123.097926,
+       44.632664
+      ],
+      [
+       -123.097926,
+       44.633006
+      ],
+      [
+       -123.0982801,
+       44.633006
+      ],
+      [
+       -123.0982801,
+       44.632664
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "X3",
+    "title": "Kerb on a sidewalk span",
+    "profiles": "default_1m, default_3m, connect_only",
+    "label": "X3 - Kerb on a sidewalk span",
+    "setup": "DS2 crossing ends in a kerb lying exactly on the span of a DS1 sidewalk.",
+    "expected": "The sidewalk is split at the kerb; the kerb keeps its position and joins sidewalk and crossing."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0975213,
+       44.632664
+      ],
+      [
+       -123.0971672,
+       44.632664
+      ],
+      [
+       -123.0971672,
+       44.633006
+      ],
+      [
+       -123.0975213,
+       44.633006
+      ],
+      [
+       -123.0975213,
+       44.632664
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "X4",
+    "title": "Kerb 0.4 m short of a sidewalk span",
+    "profiles": "default_1m, default_3m, connect_only",
+    "label": "X4 - Kerb 0.4 m short of a sidewalk span",
+    "setup": "DS2 crossing ends in a kerb 0.4 m short of the span of a DS1 sidewalk.",
+    "expected": "The kerb never moves. The sidewalk gets a node and is split there; a 0.4 m connector joins the kerb to it. The sidewalk keeps its shape (4.x bent it to the kerb)."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0967625,
+       44.632664
+      ],
+      [
+       -123.0966613,
+       44.632664
+      ],
+      [
+       -123.0966613,
+       44.633141
+      ],
+      [
+       -123.0967625,
+       44.633141
+      ],
+      [
+       -123.0967625,
+       44.632664
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "X5",
+    "title": "Kerb 0.4 m beyond a sidewalk end",
+    "profiles": "default_1m, default_3m",
+    "label": "X5 - Kerb 0.4 m beyond a sidewalk end",
+    "setup": "DS2 crossing ends in a kerb 0.4 m beyond the end of a DS1 sidewalk, in line with it.",
+    "expected": "Connected: a connector joins the kerb to the sidewalk's end node (4.x left them apart). The kerb does not move."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0960037,
+       44.632664
+      ],
+      [
+       -123.0959025,
+       44.632664
+      ],
+      [
+       -123.0959025,
+       44.633141
+      ],
+      [
+       -123.0960037,
+       44.633141
+      ],
+      [
+       -123.0960037,
+       44.632664
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "X6",
+    "title": "Crossing end 0.4 m beyond a sidewalk end",
+    "profiles": "default_1m, default_3m",
+    "label": "X6 - Crossing end 0.4 m beyond a sidewalk end",
+    "setup": "As X5, but the crossing end is a bare node.",
+    "expected": "A connector joins the crossing end to the sidewalk's end node; neither moves."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0952449,
+       44.632664
+      ],
+      [
+       -123.0951437,
+       44.632664
+      ],
+      [
+       -123.0951437,
+       44.633141
+      ],
+      [
+       -123.0952449,
+       44.633141
+      ],
+      [
+       -123.0952449,
+       44.632664
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "X7",
+    "title": "Sidewalk ends 0.4 m short of a DS1 kerb",
+    "profiles": "default_1m, default_3m",
+    "label": "X7 - Sidewalk ends 0.4 m short of a DS1 kerb",
+    "setup": "DS1 crossing ends in a kerb; a DS2 sidewalk ends 0.4 m short of it.",
+    "expected": "A connector joins the kerb to the sidewalk end. The kerb keeps its position and its tags."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.633204
+      ],
+      [
+       -123.0996965,
+       44.633204
+      ],
+      [
+       -123.0996965,
+       44.633546
+      ],
+      [
+       -123.1000506,
+       44.633546
+      ],
+      [
+       -123.1000506,
+       44.633204
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "X8",
+    "title": "Crossing ends on a plain footway",
+    "profiles": "default_1m, default_3m",
+    "label": "X8 - Crossing ends on a plain footway",
+    "setup": "DS2 crossing ends on the span of a DS1 plain footway (highway=footway, no subtype).",
+    "expected": "Not joined: no default rule joins a crossing to a plain footway (add one to get it)."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0992918,
+       44.633204
+      ],
+      [
+       -123.0989377,
+       44.633204
+      ],
+      [
+       -123.0989377,
+       44.633546
+      ],
+      [
+       -123.0992918,
+       44.633546
+      ],
+      [
+       -123.0992918,
+       44.633204
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "X9",
+    "title": "Two crossings 0.3 m apart on a sidewalk",
+    "profiles": "default_1m, default_3m",
+    "label": "X9 - Two crossings 0.3 m apart on a sidewalk",
+    "setup": "Two DS2 crossings end 0.3 m apart on the span of the same DS1 sidewalk.",
+    "expected": "The sidewalk is split at each crossing end in one pass: three pieces, two junctions."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0985962,
+       44.632979
+      ],
+      [
+       -123.0977995,
+       44.632979
+      ],
+      [
+       -123.0977995,
+       44.633546
+      ],
+      [
+       -123.0985962,
+       44.633546
+      ],
+      [
+       -123.0985962,
+       44.632979
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "X10",
+    "title": "Crossing junction near a sidewalk corner",
+    "profiles": "default_1m, default_3m",
+    "label": "X10 - Crossing junction near a sidewalk corner",
+    "setup": "DS2 sidewalk bends round a corner as one line. DS1 crossings meet at a junction 2.6 m from the corner; one of them ends exactly on the corner.",
+    "expected": "The coincident corner nodes join and the DS2 sidewalk is split there. The junction 2.6 m away never joins the sidewalk: a crossing at it already reaches the corner (nearer end only)."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0970787,
+       44.632979
+      ],
+      [
+       -123.0962819,
+       44.632979
+      ],
+      [
+       -123.0962819,
+       44.633546
+      ],
+      [
+       -123.0970787,
+       44.633546
+      ],
+      [
+       -123.0970787,
+       44.632979
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "X11",
+    "title": "Same, datasets swapped",
+    "profiles": "default_1m, default_3m",
+    "label": "X11 - Same, datasets swapped",
+    "setup": "DS1 sidewalk bends round a corner as one line. DS2 crossings meet at a junction 2.6 m from the corner; one of them ends exactly on the corner.",
+    "expected": "The DS1 sidewalk is split at the corner, where the crossing joins it. The junction keeps its position; no crossing collapses."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0994611,
+       44.6338268
+      ],
+      [
+       -123.0990119,
+       44.6338268
+      ],
+      [
+       -123.0990119,
+       44.6340551
+      ],
+      [
+       -123.0994611,
+       44.6340551
+      ],
+      [
+       -123.0994611,
+       44.6338268
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "X12",
+    "title": "Sidewalk vertex beside a crossing (real data)",
+    "profiles": "default_1m, default_3m",
+    "label": "X12 - Sidewalk vertex beside a crossing (real data)",
+    "setup": "DS1 sidewalk bends round a corner as one line, with a vertex S 2.3 m west. DS2 crossings: A on the corner, junction B 0.6 m east, an east crossing with a bend 2.7 m from the corner, and a south crossing passing 2.3 m from S.",
+    "expected": "The sidewalk is split only at the corner, where crossing A-B ends. No crossing is cut or moved."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0987024,
+       44.6338268
+      ],
+      [
+       -123.0982531,
+       44.6338268
+      ],
+      [
+       -123.0982531,
+       44.6340551
+      ],
+      [
+       -123.0987024,
+       44.6340551
+      ],
+      [
+       -123.0987024,
+       44.6338268
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "X13",
+    "title": "Same, datasets swapped",
+    "profiles": "default_1m, default_3m",
+    "label": "X13 - Same, datasets swapped",
+    "setup": "As X12 with the datasets swapped: DS1 crossings, DS2 sidewalk.",
+    "expected": "The sidewalk is split only at the corner, where crossing A-B ends. No crossing is cut or moved."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.634284
+      ],
+      [
+       -123.0996965,
+       44.634284
+      ],
+      [
+       -123.0996965,
+       44.634626
+      ],
+      [
+       -123.1000506,
+       44.634626
+      ],
+      [
+       -123.1000506,
+       44.634284
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "LS1",
+    "title": "Crossing ends on a living street",
+    "profiles": "default_1m, default_3m",
+    "label": "LS1 - Crossing ends on a living street",
+    "setup": "DS2 crossing ends on the span of a DS1 living street.",
+    "expected": "crossing-living-street splits the living street where the crossing ends."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0992918,
+       44.634284
+      ],
+      [
+       -123.0989377,
+       44.634284
+      ],
+      [
+       -123.0989377,
+       44.634626
+      ],
+      [
+       -123.0992918,
+       44.634626
+      ],
+      [
+       -123.0992918,
+       44.634284
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "LS2",
+    "title": "Same, datasets swapped",
+    "profiles": "default_1m, default_3m",
+    "label": "LS2 - Same, datasets swapped",
+    "setup": "DS1 crossing ends on the span of a DS2 living street.",
+    "expected": "The DS2 living street is split at the DS1 crossing end."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.098533,
+       44.634284
+      ],
+      [
+       -123.0984318,
+       44.634284
+      ],
+      [
+       -123.0984318,
+       44.634761
+      ],
+      [
+       -123.098533,
+       44.634761
+      ],
+      [
+       -123.098533,
+       44.634284
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "LS3",
+    "title": "Crossing end 0.4 m beyond a living street end",
+    "profiles": "default_1m, default_3m",
+    "label": "LS3 - Crossing end 0.4 m beyond a living street end",
+    "setup": "A bare DS2 crossing end lies 0.4 m beyond the end of a DS1 living street, in line with it.",
+    "expected": "A connector joins the crossing end to the living street's end node."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0977742,
+       44.634284
+      ],
+      [
+       -123.097673,
+       44.634284
+      ],
+      [
+       -123.097673,
+       44.634761
+      ],
+      [
+       -123.0977742,
+       44.634761
+      ],
+      [
+       -123.0977742,
+       44.634284
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "LS4",
+    "title": "Living street 0.4 m short of a crossing end",
+    "profiles": "default_1m, default_3m",
+    "label": "LS4 - Living street 0.4 m short of a crossing end",
+    "setup": "A DS2 living street ends 0.4 m short of a bare DS1 crossing end.",
+    "expected": "A connector joins the DS1 crossing end to the living street end; neither moves."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0970154,
+       44.634284
+      ],
+      [
+       -123.0966613,
+       44.634284
+      ],
+      [
+       -123.0966613,
+       44.634626
+      ],
+      [
+       -123.0970154,
+       44.634626
+      ],
+      [
+       -123.0970154,
+       44.634284
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "LS5",
+    "title": "Kerb 0.4 m short of a living street",
+    "profiles": "default_1m, default_3m",
+    "label": "LS5 - Kerb 0.4 m short of a living street",
+    "setup": "DS2 crossing ends in a kerb 0.4 m short of the span of a DS1 living street.",
+    "expected": "The kerb never moves. The living street gets a node and is split; a connector joins the kerb."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.634869
+      ],
+      [
+       -123.0992538,
+       44.634869
+      ],
+      [
+       -123.0992538,
+       44.635436
+      ],
+      [
+       -123.1000506,
+       44.635436
+      ],
+      [
+       -123.1000506,
+       44.634869
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "LS6",
+    "title": "Junction near a living street corner",
+    "profiles": "default_1m, default_3m",
+    "label": "LS6 - Junction near a living street corner",
+    "setup": "DS2 living street bends round a corner as one line. DS1 crossings meet at a junction 2.6 m from the corner; one of them ends exactly on the corner.",
+    "expected": "The living street is split only at the corner. The junction stays 2.6 m away."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0987859,
+       44.634869
+      ],
+      [
+       -123.0979892,
+       44.634869
+      ],
+      [
+       -123.0979892,
+       44.635436
+      ],
+      [
+       -123.0987859,
+       44.635436
+      ],
+      [
+       -123.0987859,
+       44.634869
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "LS7",
+    "title": "Same, datasets swapped",
+    "profiles": "default_1m, default_3m",
+    "label": "LS7 - Same, datasets swapped",
+    "setup": "DS1 living street bends round a corner as one line. DS2 crossings meet at a junction 2.6 m from the corner; one of them ends exactly on the corner.",
+    "expected": "The living street is split at the corner and the crossing joins it there; the junction keeps its position."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0962566,
+       44.634284
+      ],
+      [
+       -123.0959025,
+       44.634284
+      ],
+      [
+       -123.0959025,
+       44.634761
+      ],
+      [
+       -123.0962566,
+       44.634761
+      ],
+      [
+       -123.0962566,
+       44.634284
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "LS8",
+    "title": "Sidewalks meeting a living street",
+    "profiles": "default_1m, default_3m",
+    "label": "LS8 - Sidewalks meeting a living street",
+    "setup": "One DS2 sidewalk ends on the span of a DS1 living street; another ends 0.4 m beyond its end.",
+    "expected": "Not joined: no default rule joins a sidewalk and a living street."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.635724
+      ],
+      [
+       -123.0994119,
+       44.635724
+      ],
+      [
+       -123.0994119,
+       44.635796
+      ],
+      [
+       -123.1000506,
+       44.635796
+      ],
+      [
+       -123.1000506,
+       44.635724
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "SN1",
+    "title": "Sidewalk ends 2.5 m apart",
+    "profiles": "default_1m, default_3m, custom_snap",
+    "label": "SN1 - Sidewalk ends 2.5 m apart",
+    "setup": "A DS2 sidewalk starts 2.5 m beyond a DS1 sidewalk's end.",
+    "expected": "custom_snap: the 3 m sidewalk rule snaps them. Default: apart at 1 m, snapped at 3 m."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0992918,
+       44.635724
+      ],
+      [
+       -123.0986595,
+       44.635724
+      ],
+      [
+       -123.0986595,
+       44.635796
+      ],
+      [
+       -123.0992918,
+       44.635796
+      ],
+      [
+       -123.0992918,
+       44.635724
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "SN2",
+    "title": "Crossing ends 2 m apart",
+    "profiles": "default_1m, default_3m, custom_snap",
+    "label": "SN2 - Crossing ends 2 m apart",
+    "setup": "A DS2 crossing starts 2 m beyond a DS1 crossing's end.",
+    "expected": "custom_snap: beyond the 1.5 m crossing rule, so apart. Default: apart at 1 m, snapped at 3 m."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.098533,
+       44.635589
+      ],
+      [
+       -123.0979007,
+       44.635589
+      ],
+      [
+       -123.0979007,
+       44.635796
+      ],
+      [
+       -123.098533,
+       44.635796
+      ],
+      [
+       -123.098533,
+       44.635589
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "SN3",
+    "title": "Corners 2 m apart: first rule decides",
+    "profiles": "default_1m, custom_snap",
+    "label": "SN3 - Corners 2 m apart: first rule decides",
+    "setup": "Two corners 2 m apart, each where a sidewalk and a crossing meet (DS1 and DS2).",
+    "expected": "custom_snap: both corners match the crossing rule (listed first, 1.5 m) and the sidewalk rule (3 m). The first rule both match governs, so they stay apart."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0975213,
+       44.635724
+      ],
+      [
+       -123.0969142,
+       44.635724
+      ],
+      [
+       -123.0969142,
+       44.635796
+      ],
+      [
+       -123.0975213,
+       44.635796
+      ],
+      [
+       -123.0975213,
+       44.635724
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "SN4",
+    "title": "Plain footway ends 0.4 m apart",
+    "profiles": "default_1m, default_3m, custom_snap",
+    "label": "SN4 - Plain footway ends 0.4 m apart",
+    "setup": "A DS2 plain footway starts 0.4 m beyond a DS1 plain footway's end.",
+    "expected": "custom_snap: no rule lists footways, so 'others' (0.5 m) applies: snapped."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0967625,
+       44.635724
+      ],
+      [
+       -123.0961554,
+       44.635724
+      ],
+      [
+       -123.0961554,
+       44.635796
+      ],
+      [
+       -123.0967625,
+       44.635796
+      ],
+      [
+       -123.0967625,
+       44.635724
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "SN5",
+    "title": "Plain footway ends 0.7 m apart",
+    "profiles": "default_1m, default_3m, custom_snap",
+    "label": "SN5 - Plain footway ends 0.7 m apart",
+    "setup": "A DS2 plain footway starts 0.7 m beyond a DS1 plain footway's end.",
+    "expected": "custom_snap: beyond 'others' (0.5 m), so apart. Default (1 m, 3 m): snapped."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0960037,
+       44.635724
+      ],
+      [
+       -123.0953966,
+       44.635724
+      ],
+      [
+       -123.0953966,
+       44.635796
+      ],
+      [
+       -123.0960037,
+       44.635796
+      ],
+      [
+       -123.0960037,
+       44.635724
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "SN6",
+    "title": "Footway and crossing ends at one coordinate",
+    "profiles": "off, default_1m, default_3m, custom_snap, connect_only",
+    "label": "SN6 - Footway and crossing ends at one coordinate",
+    "setup": "A DS1 plain footway ends exactly where a DS2 crossing starts.",
+    "expected": "Joined by 'coincident', whatever their types. With snap off they stay two nodes."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.636084
+      ],
+      [
+       -123.0994435,
+       44.636084
+      ],
+      [
+       -123.0994435,
+       44.636156
+      ],
+      [
+       -123.1000506,
+       44.636156
+      ],
+      [
+       -123.1000506,
+       44.636084
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "AN1",
+    "title": "DS2 anchor: the DS1 end moves",
+    "profiles": "default_1m, default_3m, custom_anchor",
+    "label": "AN1 - DS2 anchor: the DS1 end moves",
+    "setup": "Sidewalk ends 0.4 m apart; DS1's end node tactile_paving=no, DS2's tactile_paving=yes.",
+    "expected": "custom_anchor (sidewalks anchored on DS2): the DS1 end moves onto the DS2 node, which keeps its position and tactile_paving=yes; DS1's 'no' is audited. No node is left at the DS1 position."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0992918,
+       44.636084
+      ],
+      [
+       -123.0986847,
+       44.636084
+      ],
+      [
+       -123.0986847,
+       44.636156
+      ],
+      [
+       -123.0992918,
+       44.636156
+      ],
+      [
+       -123.0992918,
+       44.636084
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "AN2",
+    "title": "anchor_only: DS2 values audited, not added",
+    "profiles": "default_1m, default_3m, custom_anchor",
+    "label": "AN2 - anchor_only: DS2 values audited, not added",
+    "setup": "Crossing ends 0.3 m apart; DS1's end has ext:note, DS2's has ext:lit.",
+    "expected": "custom_anchor (crossings, attributes anchor_only): the DS2 end snaps onto DS1's; the node keeps ext:note, does not gain ext:lit, and audits it."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.098533,
+       44.636084
+      ],
+      [
+       -123.097673,
+       44.636084
+      ],
+      [
+       -123.097673,
+       44.6361587
+      ],
+      [
+       -123.098533,
+       44.6361587
+      ],
+      [
+       -123.098533,
+       44.636084
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "AN3",
+    "title": "DS2 anchor: the DS1 duplicate goes",
+    "profiles": "default_1m, default_3m, custom_anchor",
+    "label": "AN3 - DS2 anchor: the DS1 duplicate goes",
+    "setup": "The same sidewalk in both datasets, 0.3 m apart.",
+    "expected": "custom_anchor: DS1's ends move onto DS2's, then dedup (anchored on DS2) removes the DS1 copy."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.636264
+      ],
+      [
+       -123.0996965,
+       44.636264
+      ],
+      [
+       -123.0996965,
+       44.636696
+      ],
+      [
+       -123.1000506,
+       44.636696
+      ],
+      [
+       -123.1000506,
+       44.636264
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "CC1",
+    "title": "O1: two rules match the same spot",
+    "profiles": "custom_connect",
+    "label": "CC1 - O1: two rules match the same spot",
+    "setup": "A DS2 crossing ends 0.5 m short of a DS1 sidewalk.",
+    "expected": "kerbed-crossing (listed first) takes it: a node on the sidewalk tagged barrier=kerb, kerb=lowered and ext:survey_batch, and a connector carrying ext:barrier and ext:kerb (not edge keys). The broader footway-sidewalk rule skips it."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0992918,
+       44.636264
+      ],
+      [
+       -123.0989377,
+       44.636264
+      ],
+      [
+       -123.0989377,
+       44.636696
+      ],
+      [
+       -123.0992918,
+       44.636696
+      ],
+      [
+       -123.0992918,
+       44.636264
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "CC2",
+    "title": "The broader rule catches a plain footway",
+    "profiles": "custom_connect",
+    "label": "CC2 - The broader rule catches a plain footway",
+    "setup": "A DS2 plain footway ends 0.5 m short of a DS1 sidewalk.",
+    "expected": "Only footway-sidewalk matches: its node carries ext:source=rule2."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.098533,
+       44.636264
+      ],
+      [
+       -123.0981789,
+       44.636264
+      ],
+      [
+       -123.0981789,
+       44.636696
+      ],
+      [
+       -123.098533,
+       44.636696
+      ],
+      [
+       -123.098533,
+       44.636264
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "CC3",
+    "title": "O2: a later rule meets an earlier node",
+    "profiles": "custom_connect",
+    "label": "CC3 - O2: a later rule meets an earlier node",
+    "setup": "kerbed-crossing makes node J on a sidewalk; a footway ends 0.78 m from J (0.6 m from the span).",
+    "expected": "footway-sidewalk reuses J rather than making a second node beside it. J lists both rules and keeps kerbed-crossing's tags."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0977742,
+       44.636264
+      ],
+      [
+       -123.0974201,
+       44.636264
+      ],
+      [
+       -123.0974201,
+       44.636696
+      ],
+      [
+       -123.0977742,
+       44.636696
+      ],
+      [
+       -123.0977742,
+       44.636264
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "CC4",
+    "title": "O3: a created connector is never cut",
+    "profiles": "custom_connect",
+    "label": "CC4 - O3: a created connector is never cut",
+    "setup": "kerbed-crossing's 0.8 m connector crosses a DS1 road lying 0.4 m off the sidewalk.",
+    "expected": "The later road-crossing rule does not split the connector, and the crossing itself stops 0.4 m short of the road (beyond road-crossing's 0.3 m): the road stays whole."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0969522,
+       44.636264
+      ],
+      [
+       -123.0964716,
+       44.636264
+      ],
+      [
+       -123.0964716,
+       44.636876
+      ],
+      [
+       -123.0969522,
+       44.636876
+      ],
+      [
+       -123.0969522,
+       44.636264
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "CC5",
+    "title": "Point rule: a crossing and a near miss",
+    "profiles": "custom_connect",
+    "label": "CC5 - Point rule: a crossing and a near miss",
+    "setup": "One DS2 crossing crosses a DS1 road; another stops 0.2 m short of it.",
+    "expected": "road-crossing (point, 0.3 m) makes a node at each, tagged tactile_paving=yes; the near miss gets a connector."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0961934,
+       44.636264
+      ],
+      [
+       -123.0957128,
+       44.636264
+      ],
+      [
+       -123.0957128,
+       44.636876
+      ],
+      [
+       -123.0961934,
+       44.636876
+      ],
+      [
+       -123.0961934,
+       44.636264
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "CC6",
+    "title": "G1: a crossing on a bridge",
+    "profiles": "default_1m, default_3m, custom_connect",
+    "label": "CC6 - G1: a crossing on a bridge",
+    "setup": "A DS2 crossing tagged bridge=yes, layer=1 passes over a DS1 road.",
+    "expected": "Never joined: lines whose layer or bridge differ do not meet, even where they cross on the map."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.637164
+      ],
+      [
+       -123.0994435,
+       44.637164
+      ],
+      [
+       -123.0994435,
+       44.637416
+      ],
+      [
+       -123.1000506,
+       44.637416
+      ],
+      [
+       -123.1000506,
+       44.637164
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "CC7",
+    "title": "Sidewalk T onto a sidewalk",
+    "profiles": "custom_connect",
+    "label": "CC7 - Sidewalk T onto a sidewalk",
+    "setup": "A DS2 sidewalk ends 0.6 m short of the span of a DS1 sidewalk.",
+    "expected": "sidewalk-sidewalk: the DS1 sidewalk gets a node and is split; a connector joins the DS2 end."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0992918,
+       44.637164
+      ],
+      [
+       -123.0986847,
+       44.637164
+      ],
+      [
+       -123.0986847,
+       44.6372441
+      ],
+      [
+       -123.0992918,
+       44.6372441
+      ],
+      [
+       -123.0992918,
+       44.637164
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "CC8",
+    "title": "W5: a near-parallel end is not a T",
+    "profiles": "custom_connect",
+    "label": "CC8 - W5: a near-parallel end is not a T",
+    "setup": "A DS2 sidewalk runs 0.6-0.9 m off a DS1 sidewalk, nearly parallel, both ends within 1 m of it.",
+    "expected": "No junction: an end running alongside B is not a T (angle under 30\u00b0). Overlap is dedup's job; at 0.5 m buffer it does not count as a duplicate."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.098533,
+       44.636984
+      ],
+      [
+       -123.0981726,
+       44.636984
+      ],
+      [
+       -123.0981726,
+       44.637416
+      ],
+      [
+       -123.098533,
+       44.637416
+      ],
+      [
+       -123.098533,
+       44.636984
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "CC9",
+    "title": "W2: nearest B only",
+    "profiles": "custom_connect",
+    "label": "CC9 - W2: nearest B only",
+    "setup": "A DS2 crossing end lies 0.4 m from one DS1 sidewalk and 0.9 m from another.",
+    "expected": "One junction, to the nearer sidewalk; never a fan of connectors."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0977742,
+       44.636984
+      ],
+      [
+       -123.097415,
+       44.636984
+      ],
+      [
+       -123.097415,
+       44.637236
+      ],
+      [
+       -123.0977742,
+       44.637236
+      ],
+      [
+       -123.0977742,
+       44.636984
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "CC10",
+    "title": "W3: two ends facing across a gap",
+    "profiles": "custom_connect",
+    "label": "CC10 - W3: two ends facing across a gap",
+    "setup": "A DS1 sidewalk end and a DS2 sidewalk end 0.57 m apart, each nearest the other's end.",
+    "expected": "Both ends qualify under sidewalk-sidewalk, but only one connector is made."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0967745,
+       44.636984
+      ],
+      [
+       -123.0966613,
+       44.636984
+      ],
+      [
+       -123.0966613,
+       44.637416
+      ],
+      [
+       -123.0967745,
+       44.637416
+      ],
+      [
+       -123.0967745,
+       44.636984
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "CC11",
+    "title": "W4: nearer end only",
+    "profiles": "custom_connect",
+    "label": "CC11 - W4: nearer end only",
+    "setup": "A 0.75 m DS2 sidewalk stub whose ends are 0.2 m and 0.95 m from a DS1 sidewalk span.",
+    "expected": "Only the nearer end joins, so the stub cannot fold onto the sidewalk."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0962566,
+       44.636984
+      ],
+      [
+       -123.0959025,
+       44.636984
+      ],
+      [
+       -123.0959025,
+       44.637416
+      ],
+      [
+       -123.0962566,
+       44.637416
+      ],
+      [
+       -123.0962566,
+       44.636984
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "CC12",
+    "title": "G3: DS1 \u00d7 DS1 left as authored",
+    "profiles": "default_1m, default_3m, custom_connect",
+    "label": "CC12 - G3: DS1 \u00d7 DS1 left as authored",
+    "setup": "A DS1 crossing ends 0.5 m short of a DS1 sidewalk.",
+    "expected": "Untouched: connect rules act on DS1 \u00d7 DS2 pairs only. Gaps inside a dataset are self-merge's job."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0954978,
+       44.636984
+      ],
+      [
+       -123.0951437,
+       44.636984
+      ],
+      [
+       -123.0951437,
+       44.637416
+      ],
+      [
+       -123.0954978,
+       44.637416
+      ],
+      [
+       -123.0954978,
+       44.636984
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "CC13",
+    "title": "W1: one rule, two matches on one sidewalk",
+    "profiles": "custom_connect",
+    "label": "CC13 - W1: one rule, two matches on one sidewalk",
+    "setup": "Two DS2 crossings end 0.5 m and 0.4 m short of the same DS1 sidewalk.",
+    "expected": "Both junctions are made in one pass; the sidewalk is split twice."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0947391,
+       44.636984
+      ],
+      [
+       -123.0943799,
+       44.636984
+      ],
+      [
+       -123.0943799,
+       44.637416
+      ],
+      [
+       -123.0947391,
+       44.637416
+      ],
+      [
+       -123.0947391,
+       44.636984
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "CC14",
+    "title": "An end that overshoots B",
+    "profiles": "default_1m, default_3m, custom_connect",
+    "label": "CC14 - An end that overshoots B",
+    "setup": "A DS2 crossing crosses a DS1 sidewalk and ends 0.4 m beyond it.",
+    "expected": "The crossing meets the sidewalk where it crosses it: one node there, the sidewalk and the crossing both split (a 0.4 m crossing stub remains), no connector."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1001012,
+       44.638604
+      ],
+      [
+       -123.0994435,
+       44.638604
+      ],
+      [
+       -123.0994435,
+       44.638856
+      ],
+      [
+       -123.1001012,
+       44.638856
+      ],
+      [
+       -123.1001012,
+       44.638604
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "DG1",
+    "title": "Stranding guard restores a duplicate",
+    "profiles": "default_1m, default_3m",
+    "label": "DG1 - Stranding guard restores a duplicate",
+    "setup": "A DS2 sidewalk 0.5 m off a DS1 sidewalk, its ends 4 m beyond snap reach; a DS2 footway hangs off its west end.",
+    "expected": "Dedup removes the DS2 sidewalk, but nothing connects the footway to DS1, so after connect the stranding guard restores it: the footway stays connected to it."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0987859,
+       44.638604
+      ],
+      [
+       -123.0981789,
+       44.638604
+      ],
+      [
+       -123.0981789,
+       44.6386787
+      ],
+      [
+       -123.0987859,
+       44.6386787
+      ],
+      [
+       -123.0987859,
+       44.638604
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "DG2",
+    "title": "Duplicate drawn with different segmentation",
+    "profiles": "default_1m, default_3m",
+    "label": "DG2 - Duplicate drawn with different segmentation",
+    "setup": "DS1 draws a sidewalk as two edges (a node mid-way); DS2 draws it as one edge 0.3 m off.",
+    "expected": "DS2's ends snap onto DS1's ends. Both ends are then on the anchor network, and the two DS1 edges inside its buffer already join them, so the DS2 copy is a duplicate and is removed (connectivity guard, refined in the 5.0 build: it keeps only an edge that adds a connection)."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.1000506,
+       44.638064
+      ],
+      [
+       -123.0999456,
+       44.638064
+      ],
+      [
+       -123.0999456,
+       44.6381405
+      ],
+      [
+       -123.1000506,
+       44.6381405
+      ],
+      [
+       -123.1000506,
+       44.638064
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "E1",
+    "title": "Points: same type merges, other types do not",
+    "profiles": "off, default_1m, default_3m",
+    "label": "E1 - Points: same type merges, other types do not",
+    "setup": "A bench in both datasets 0.3 m apart (ext:color green / red), and a DS2 pole 0.5 m away.",
+    "expected": "The benches merge at DS1's position, DS1's colour kept and DS2's audited; the pole stays."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0995447,
+       44.638064
+      ],
+      [
+       -123.0989377,
+       44.638064
+      ],
+      [
+       -123.0989377,
+       44.6381387
+      ],
+      [
+       -123.0995447,
+       44.6381387
+      ],
+      [
+       -123.0995447,
+       44.638064
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "E2",
+    "title": "Lines: the same fence",
+    "profiles": "off, default_1m, default_3m",
+    "label": "E2 - Lines: the same fence",
+    "setup": "The same fence line in both datasets 0.3 m apart; DS2 adds ext:height.",
+    "expected": "One line: DS1's geometry, gaining ext:height."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0987859,
+       44.637974
+      ],
+      [
+       -123.0981789,
+       44.637974
+      ],
+      [
+       -123.0981789,
+       44.638226
+      ],
+      [
+       -123.0987859,
+       44.638226
+      ],
+      [
+       -123.0987859,
+       44.637974
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "E3",
+    "title": "Polygons: the same building, plus a kiosk",
+    "profiles": "off, default_1m, default_3m",
+    "label": "E3 - Polygons: the same building, plus a kiosk",
+    "setup": "The same building in both datasets (0.5 m shift; DS2 adds ext:levels) and a DS2-only kiosk.",
+    "expected": "Two polygons: the building (DS1 geometry, gaining ext:levels) and the kiosk."
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0980272,
+       44.637974
+      ],
+      [
+       -123.0976705,
+       44.637974
+      ],
+      [
+       -123.0976705,
+       44.638226
+      ],
+      [
+       -123.0980272,
+       44.638226
+      ],
+      [
+       -123.0980272,
+       44.637974
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "case": "E4",
+    "title": "Zones: the same pedestrian zone",
+    "profiles": "off, default_1m, default_3m",
+    "label": "E4 - Zones: the same pedestrian zone",
+    "setup": "The same pedestrian zone in both datasets, 0.2 m apart.",
+    "expected": "One zone (DS1's); its _w_id lists output nodes."
+   }
+  }
+ ]
+}

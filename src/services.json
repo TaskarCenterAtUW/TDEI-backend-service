@@ -98,12 +98,7 @@
                 "required": true
             },
             {
-                "name": "proximity",
-                "type": "number",
-                "required": false
-            },
-            {
-                "name": "entity_filters",
+                "name": "config",
                 "type": "object",
                 "required": false
             }

@@ -1,0 +1,23 @@
+{
+  "about": "Union 5.0 demo input. Paste the configurator's config below (or replace this whole file with the configurator's output or a job request), then run ./run_demo.sh local. The picture goes to runs/demo_input/demo.png.",
+  "config": {
+    "connect": {
+      "mode": "custom",
+      "rules": [
+        {
+          "name": "connect_crossing_sidewalk",
+          "from": "crossing",
+          "to": "sidewalk",
+          "operation": "geometry",
+          "proximity": 2,
+          "node_tags": {
+            "cross-sidewalk": "junction"
+          },
+          "edge_tags": {
+            "cross-sidewalk": "connector"
+          }
+        }
+      ]
+    }
+  }
+}

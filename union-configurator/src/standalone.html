@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Union 5.0 Configurator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&family=Montserrat:wght@600;700&display=swap">
+<style>
+:root{--brand-primary:#32006e;--brand-accent:#4b2e83;--secondary-color:#5f647a;--tdei-blue:#586AB5;--tdei-green:#479FA1;
+  --purple-background-light:#f4f0fb;--purple-background-medium:#ebe4f6;--purple-background-dark:#ddd2ee;
+  --primary-font-family:"Open Sans",sans-serif;--secondary-font-family:"Montserrat",sans-serif;color-scheme:light}
+html,body{margin:0;background:var(--u5-page)}
+body{color:var(--u5-text);font:15px/1.55 var(--u5-f-body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--u5-brand)}
+.bar{background:var(--u5-brand);color:var(--u5-white);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px}
+.bar-in{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.mark{font:700 15px var(--u5-f-alt);letter-spacing:.06em;background:var(--u5-white);color:var(--u5-brand);border-radius:4px;padding:4px 8px}
+.bar h1{font:700 17px var(--u5-f-head);margin:0}
+.bar small{opacity:.8;font-size:13px}
+.page{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.page{padding-block:12px calc(120px + env(safe-area-inset-bottom,0px))}
+.bar small{display:none}
+</style>
+</head>
+<body>
+<div class="bar"><div class="bar-in"><span class="mark">TDEI</span><h1>Dataset Union</h1><small>Union 5.0 configuration</small></div></div>
+<div class="page"><div class="wrap" id="configurator"></div></div>
+<script type="module">
+/*__MODULE__*/
+mount(document.getElementById('configurator'), { standalone: true });
+</script>
+</body>
+</html>

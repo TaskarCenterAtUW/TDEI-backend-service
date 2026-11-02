@@ -1,0 +1,48 @@
+{
+ "$schema": "https://sidewalks.washington.edu/opensidewalks/0.3/schema.json",
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0994941,
+      44.6381
+     ],
+     [
+      -123.0989883,
+      44.6381
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1850001",
+    "barrier": "fence",
+    "ext:case": "E2"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -123.0972178,
+      44.6381
+     ],
+     [
+      -123.0967119,
+      44.6381
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1850002",
+    "barrier": "hedge",
+    "ext:case": "E5"
+   }
+  }
+ ]
+}

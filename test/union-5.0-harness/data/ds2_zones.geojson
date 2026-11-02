@@ -1,0 +1,48 @@
+{
+ "$schema": "https://sidewalks.washington.edu/opensidewalks/0.3/schema.json",
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.097974,
+       44.63801
+      ],
+      [
+       -123.0977211,
+       44.63801
+      ],
+      [
+       -123.0977211,
+       44.63819
+      ],
+      [
+       -123.097974,
+       44.63819
+      ],
+      [
+       -123.097974,
+       44.63801
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "2700001",
+    "highway": "pedestrian",
+    "ext:case": "E4",
+    "_w_id": [
+     "2000167",
+     "2000168",
+     "2000169",
+     "2000170",
+     "2000167"
+    ]
+   }
+  }
+ ]
+}

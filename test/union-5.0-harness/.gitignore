@@ -1,0 +1,6 @@
+# run outputs (regenerate with ./run_harness.sh)
+runs/
+__pycache__/
+*.pyc
+.DS_Store
+# union/*.sql, data/ and docs/images/ ARE tracked

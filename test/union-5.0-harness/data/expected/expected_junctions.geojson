@@ -1,0 +1,1977 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0987353,
+     44.63027
+    ]
+   },
+   "properties": {
+    "case": "C",
+    "profile": "default_1m",
+    "min_degree": 4,
+    "must_join": "road + crossing",
+    "label": "C: joins 4+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0987353,
+     44.63027
+    ]
+   },
+   "properties": {
+    "case": "C",
+    "profile": "default_3m",
+    "min_degree": 4,
+    "must_join": "road + crossing",
+    "label": "C: joins 4+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0979766,
+     44.63027
+    ]
+   },
+   "properties": {
+    "case": "G",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "long sidewalk + short T stub",
+    "label": "G: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0979766,
+     44.63027
+    ]
+   },
+   "properties": {
+    "case": "G",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "long sidewalk + short T stub",
+    "label": "G: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0994941,
+     44.63108
+    ]
+   },
+   "properties": {
+    "case": "H",
+    "profile": "default_1m",
+    "min_degree": 2,
+    "must_join": "sidewalk west + sidewalk east",
+    "label": "H: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0994941,
+     44.63108
+    ]
+   },
+   "properties": {
+    "case": "H",
+    "profile": "default_3m",
+    "min_degree": 2,
+    "must_join": "sidewalk west + sidewalk east",
+    "label": "H: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0994941,
+     44.63135
+    ]
+   },
+   "properties": {
+    "case": "J",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "long DS2 sidewalk + DS1 spur meeting it",
+    "label": "J: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0994941,
+     44.63135
+    ]
+   },
+   "properties": {
+    "case": "J",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "long DS2 sidewalk + DS1 spur meeting it",
+    "label": "J: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0969648,
+     44.63036
+    ]
+   },
+   "properties": {
+    "case": "L",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "road with mid node + crossing ending on road node",
+    "label": "L: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0969648,
+     44.63036
+    ]
+   },
+   "properties": {
+    "case": "L",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "road with mid node + crossing ending on road node",
+    "label": "L: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0997471,
+     44.63189
+    ]
+   },
+   "properties": {
+    "case": "N",
+    "profile": "default_1m",
+    "min_degree": 2,
+    "must_join": "sidewalk + plain footway connector",
+    "label": "N: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0996206,
+     44.63189
+    ]
+   },
+   "properties": {
+    "case": "N",
+    "profile": "default_1m",
+    "min_degree": 2,
+    "must_join": "plain footway connector + crossing",
+    "label": "N: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0997471,
+     44.63189
+    ]
+   },
+   "properties": {
+    "case": "N",
+    "profile": "default_3m",
+    "min_degree": 2,
+    "must_join": "sidewalk + plain footway connector",
+    "label": "N: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0996206,
+     44.63189
+    ]
+   },
+   "properties": {
+    "case": "N",
+    "profile": "default_3m",
+    "min_degree": 2,
+    "must_join": "plain footway connector + crossing",
+    "label": "N: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0954472,
+     44.63
+    ]
+   },
+   "properties": {
+    "case": "P",
+    "profile": "default_1m",
+    "min_degree": 2,
+    "must_join": "sidewalk + crossing off duplicate end",
+    "label": "P: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0954472,
+     44.63
+    ]
+   },
+   "properties": {
+    "case": "P",
+    "profile": "default_3m",
+    "min_degree": 2,
+    "must_join": "sidewalk + crossing off duplicate end",
+    "label": "P: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0957002,
+     44.63036
+    ]
+   },
+   "properties": {
+    "case": "Q",
+    "profile": "default_1m",
+    "min_degree": 2,
+    "must_join": "ds1 west + ds2 link a",
+    "label": "Q: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0954472,
+     44.63036
+    ]
+   },
+   "properties": {
+    "case": "Q",
+    "profile": "default_1m",
+    "min_degree": 2,
+    "must_join": "ds2 link a + ds2 link b",
+    "label": "Q: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0951943,
+     44.63036
+    ]
+   },
+   "properties": {
+    "case": "Q",
+    "profile": "default_1m",
+    "min_degree": 2,
+    "must_join": "ds2 link b + ds2 link c",
+    "label": "Q: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0949414,
+     44.63036
+    ]
+   },
+   "properties": {
+    "case": "Q",
+    "profile": "default_1m",
+    "min_degree": 2,
+    "must_join": "ds2 link c + ds1 east",
+    "label": "Q: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0957002,
+     44.63036
+    ]
+   },
+   "properties": {
+    "case": "Q",
+    "profile": "default_3m",
+    "min_degree": 2,
+    "must_join": "ds1 west + ds2 link a",
+    "label": "Q: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0954472,
+     44.63036
+    ]
+   },
+   "properties": {
+    "case": "Q",
+    "profile": "default_3m",
+    "min_degree": 2,
+    "must_join": "ds2 link a + ds2 link b",
+    "label": "Q: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0951943,
+     44.63036
+    ]
+   },
+   "properties": {
+    "case": "Q",
+    "profile": "default_3m",
+    "min_degree": 2,
+    "must_join": "ds2 link b + ds2 link c",
+    "label": "Q: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0949414,
+     44.63036
+    ]
+   },
+   "properties": {
+    "case": "Q",
+    "profile": "default_3m",
+    "min_degree": 2,
+    "must_join": "ds2 link c + ds1 east",
+    "label": "Q: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0951943,
+     44.63072
+    ]
+   },
+   "properties": {
+    "case": "R",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "long ds1 sidewalk + spur off duplicate",
+    "label": "R: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0951943,
+     44.63072
+    ]
+   },
+   "properties": {
+    "case": "R",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "long ds1 sidewalk + spur off duplicate",
+    "label": "R: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0953208,
+     44.63108
+    ]
+   },
+   "properties": {
+    "case": "S",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "ds1 sidewalk span + ds2 T onto span",
+    "label": "S: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0953208,
+     44.63108
+    ]
+   },
+   "properties": {
+    "case": "S",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "ds1 sidewalk span + ds2 T onto span",
+    "label": "S: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.098356,
+     44.63216
+    ]
+   },
+   "properties": {
+    "case": "W",
+    "profile": "default_1m",
+    "min_degree": 2,
+    "must_join": "ds1 sidewalk to kerb + ds2 sidewalk from kerb",
+    "label": "W: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.098356,
+     44.63216
+    ]
+   },
+   "properties": {
+    "case": "W",
+    "profile": "default_3m",
+    "min_degree": 2,
+    "must_join": "ds1 sidewalk to kerb + ds2 sidewalk from kerb",
+    "label": "W: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0997471,
+     44.6329646
+    ]
+   },
+   "properties": {
+    "case": "X1",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "sidewalk south + crossing",
+    "label": "X1: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0997471,
+     44.63297
+    ]
+   },
+   "properties": {
+    "case": "X1",
+    "profile": "default_1m",
+    "min_degree": 2,
+    "must_join": "sidewalk west + sidewalk south",
+    "label": "X1: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0997471,
+     44.6329646
+    ]
+   },
+   "properties": {
+    "case": "X1",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "sidewalk south + crossing",
+    "label": "X1: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0997471,
+     44.63297
+    ]
+   },
+   "properties": {
+    "case": "X1",
+    "profile": "default_3m",
+    "min_degree": 2,
+    "must_join": "sidewalk west + sidewalk south",
+    "label": "X1: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0989883,
+     44.6329646
+    ]
+   },
+   "properties": {
+    "case": "X2",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "sidewalk south + crossing",
+    "label": "X2: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0989883,
+     44.63297
+    ]
+   },
+   "properties": {
+    "case": "X2",
+    "profile": "default_1m",
+    "min_degree": 2,
+    "must_join": "sidewalk west + sidewalk south",
+    "label": "X2: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0989883,
+     44.6329646
+    ]
+   },
+   "properties": {
+    "case": "X2",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "sidewalk south + crossing",
+    "label": "X2: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0989883,
+     44.63297
+    ]
+   },
+   "properties": {
+    "case": "X2",
+    "profile": "default_3m",
+    "min_degree": 2,
+    "must_join": "sidewalk west + sidewalk south",
+    "label": "X2: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0982295,
+     44.632835
+    ]
+   },
+   "properties": {
+    "case": "X3",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "sidewalk + crossing to kerb",
+    "label": "X3: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0982295,
+     44.632835
+    ]
+   },
+   "properties": {
+    "case": "X3",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "sidewalk + crossing to kerb",
+    "label": "X3: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0982295,
+     44.632835
+    ]
+   },
+   "properties": {
+    "case": "X3",
+    "profile": "connect_only",
+    "min_degree": 3,
+    "must_join": "sidewalk + crossing to kerb",
+    "label": "X3: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0974707,
+     44.632835
+    ]
+   },
+   "properties": {
+    "case": "X4",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "sidewalk + crossing to kerb",
+    "label": "X4: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0974707,
+     44.632835
+    ]
+   },
+   "properties": {
+    "case": "X4",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "sidewalk + crossing to kerb",
+    "label": "X4: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0974707,
+     44.632835
+    ]
+   },
+   "properties": {
+    "case": "X4",
+    "profile": "connect_only",
+    "min_degree": 3,
+    "must_join": "sidewalk + crossing to kerb",
+    "label": "X4: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0967119,
+     44.63297
+    ]
+   },
+   "properties": {
+    "case": "X5",
+    "profile": "default_1m",
+    "min_degree": 2,
+    "must_join": "sidewalk + crossing to kerb",
+    "label": "X5: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0967119,
+     44.63297
+    ]
+   },
+   "properties": {
+    "case": "X5",
+    "profile": "default_3m",
+    "min_degree": 2,
+    "must_join": "sidewalk + crossing to kerb",
+    "label": "X5: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0959531,
+     44.63297
+    ]
+   },
+   "properties": {
+    "case": "X6",
+    "profile": "default_1m",
+    "min_degree": 2,
+    "must_join": "sidewalk + crossing",
+    "label": "X6: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0959531,
+     44.63297
+    ]
+   },
+   "properties": {
+    "case": "X6",
+    "profile": "default_3m",
+    "min_degree": 2,
+    "must_join": "sidewalk + crossing",
+    "label": "X6: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0951943,
+     44.63297
+    ]
+   },
+   "properties": {
+    "case": "X7",
+    "profile": "default_1m",
+    "min_degree": 2,
+    "must_join": "sidewalk + crossing to kerb",
+    "label": "X7: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0951943,
+     44.63297
+    ]
+   },
+   "properties": {
+    "case": "X7",
+    "profile": "default_3m",
+    "min_degree": 2,
+    "must_join": "sidewalk + crossing to kerb",
+    "label": "X7: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0992412,
+     44.633375
+    ]
+   },
+   "properties": {
+    "case": "X9",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "sidewalk + crossing east",
+    "label": "X9: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0992412,
+     44.6333777
+    ]
+   },
+   "properties": {
+    "case": "X9",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "sidewalk + crossing south-east",
+    "label": "X9: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0992412,
+     44.633375
+    ]
+   },
+   "properties": {
+    "case": "X9",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "sidewalk + crossing east",
+    "label": "X9: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0992412,
+     44.6333777
+    ]
+   },
+   "properties": {
+    "case": "X9",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "sidewalk + crossing south-east",
+    "label": "X9: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0982295,
+     44.63324
+    ]
+   },
+   "properties": {
+    "case": "X10",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "sidewalk + crossing to corner",
+    "label": "X10: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0982421,
+     44.6332184
+    ]
+   },
+   "properties": {
+    "case": "X10",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "crossing to corner + crossing west + crossing south",
+    "label": "X10: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0982295,
+     44.63324
+    ]
+   },
+   "properties": {
+    "case": "X10",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "sidewalk + crossing to corner",
+    "label": "X10: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0982421,
+     44.6332184
+    ]
+   },
+   "properties": {
+    "case": "X10",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "crossing to corner + crossing west + crossing south",
+    "label": "X10: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0967119,
+     44.63324
+    ]
+   },
+   "properties": {
+    "case": "X11",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "sidewalk + crossing to corner",
+    "label": "X11: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0967245,
+     44.6332184
+    ]
+   },
+   "properties": {
+    "case": "X11",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "crossing to corner + crossing west + crossing south",
+    "label": "X11: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0967119,
+     44.63324
+    ]
+   },
+   "properties": {
+    "case": "X11",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "sidewalk + crossing to corner",
+    "label": "X11: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0967245,
+     44.6332184
+    ]
+   },
+   "properties": {
+    "case": "X11",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "crossing to corner + crossing west + crossing south",
+    "label": "X11: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0992412,
+     44.63396
+    ]
+   },
+   "properties": {
+    "case": "X12",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "sidewalk + crossing A-B",
+    "label": "X12: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0992336,
+     44.6339597
+    ]
+   },
+   "properties": {
+    "case": "X12",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "crossing A-B + crossing east + crossing south",
+    "label": "X12: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0992412,
+     44.63396
+    ]
+   },
+   "properties": {
+    "case": "X12",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "sidewalk + crossing A-B",
+    "label": "X12: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0992336,
+     44.6339597
+    ]
+   },
+   "properties": {
+    "case": "X12",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "crossing A-B + crossing east + crossing south",
+    "label": "X12: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0984824,
+     44.63396
+    ]
+   },
+   "properties": {
+    "case": "X13",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "sidewalk + crossing A-B",
+    "label": "X13: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0984748,
+     44.6339597
+    ]
+   },
+   "properties": {
+    "case": "X13",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "crossing A-B + crossing east + crossing south",
+    "label": "X13: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0984824,
+     44.63396
+    ]
+   },
+   "properties": {
+    "case": "X13",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "sidewalk + crossing A-B",
+    "label": "X13: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0984748,
+     44.6339597
+    ]
+   },
+   "properties": {
+    "case": "X13",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "crossing A-B + crossing east + crossing south",
+    "label": "X13: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.1,
+     44.634455
+    ]
+   },
+   "properties": {
+    "case": "LS1",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "living street + crossing",
+    "label": "LS1: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.1,
+     44.634455
+    ]
+   },
+   "properties": {
+    "case": "LS1",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "living street + crossing",
+    "label": "LS1: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0992412,
+     44.634455
+    ]
+   },
+   "properties": {
+    "case": "LS2",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "living street + crossing",
+    "label": "LS2: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0992412,
+     44.634455
+    ]
+   },
+   "properties": {
+    "case": "LS2",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "living street + crossing",
+    "label": "LS2: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0984824,
+     44.63459
+    ]
+   },
+   "properties": {
+    "case": "LS3",
+    "profile": "default_1m",
+    "min_degree": 2,
+    "must_join": "living street + crossing",
+    "label": "LS3: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0984824,
+     44.63459
+    ]
+   },
+   "properties": {
+    "case": "LS3",
+    "profile": "default_3m",
+    "min_degree": 2,
+    "must_join": "living street + crossing",
+    "label": "LS3: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0977236,
+     44.6345936
+    ]
+   },
+   "properties": {
+    "case": "LS4",
+    "profile": "default_1m",
+    "min_degree": 2,
+    "must_join": "living street + crossing",
+    "label": "LS4: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0977236,
+     44.6345936
+    ]
+   },
+   "properties": {
+    "case": "LS4",
+    "profile": "default_3m",
+    "min_degree": 2,
+    "must_join": "living street + crossing",
+    "label": "LS4: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0969648,
+     44.634455
+    ]
+   },
+   "properties": {
+    "case": "LS5",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "living street + crossing to kerb",
+    "label": "LS5: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0969648,
+     44.634455
+    ]
+   },
+   "properties": {
+    "case": "LS5",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "living street + crossing to kerb",
+    "label": "LS5: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0996838,
+     44.63513
+    ]
+   },
+   "properties": {
+    "case": "LS6",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "living street + crossing to corner",
+    "label": "LS6: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0996965,
+     44.6351084
+    ]
+   },
+   "properties": {
+    "case": "LS6",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "crossing to corner + crossing west + crossing south",
+    "label": "LS6: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0996838,
+     44.63513
+    ]
+   },
+   "properties": {
+    "case": "LS6",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "living street + crossing to corner",
+    "label": "LS6: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0996965,
+     44.6351084
+    ]
+   },
+   "properties": {
+    "case": "LS6",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "crossing to corner + crossing west + crossing south",
+    "label": "LS6: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0984192,
+     44.63513
+    ]
+   },
+   "properties": {
+    "case": "LS7",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "living street + crossing to corner",
+    "label": "LS7: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0984318,
+     44.6351084
+    ]
+   },
+   "properties": {
+    "case": "LS7",
+    "profile": "default_1m",
+    "min_degree": 3,
+    "must_join": "crossing to corner + crossing west + crossing south",
+    "label": "LS7: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0984192,
+     44.63513
+    ]
+   },
+   "properties": {
+    "case": "LS7",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "living street + crossing to corner",
+    "label": "LS7: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0984318,
+     44.6351084
+    ]
+   },
+   "properties": {
+    "case": "LS7",
+    "profile": "default_3m",
+    "min_degree": 3,
+    "must_join": "crossing to corner + crossing west + crossing south",
+    "label": "LS7: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0997471,
+     44.63576
+    ]
+   },
+   "properties": {
+    "case": "SN1",
+    "profile": "default_3m",
+    "min_degree": 2,
+    "must_join": "ds1 sidewalk + ds2 sidewalk",
+    "label": "SN1: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0997471,
+     44.63576
+    ]
+   },
+   "properties": {
+    "case": "SN1",
+    "profile": "custom_snap",
+    "min_degree": 2,
+    "must_join": "ds1 sidewalk + ds2 sidewalk",
+    "label": "SN1: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0989883,
+     44.63576
+    ]
+   },
+   "properties": {
+    "case": "SN2",
+    "profile": "default_3m",
+    "min_degree": 2,
+    "must_join": "ds1 crossing + ds2 crossing",
+    "label": "SN2: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0972178,
+     44.63576
+    ]
+   },
+   "properties": {
+    "case": "SN4",
+    "profile": "default_1m",
+    "min_degree": 2,
+    "must_join": "ds1 footway + ds2 footway",
+    "label": "SN4: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0972178,
+     44.63576
+    ]
+   },
+   "properties": {
+    "case": "SN4",
+    "profile": "default_3m",
+    "min_degree": 2,
+    "must_join": "ds1 footway + ds2 footway",
+    "label": "SN4: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0972178,
+     44.63576
+    ]
+   },
+   "properties": {
+    "case": "SN4",
+    "profile": "custom_snap",
+    "min_degree": 2,
+    "must_join": "ds1 footway + ds2 footway",
+    "label": "SN4: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.096459,
+     44.63576
+    ]
+   },
+   "properties": {
+    "case": "SN5",
+    "profile": "default_1m",
+    "min_degree": 2,
+    "must_join": "ds1 footway + ds2 footway",
+    "label": "SN5: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.096459,
+     44.63576
+    ]
+   },
+   "properties": {
+    "case": "SN5",
+    "profile": "default_3m",
+    "min_degree": 2,
+    "must_join": "ds1 footway + ds2 footway",
+    "label": "SN5: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0957002,
+     44.63576
+    ]
+   },
+   "properties": {
+    "case": "SN6",
+    "profile": "default_1m",
+    "min_degree": 2,
+    "must_join": "ds1 footway + ds2 crossing",
+    "label": "SN6: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0957002,
+     44.63576
+    ]
+   },
+   "properties": {
+    "case": "SN6",
+    "profile": "default_3m",
+    "min_degree": 2,
+    "must_join": "ds1 footway + ds2 crossing",
+    "label": "SN6: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0957002,
+     44.63576
+    ]
+   },
+   "properties": {
+    "case": "SN6",
+    "profile": "custom_snap",
+    "min_degree": 2,
+    "must_join": "ds1 footway + ds2 crossing",
+    "label": "SN6: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.099742,
+     44.63612
+    ]
+   },
+   "properties": {
+    "case": "AN1",
+    "profile": "custom_anchor",
+    "min_degree": 2,
+    "must_join": "ds1 sidewalk + ds2 sidewalk",
+    "label": "AN1: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0989883,
+     44.63612
+    ]
+   },
+   "properties": {
+    "case": "AN2",
+    "profile": "custom_anchor",
+    "min_degree": 2,
+    "must_join": "ds1 crossing + ds2 crossing",
+    "label": "AN2: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0997471,
+     44.63648
+    ]
+   },
+   "properties": {
+    "case": "CC1",
+    "profile": "custom_connect",
+    "min_degree": 3,
+    "must_join": "sidewalk + crossing",
+    "label": "CC1: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0989883,
+     44.63648
+    ]
+   },
+   "properties": {
+    "case": "CC2",
+    "profile": "custom_connect",
+    "min_degree": 3,
+    "must_join": "sidewalk + plain footway",
+    "label": "CC2: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0982295,
+     44.63648
+    ]
+   },
+   "properties": {
+    "case": "CC3",
+    "profile": "custom_connect",
+    "min_degree": 4,
+    "must_join": "sidewalk + crossing + plain footway",
+    "label": "CC3: joins 4+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0967119,
+     44.63675
+    ]
+   },
+   "properties": {
+    "case": "CC5",
+    "profile": "custom_connect",
+    "min_degree": 4,
+    "must_join": "road + crossing through",
+    "label": "CC5: joins 4+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0967119,
+     44.636435
+    ]
+   },
+   "properties": {
+    "case": "CC5",
+    "profile": "custom_connect",
+    "min_degree": 3,
+    "must_join": "road + crossing short",
+    "label": "CC5: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0997471,
+     44.6372
+    ]
+   },
+   "properties": {
+    "case": "CC7",
+    "profile": "custom_connect",
+    "min_degree": 3,
+    "must_join": "ds1 sidewalk + ds2 sidewalk T",
+    "label": "CC7: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0982295,
+     44.6372
+    ]
+   },
+   "properties": {
+    "case": "CC9",
+    "profile": "custom_connect",
+    "min_degree": 3,
+    "must_join": "near sidewalk + crossing",
+    "label": "CC9: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0967119,
+     44.6372
+    ]
+   },
+   "properties": {
+    "case": "CC11",
+    "profile": "custom_connect",
+    "min_degree": 3,
+    "must_join": "ds1 sidewalk + ds2 stub",
+    "label": "CC11: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0951943,
+     44.63711
+    ]
+   },
+   "properties": {
+    "case": "CC13",
+    "profile": "custom_connect",
+    "min_degree": 3,
+    "must_join": "sidewalk + crossing south",
+    "label": "CC13: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0951943,
+     44.63729
+    ]
+   },
+   "properties": {
+    "case": "CC13",
+    "profile": "custom_connect",
+    "min_degree": 3,
+    "must_join": "sidewalk + crossing north",
+    "label": "CC13: joins 3+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0944355,
+     44.6372
+    ]
+   },
+   "properties": {
+    "case": "CC14",
+    "profile": "default_1m",
+    "min_degree": 4,
+    "must_join": "sidewalk + crossing",
+    "label": "CC14: joins 4+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0944355,
+     44.6372
+    ]
+   },
+   "properties": {
+    "case": "CC14",
+    "profile": "default_3m",
+    "min_degree": 4,
+    "must_join": "sidewalk + crossing",
+    "label": "CC14: joins 4+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0944355,
+     44.6372
+    ]
+   },
+   "properties": {
+    "case": "CC14",
+    "profile": "custom_connect",
+    "min_degree": 4,
+    "must_join": "sidewalk + crossing",
+    "label": "CC14: joins 4+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0984824,
+     44.63864
+    ]
+   },
+   "properties": {
+    "case": "DG2",
+    "profile": "default_1m",
+    "min_degree": 2,
+    "must_join": "ds1 sidewalk",
+    "label": "DG2: joins 2+ edges"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.0984824,
+     44.63864
+    ]
+   },
+   "properties": {
+    "case": "DG2",
+    "profile": "default_3m",
+    "min_degree": 2,
+    "must_join": "ds1 sidewalk",
+    "label": "DG2: joins 2+ edges"
+   }
+  }
+ ]
+}

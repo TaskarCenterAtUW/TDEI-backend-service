@@ -1,0 +1,41 @@
+{
+ "$schema": "https://sidewalks.washington.edu/opensidewalks/0.3/schema.json",
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -123.0987353,
+       44.63801
+      ],
+      [
+       -123.0984824,
+       44.63801
+      ],
+      [
+       -123.0984824,
+       44.63819
+      ],
+      [
+       -123.0987353,
+       44.63819
+      ],
+      [
+       -123.0987353,
+       44.63801
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "_id": "1900001",
+    "building": "yes",
+    "ext:case": "E3"
+   }
+  }
+ ]
+}
