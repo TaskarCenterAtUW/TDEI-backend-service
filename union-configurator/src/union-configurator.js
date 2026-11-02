@@ -1073,7 +1073,8 @@ export function mount(element, options = {}) {
   on('change',e=>{ const nid=e.target.dataset&&e.target.dataset.num; if(nid){ const st=STEPS.find(x=>x.id===nid); e.target.value= st.kind==='pct'?pctTxt(A[nid]):(+A[nid]).toFixed(1); } });
   on('click',e=>{
     const b=e.target.closest('button'); if(!b) return;
-    if(is(b,'reset')){ A=Object.assign(recAnswers(),{trust:A.trust}); render(); save(); return flash('Recommended values restored'); }
+    e.preventDefault();
+    if(is(b,'reset')){ A=Object.assign(recAnswers(),{_last:{}}); bad.clear(); startNotes=[]; render(); save(); return flash('Recommended values restored'); }
     if(is(b,'alloff')){ A._last={}; STEPS.forEach(s=>{ if(s.kind==='dist'){ if(A[s.id]>0) A._last[s.id]=A[s.id]; A[s.id]=0; } if(s.kind==='yesno') A[s.id]=false; }); render(); save(); return flash('Everything turned off'); }
     if(is(b,'loadopen')){ const lp=$('loadp'); lp.hidden=!lp.hidden; if(!lp.hidden) $('loadtxt').focus(); return; }
     if(is(b,'loadcancel')){ $('loadp').hidden=true; $('loadtxt').value=''; $('loadmsg').innerHTML=''; pendingLoad=null; $('loadgo').textContent='Load'; return; }
