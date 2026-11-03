@@ -1,0 +1,44 @@
+-- =============================================================================
+-- perf/run_once.psql — one timed union run (perf/run_scale.sh calls this).
+--
+--   psql "<conn>" -v fn=content.tdei_union_dataset -v ds1=.. -v ds2=.. -v config='{..}' -v report=out.json \
+--        -v pre='' -f perf/run_once.psql
+--
+-- Runs the union in one transaction, as the TDEI backend does, then drains
+-- every cursor on the server (MOVE ALL: rows are produced but not sent), so
+-- the times are the database's share of a job. Prints the size of the union's
+-- temp tables and of the output JSON, a checksum of the output (to compare two
+-- versions of the union on the same data), and writes the report to :report.
+-- =============================================================================
+\set ON_ERROR_STOP on
+:pre
+\timing on
+BEGIN;
+SELECT * FROM :fn(:'ds1', :'ds2', :'config'::jsonb);
+MOVE ALL IN node_cursor;
+MOVE ALL IN edge_cursor;
+MOVE ALL IN zone_cursor;
+MOVE ALL IN point_cursor;
+MOVE ALL IN line_cursor;
+MOVE ALL IN polygon_cursor;
+\timing off
+SET client_min_messages = warning;
+SELECT pg_size_pretty(sum(pg_total_relation_size(c.oid))) AS temp_tables
+FROM pg_class c WHERE c.relnamespace = pg_my_temp_schema() AND c.relkind = 'r';
+SELECT pg_size_pretty(sum(octet_length(feature::text))::bigint) AS output_json FROM (
+    SELECT feature FROM u5_out_nodes UNION ALL SELECT feature FROM u5_out_edges UNION ALL SELECT feature FROM u5_out_zones
+    UNION ALL SELECT feature FROM u5_out_points UNION ALL SELECT feature FROM u5_out_lines
+    UNION ALL SELECT feature FROM u5_out_polygons) f;
+SELECT md5(string_agg(t || ':' || h, ',' ORDER BY t)) AS output_checksum FROM (
+    SELECT 'node' AS t, md5(string_agg(feature::text, '' ORDER BY id)) AS h FROM u5_out_nodes
+    UNION ALL SELECT 'edge', md5(string_agg(feature::text, '' ORDER BY id)) FROM u5_out_edges
+    UNION ALL SELECT 'zone', md5(string_agg(feature::text, '' ORDER BY id)) FROM u5_out_zones
+    UNION ALL SELECT 'point', md5(string_agg(feature::text, '' ORDER BY id)) FROM u5_out_points
+    UNION ALL SELECT 'line', md5(string_agg(feature::text, '' ORDER BY id)) FROM u5_out_lines
+    UNION ALL SELECT 'polygon', md5(string_agg(feature::text, '' ORDER BY id)) FROM u5_out_polygons) x;
+\pset tuples_only on
+\pset format unaligned
+\o :report
+FETCH ALL FROM report_cursor;
+\o
+COMMIT;

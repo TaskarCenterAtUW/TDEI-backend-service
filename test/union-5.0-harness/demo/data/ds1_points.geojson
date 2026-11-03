@@ -1,0 +1,4 @@
+{"type": "FeatureCollection", "$schema": "https://sidewalks.washington.edu/opensidewalks/0.3/schema.json", "features": [
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.08671, 44.6338695]}, "properties": {"_id": "3800001", "amenity": "bench"}},
+{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-123.0881644, 44.634126]}, "properties": {"_id": "3800002", "highway": "street_lamp"}}
+]}

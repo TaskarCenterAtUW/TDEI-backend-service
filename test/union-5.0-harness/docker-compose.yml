@@ -1,0 +1,36 @@
+# Local TDEI-shaped PostGIS database for the union 5.0 harness.
+#
+#   ./local_db.sh up                    # first time: builds the image, creates the schema, deploys union/*.sql
+#   LOAD=1 ./run_harness.sh local       # load the test data, run every profile, check
+#
+# Connection: host=localhost port=5434 dbname=tdei user=tdei password=tdei
+# Port 5434 so it can run beside the 4.x harness database (5433) and any
+# PostgreSQL on 5432 (change with HARNESS_PG_PORT=xxxx).
+name: tdei-union5-harness
+
+services:
+  db:
+    build:
+      context: ./docker
+      args:
+        PG_MAJOR: "16"
+    image: tdei-union5-harness-pg:16
+    container_name: tdei-union5-harness-pg
+    environment:
+      POSTGRES_USER: tdei
+      POSTGRES_PASSWORD: tdei
+      POSTGRES_DB: tdei
+    ports:
+      - "${HARNESS_PG_PORT:-5434}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro   # schema + union deploy, first start only
+      - ./:/harness:ro                                    # union/*.sql and sql/union_to_geojson.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tdei -d tdei"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  pgdata:
